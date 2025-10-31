@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 
 
-model_path = '/mnt/c/Users/AdeiTamayo/Documents/Programming/Uni/GrAl_Tamayo_Adei/testLandmark/pose_landmarker_heavy.task'
+model_path = './pose_landmarker_heavy.task'
 
 
 # Method for visualizing the output on top of the image 
@@ -91,12 +91,29 @@ videoCapture = cv2.VideoCapture("./media/Sentadilla.mp4")
 frame_count = videoCapture.get(cv2.CAP_PROP_FRAME_COUNT)
 fps = videoCapture.get(cv2.CAP_PROP_FPS)
 
+
+
+# Performance settings
+FRAME_SKIP = 2  # Process every 2nd frame
+MAX_WIDTH, MAX_HEIGHT = 800, 600  # Display size
+
 # Loop through the video frame by frame
 for frame_idx in range(int(frame_count)):
     success, frame = videoCapture.read()
     if not success:
         print("Ignoring empty camera frame.")
         continue
+    
+    # Skip frames for better performance
+    if frame_idx % FRAME_SKIP != 0:
+        continue
+    
+    # Resize frame for performance and screen fit
+    height, width = frame.shape[:2]
+    scale = min(MAX_WIDTH/width, MAX_HEIGHT/height, 1.0)
+    if scale < 1.0:
+        new_size = (int(width*scale), int(height*scale))
+        frame = cv2.resize(frame, new_size, interpolation=cv2.INTER_AREA)
 
     # Convert the BGR image to RGB.
     rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -104,7 +121,6 @@ for frame_idx in range(int(frame_count)):
     # Create a MediaPipe Image object from the RGB image.
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_image)
 
-    # Perform pose landmark detection on the input image.
     # Perform pose landmark detection on the input image.
     # pass an integer timestamp (milliseconds) to the API to avoid TypeError from float
     timestamp_ms = int((frame_idx / fps) * 1000) if fps else int(frame_idx)
@@ -119,3 +135,5 @@ for frame_idx in range(int(frame_count)):
     cv2.imshow('MediaPipe Pose Landmarker', bgr_annotated_image)
     if cv2.waitKey(5) & 0xFF == 27:
         break
+videoCapture.release()
+cv2.destroyAllWindows()
