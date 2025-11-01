@@ -30,47 +30,6 @@ def draw_landmarks_on_image(rgb_image, detection_result):
       solutions.drawing_styles.get_default_pose_landmarks_style())
   return annotated_image
 
-# ## ============================
-# ## Code for the image detection
-# ## ============================
-
-
-# # STEP 2: Create an PoseLandmarker object.
-# base_options = python.BaseOptions(model_asset_path=model_path)
-# options = vision.PoseLandmarkerOptions(
-#     base_options=base_options,
-#     output_segmentation_masks=True) # Default value for the running_mode = IMAGE so no need to add it as parameter
-# detector = vision.PoseLandmarker.create_from_options(options)
-
-# # STEP 3: Load the input image.
-# image = mp.Image.create_from_file("media/Test_image.jpg")
-
-# # STEP 4: Detect pose landmarks from the input image.
-# detection_result = detector.detect(image)
-
-# # STEP 5: Process the detection result. In this case, visualize it.
-# annotated_image = draw_landmarks_on_image(image.numpy_view(), detection_result)
-
-# # Resize annotated image to fit on screen
-# max_width, max_height = 800, 600
-# height, width = annotated_image.shape[:2]
-# scale = min(max_width/width, max_height/height, 1.0)
-# # Removed duplicate display block (annotated image is shown above).
-# scale = min(max_width/width, max_height/height, 1.0)
-# if scale < 1.0:
-#   new_size = (int(width*scale), int(height*scale))
-#   mp_image = cv2.resize(annotated_image, new_size, interpolation=cv2.INTER_AREA)
-# # Display the image using OpenCV
-# cv2.imshow('Test_image', mp_image)
-# # waits for user to press any key
-# # (this is necessary to avoid Python kernel form crashing)
-# cv2.waitKey(0)
-
-
-## ============================
-## Code for the video detection
-## ============================
-
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
 PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
@@ -137,3 +96,4 @@ for frame_idx in range(int(frame_count)):
         break
 videoCapture.release()
 cv2.destroyAllWindows()
+
