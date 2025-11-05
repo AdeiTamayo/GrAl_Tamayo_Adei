@@ -11,7 +11,7 @@
     * [ ] Abiadura eta azelerazio kurba.
     * [ ] Abiadura eta azelerazioa kalkulatu: Errepikapen bakoitza isolatu + Errepikapen guztien media lortu.
 * [ ] Emaitzen Bistaratzeko Proba (Plotting): Sortu ibilbidearen eta abiaduraren lehen grafikoak.
-    * [ ] Aukera eskaini bi serie desberdinen artean alderatzeko (adibidez, 1. seriea vs azkena).
+    * [ ] Aukera eskaini bi serie desberdinen artean alderatzeko (adibidez, 1. seriea vs azkena). -> Aldez aldeko irudikatzea edo metrikak.
     * [ ] Konparazio-arazoak aztertu: Bideoak posizio desberdinetatik grabatuta badaude, kalibrazioa nola eragiten duen ebaluatu.
 
 ### 1.2 FASEA: Erabiltzailearen formaren jarraipena (Pose Analysis)
@@ -24,8 +24,8 @@
     * [ ] Puntu garrantzitsuen arteko **angeluak** kalkulatu (adibidez, enborraren eta femurraren arteko angelua, belaunaren flexio-angelua).
     * [ ] Angelsuak aurrez definitutako mugen aurka konparatu (adibidez, 'squat' sakontasuna edo 'deadlift' bizkarrezurraren angelua).
     * [ ] Feedback bisuala sortu (adibidez, alerta bat "belaunak barrurantz" edo "bizkarra gehiegi okertuta" dagoenean).
+* [ ] Begiratu Mediapipen marrak txukuntzeko aukera -> Oraintxe oso zikina dago.
 
----
 
 ## 2. FASEA: Aplikazioaren Garapena eta Integrazioa (Web/Backend)
 
