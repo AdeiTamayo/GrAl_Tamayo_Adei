@@ -64,8 +64,15 @@ print("Initializing camera...")
 cam = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # DirectShow for Windows
 
 if not cam.isOpened():
-    print("Cannot open camera")
-    exit()
+    print("Trying alternative camera index...")
+    cam = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+
+if not cam.isOpened():
+    print("ERROR: Cannot open camera. Please check:")
+    print("  1. Camera is connected")
+    print("  2. No other application is using the camera")
+    print("  3. Camera permissions are granted")
+    exit(1)
 
 # Give camera time to initialize
 time.sleep(2)
@@ -74,6 +81,7 @@ time.sleep(2)
 frame_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+print(f"Camera initialized: {frame_width}x{frame_height}")
 
 with PoseLandmarker.create_from_options(options) as landmarker:
     # Define the codec and create VideoWriter object
@@ -97,17 +105,16 @@ with PoseLandmarker.create_from_options(options) as landmarker:
     while True:
         ret, frame = cam.read()
         
-        # if frame is read correctly ret is True
         if not ret:
-            print("Can't receive frame (stream end?). Exiting ...")
-            break
-
+            print("Warning: Failed to grab frame, retrying...")
+            time.sleep(0.1)
+            continue
 
         # Convert BGR to RGB
-        #rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # Convert the frame to MediaPipe's Image object
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame) #rgb_frame
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
         # Send live image data to perform pose landmarking
         frame_timestamp_ms += 33  # Approximate 30 FPS
@@ -175,3 +182,4 @@ if out is not None:
     out.release()
 cam.release()
 cv2.destroyAllWindows()
+print("Cleanup complete.")
