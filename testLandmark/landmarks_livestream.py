@@ -5,36 +5,125 @@ from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 import cv2
 import time
+import math
 
-model_path = './pose_landmarker_heavy.task'
+model_path = './models/pose_landmarker_lite.task'
 
 # Global variable to store the latest detection result
 latest_result = None
 result_lock = False
 
-# Method for visualizing the output on top of the image 
+def calculate_angle(point1, point2, point3):
+    """
+    Calculate the angle between three points.
+    point2 is the vertex of the angle.
+    Returns angle in degrees.
+    """
+    # Calculate vectors
+    vector1 = np.array([point1[0] - point2[0], point1[1] - point2[1]])
+    vector2 = np.array([point3[0] - point2[0], point3[1] - point2[1]])
+    
+    # Calculate angle using dot product
+    cosine_angle = np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
+    angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))
+    
+    return np.degrees(angle)
+
 def draw_landmarks_on_image(rgb_image, detection_result):
-    if detection_result is None or detection_result.pose_landmarks is None:
+    if detection_result is None or not detection_result.pose_landmarks:
         return rgb_image
     
-    pose_landmarks_list = detection_result.pose_landmarks
-    annotated_image = np.copy(rgb_image)
-
-    # Loop through the detected poses to visualize.
-    for idx in range(len(pose_landmarks_list)):
-        pose_landmarks = pose_landmarks_list[idx]
-
-        # Draw the pose landmarks.
-        pose_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
-        pose_landmarks_proto.landmark.extend([
-            landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in pose_landmarks
-        ])
-        solutions.drawing_utils.draw_landmarks(
-            annotated_image,
-            pose_landmarks_proto,
-            solutions.pose.POSE_CONNECTIONS,
-            solutions.drawing_styles.get_default_pose_landmarks_style())
+    annotated_image = rgb_image.copy()
+    h, w = rgb_image.shape[:2]
+    
+    # Landmarks relevant for squat analysis
+    squat_landmarks = [
+        11, 12,  # Shoulders
+        13, 14,  # Elbows (optional, for arm position)
+        23, 24,  # Hips
+        25, 26,  # Knees
+        27, 28   # Ankles
+    ]
+    
+    for pose_landmarks in detection_result.pose_landmarks:
+        # Extract key points for angle calculation
+        if len(pose_landmarks) > 28:
+            # Left side: hip(23) -> knee(25) -> ankle(27)
+            left_hip = (int(pose_landmarks[23].x * w), int(pose_landmarks[23].y * h))
+            left_knee = (int(pose_landmarks[25].x * w), int(pose_landmarks[25].y * h))
+            left_ankle = (int(pose_landmarks[27].x * w), int(pose_landmarks[27].y * h))
+            
+            # Right side: hip(24) -> knee(26) -> ankle(28)
+            right_hip = (int(pose_landmarks[24].x * w), int(pose_landmarks[24].y * h))
+            right_knee = (int(pose_landmarks[26].x * w), int(pose_landmarks[26].y * h))
+            right_ankle = (int(pose_landmarks[28].x * w), int(pose_landmarks[28].y * h))
+            
+            # Calculate knee angles
+            left_knee_angle = calculate_angle(left_hip, left_knee, left_ankle)
+            right_knee_angle = calculate_angle(right_hip, right_knee, right_ankle)
+            
+            # Average knee angle
+            avg_knee_angle = (left_knee_angle + right_knee_angle) / 2
+            
+            # Draw angle text on knees
+            cv2.putText(annotated_image, f'{int(left_knee_angle)}°', 
+                       (left_knee[0] - 40, left_knee[1]), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+            cv2.putText(annotated_image, f'{int(right_knee_angle)}°', 
+                       (right_knee[0] + 10, right_knee[1]), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+            
+            # Display squat depth status
+            if avg_knee_angle < 90:
+                depth_status = "DEEP SQUAT"
+                depth_color = (0, 255, 0)  # Green
+            elif avg_knee_angle < 110:
+                depth_status = "PARALLEL"
+                depth_color = (0, 255, 255)  # Yellow
+            else:
+                depth_status = "PARTIAL"
+                depth_color = (0, 165, 255)  # Orange
+            
+            cv2.putText(annotated_image, f'Knee Angle: {int(avg_knee_angle)}°', 
+                       (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+            cv2.putText(annotated_image, depth_status, 
+                       (10, 145), cv2.FONT_HERSHEY_SIMPLEX, 0.8, depth_color, 2)
+        
+        # Draw only squat-relevant landmarks
+        for idx in squat_landmarks:
+            if idx < len(pose_landmarks):
+                landmark = pose_landmarks[idx]
+                x = int(landmark.x * w)
+                y = int(landmark.y * h)
+                cv2.circle(annotated_image, (x, y), 5, (0, 255, 0), -1)
+        
+        # Draw connections for squat form
+        connections = [
+            (11, 12),  # Shoulder line
+            (11, 13),  # Left arm
+            (12, 14),  # Right arm
+            (11, 23),  # Left torso
+            (12, 24),  # Right torso
+            (23, 24),  # Hip line
+            (23, 25),  # Left thigh
+            (24, 26),  # Right thigh
+            (25, 27),  # Left shin
+            (26, 28)   # Right shin
+        ]
+        
+        for start_idx, end_idx in connections:
+            if (start_idx < len(pose_landmarks) and 
+                end_idx < len(pose_landmarks) and
+                start_idx in squat_landmarks and 
+                end_idx in squat_landmarks):
+                start = pose_landmarks[start_idx]
+                end = pose_landmarks[end_idx]
+                start_point = (int(start.x * w), int(start.y * h))
+                end_point = (int(end.x * w), int(end.y * h))
+                cv2.line(annotated_image, start_point, end_point, (255, 255, 255), 2)
+    
     return annotated_image
+
 
 ## ============================
 ## Code for the livestream detection
@@ -117,7 +206,7 @@ with PoseLandmarker.create_from_options(options) as landmarker:
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
         # Send live image data to perform pose landmarking
-        frame_timestamp_ms += 33  # Approximate 30 FPS
+        frame_timestamp_ms += 15  # Approximate 60 FPS
         
         try:
             landmarker.detect_async(mp_image, frame_timestamp_ms)
