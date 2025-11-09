@@ -90,7 +90,7 @@ def draw_landmarks_on_image(rgb_image, detection_result):
                        (10, 145), cv2.FONT_HERSHEY_SIMPLEX, 0.8, depth_color, 2)
         
         # Draw only squat-relevant landmarks
-        for idx in squat_landmarks:
+        for idx in squat_landmarks: 
             if idx < len(pose_landmarks):
                 landmark = pose_landmarks[idx]
                 x = int(landmark.x * w)
@@ -172,15 +172,17 @@ frame_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
 print(f"Camera initialized: {frame_width}x{frame_height}")
 
+scale = 1.25  # make the output a bit larger
+out_width = int(frame_width * scale)
+out_height = int(frame_height * scale)
+
 with PoseLandmarker.create_from_options(options) as landmarker:
-    # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = None
     recording = False
 
-    # Create window
     cv2.namedWindow('Pose Landmarker')
-    
+
     frame_timestamp_ms = 0
     fps_time = time.time()
     fps_counter = 0
@@ -193,78 +195,68 @@ with PoseLandmarker.create_from_options(options) as landmarker:
 
     while True:
         ret, frame = cam.read()
-        
         if not ret:
             print("Warning: Failed to grab frame, retrying...")
             time.sleep(0.1)
             continue
 
+        # Resize the frame for slightly larger display/output
+        frame = cv2.resize(frame, (out_width, out_height))
+
         # Convert BGR to RGB
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Convert the frame to MediaPipe's Image object
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
 
-        # Send live image data to perform pose landmarking
-        frame_timestamp_ms += 15  # Approximate 60 FPS
-        
-        try:
-            landmarker.detect_async(mp_image, frame_timestamp_ms)
-        except Exception as e:
-            print(f"Detection error: {e}")
+        # Throttle frame rate (~20-25 FPS)
+        time.sleep(0.04)  # 40 ms per frame ≈ 25 FPS
 
-        # Draw landmarks on the frame
+        # Only call detect_async if previous inference is done
+        if not result_lock:
+            frame_timestamp_ms += 40
+            try:
+                landmarker.detect_async(mp_image, frame_timestamp_ms)
+            except Exception as e:
+                print(f"Detection error: {e}")
+
+        # Lock while drawing landmarks
         result_lock = True
         annotated_frame = draw_landmarks_on_image(frame, latest_result)
         result_lock = False
 
-        # Calculate FPS
+        # Calculate FPS for overlay
         fps_counter += 1
         if time.time() - fps_time > 1:
             fps = fps_counter
             fps_counter = 0
             fps_time = time.time()
 
-        # Add text overlays (GUI elements)
-        cv2.putText(annotated_frame, f'FPS: {fps}', (10, 30), 
+        cv2.putText(annotated_frame, f'FPS: {fps}', (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        
-        status_text = "Recording..." if recording else "Not Recording"
-        status_color = (0, 0, 255) if recording else (255, 255, 255)
-        cv2.putText(annotated_frame, status_text, (10, 70), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, status_color, 2)
 
-        cv2.putText(annotated_frame, "Press 'r' to record | 'q' to quit", (10, frame_height - 20), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
-
-        # Write frame if recording
+        # Handle recording
         if recording and out is not None:
             out.write(annotated_frame)
 
-        # Display the frame
+        # Display window
         cv2.imshow('Pose Landmarker', annotated_frame)
 
-        # Handle key presses
         key = cv2.waitKey(1) & 0xFF
-        
         if key == ord('q'):
             print("Quitting...")
             break
         elif key == ord('r'):
             if not recording:
-                # Start recording
                 timestamp = time.strftime("%Y%m%d-%H%M%S")
-                out = cv2.VideoWriter(f'output_{timestamp}.mp4', fourcc, 20.0, 
-                                     (frame_width, frame_height))
+                out = cv2.VideoWriter(f'output_{timestamp}.mp4', fourcc, 20.0, (out_width, out_height))
                 recording = True
                 print(f"Started recording to output_{timestamp}.mp4")
             else:
-                # Stop recording
                 if out is not None:
                     out.release()
                     out = None
                 recording = False
                 print("Stopped recording")
+
 
 # Cleanup
 if out is not None:
