@@ -1,17 +1,12 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import VideoRecorder from './components/VideoRecorder';
+import UploadVideo from "./components/UploadVideo";
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <VideoRecorder />
-
+        <UploadVideo />
       </header>
     </div>
   );
 }
-
 export default App;

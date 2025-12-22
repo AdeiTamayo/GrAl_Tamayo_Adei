@@ -3,9 +3,7 @@ import tempfile
 import os
 from landmarks_video import process
 
-app = Flask(__name__)
 
-@app.route('/process-video', methods=['POST'])
 def process_video():
   if 'video' not in request.files:
     return jsonify({'error': 'No video file provided'}), 400
