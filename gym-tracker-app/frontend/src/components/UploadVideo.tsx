@@ -8,6 +8,67 @@ export default function UploadVideo() {
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // ==========================================================================
+    // BARBELL TRACKING HANDLER
+    // ==========================================================================
+    // Sends video to barbell tracking endpoint and downloads the processed result
+    const handleBarbellTracking = async () => {
+        if (!file) return;
+
+        setIsProcessing(true);
+        setError(null);
+        setProgress('Uploading video for barbell tracking...');
+
+        const formData = new FormData();
+        formData.append('video', file);
+
+        try {
+            setProgress('Tracking barbell path...');
+
+            // Send video to barbell tracking API endpoint
+            const response = await fetch('http://localhost:8000/api/videos/barbell-track', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Barbell tracking failed');
+            }
+
+            setProgress('Downloading tracked video...');
+
+            // Fetch the processed video from the returned URL
+            const videoResponse = await fetch(data.processedVideoUrl);
+            const blob = await videoResponse.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            // Trigger download of the processed video
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `barbell-tracked-${file.name}`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            window.URL.revokeObjectURL(url);
+
+            setProgress('Barbell tracking complete! Download started.');
+            setFile(null);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+
+        } catch (error) {
+            console.error('Barbell tracking failed:', error);
+            setError(error instanceof Error ? error.message : 'Barbell tracking failed');
+            setProgress('');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0] || null;
         setFile(selectedFile);
@@ -126,19 +187,35 @@ export default function UploadVideo() {
                 />
             </div>
 
-            {/* Process Button */}
+            {/* Process Buttons */}
             {file && (
-                <button
-                    type="button"
-                    onClick={handleUpload}
-                    disabled={isProcessing}
-                    className={`
-                        w-full mt-5 py-2 px-5 border rounded
-                        ${isProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
-                    `}
-                >
-                    {isProcessing ? 'Processing...' : 'Process Video'}
-                </button>
+                <div className="flex flex-col gap-3 mt-5">
+                    {/* Pose Estimation Button (existing functionality) */}
+                    <button
+                        type="button"
+                        onClick={handleUpload}
+                        disabled={isProcessing}
+                        className={`
+                            w-full py-2 px-5 border rounded
+                            ${isProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'}
+                        `}
+                    >
+                        {isProcessing ? 'Processing...' : ' Pose Estimation'}
+                    </button>
+
+                    {/* Barbell Tracking Button (new functionality) */}
+                    <button
+                        type="button"
+                        onClick={handleBarbellTracking}
+                        disabled={isProcessing}
+                        className={`
+                            w-full py-2 px-5 border rounded
+                            ${isProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'}
+                        `}
+                    >
+                        {isProcessing ? 'Processing...' : ' Track Barbell'}
+                    </button>
+                </div>
             )}
 
             {/* Progress Message */}
