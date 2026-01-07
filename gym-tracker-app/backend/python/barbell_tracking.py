@@ -59,7 +59,7 @@ class RoboflowBarbellDetector:
         
         return resized, scale
     
-    def detect(self, frame, target_class="End"):
+    def detect(self, frame):
         """Detect barbell in frame, returns (x, y, w, h) or None."""
         processed_frame, scale = self._preprocess_frame(frame)
         result = self.client.infer(processed_frame, model_id=self.model_id)
@@ -73,17 +73,14 @@ class RoboflowBarbellDetector:
         for i, pred in enumerate(predictions):
             print(f"  [{i+1}] class='{pred.get('class')}', conf={pred.get('confidence', 0):.2f}")
         
-        # Filter for target class
-        target_predictions = [p for p in predictions if p.get('class') == target_class]
-        if not target_predictions:
-            target_predictions = [p for p in predictions if p.get('class') == "Barbell"]
-            if target_predictions:
-                print(f"[Roboflow] No '{target_class}' found, using 'Barbell'")
-            else:
-                print(f"[Roboflow] No '{target_class}' or 'Barbell' detected")
-                return None
+        # Filter for Barbell class (case-insensitive)
+        barbell_predictions = [p for p in predictions if p.get('class', '').lower() == 'barbell']
         
-        best = max(target_predictions, key=lambda p: p.get('confidence', 0))
+        if not barbell_predictions:
+            print("[Roboflow] No 'Barbell' class detected")
+            return None
+        
+        best = max(barbell_predictions, key=lambda p: p.get('confidence', 0))
         
         # Convert to OpenCV format and scale back
         center_x = best.get('x', 0) / scale
