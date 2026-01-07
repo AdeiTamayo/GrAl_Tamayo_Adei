@@ -23,7 +23,7 @@ load_dotenv()
 
 TRAJECTORY_COLOR = (0, 0, 255)      # Red (BGR)
 TRAJECTORY_THICKNESS = 3
-MAX_TRAJECTORY_LENGTH = 500
+MAX_TRAJECTORY_LENGTH = 500         # Max number of points in trajectory (point per frame)
 ENABLE_FADING_TRAIL = True
 MARKER_COLOR = (0, 255, 0)          # Green
 MARKER_RADIUS = 8
@@ -114,7 +114,7 @@ class BarbellTracker:
     
     def _create_tracker(self):
         try:
-            return cv2.legacy.TrackerCSRT_create()
+            return cv2.legacy.TrackerCSRT_create() # TODO: Check if legacy can be removed
         except AttributeError:
             return cv2.TrackerCSRT_create()
     
@@ -203,7 +203,7 @@ class VideoProcessor:
         print("[Detection] Using Roboflow YOLO for detection...")
         
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        sample_positions = [0, 0.1, 0.2, 0.3, 0.4, 0.5]
+        sample_positions = [0, 0.1] #, 0.2, 0.3, 0.4, 0.5
         sample_frames = [int(total_frames * pos) for pos in sample_positions]
         
         print(f"[Detection] Sampling frames: {sample_frames}")
