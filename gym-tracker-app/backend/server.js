@@ -13,27 +13,21 @@ console.log(`Current directory: ${__dirname}`);
 // Ensure directories exist
 const uploadsDir = path.join(__dirname, 'media/uploads');
 const processedDir = path.join(__dirname, 'media/output');
-console.log(`Uploads directory: ${uploadsDir}`);
-console.log(`Processed directory: ${processedDir}`);
 
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
-    console.log('Created uploads directory');
 }
 if (!fs.existsSync(processedDir)) {
     fs.mkdirSync(processedDir, { recursive: true });
-    console.log('Created processed directory');
 }
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        console.log(`[Multer] Saving file to: ${uploadsDir}`);
         cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
         const uniqueName = Date.now() + '-' + file.originalname;
-        console.log(`[Multer] Generated filename: ${uniqueName}`);
         cb(null, uniqueName);
     }
 });
@@ -47,54 +41,44 @@ app.use(express.json());
 // Serve processed videos statically
 app.use('/media/output', express.static(processedDir));
 
-// POST endpoint to upload and process video
-app.post('/api/videos/upload', upload.single('video'), async (req, res) => {
-    console.log('\n=== New Upload Request ===');
-    console.log(`[Request] Received at: ${new Date().toISOString()}`);
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
 
-    try {
-        if (!req.file) {
-            console.log('[Error] No file in request');
-            return res.status(400).json({ error: 'No video file uploaded' });
-        }
+/**
+ * Validates uploaded file and checks if required files exist
+ */
+function validateUpload(req, res, scriptPath) {
+    if (!req.file) {
+        console.log('[Error] No file in request');
+        return { valid: false, error: 'No video file uploaded' };
+    }
 
-        console.log(`[Upload] File received: ${req.file.originalname}`);
-        console.log(`[Upload] File size: ${(req.file.size / 1024 / 1024).toFixed(2)} MB`);
-        console.log(`[Upload] MIME type: ${req.file.mimetype}`);
+    if (!fs.existsSync(scriptPath)) {
+        return { valid: false, error: 'Python script not found' };
+    }
 
-        const inputPath = req.file.path;
-        const outputFilename = 'processed-' + req.file.filename;
-        const outputPath = path.join(processedDir, outputFilename);
-        const scriptPath = path.join(__dirname, 'python', 'landmarks_video.py');
+    if (!fs.existsSync(req.file.path)) {
+        return { valid: false, error: 'Input file not found' };
+    }
 
-        console.log(`[Processing] Input path: ${inputPath}`);
-        console.log(`[Processing] Output path: ${outputPath}`);
-        console.log(`[Processing] Script path: ${scriptPath}`);
+    return { valid: true };
+}
 
-        // Check if script exists
-        if (!fs.existsSync(scriptPath)) {
-            console.error(`[Error] Python script not found at: ${scriptPath}`);
-            return res.status(500).json({ error: 'Python script not found' });
-        }
-        console.log('[Processing] Python script found');
-
-        // Check if input file exists
-        if (!fs.existsSync(inputPath)) {
-            console.error(`[Error] Input file not found at: ${inputPath}`);
-            return res.status(500).json({ error: 'Input file not found' });
-        }
-        console.log('[Processing] Input file verified');
-
+/**
+ * Processes video using Python script
+ * Returns a Promise that resolves with the output path or rejects with an error
+ */
+function processVideoWithPython(scriptPath, inputPath, outputPath, inputFlag = '-i', outputFlag = '-o') {
+    return new Promise((resolve, reject) => {
         console.log('[Processing] Starting Python process...');
         const startTime = Date.now();
 
         const pythonProcess = spawn('python', [
             scriptPath,
-            '--input', inputPath,
-            '--output', outputPath
+            inputFlag, inputPath,
+            outputFlag, outputPath
         ]);
-
-        console.log(`[Processing] Python PID: ${pythonProcess.pid}`);
 
         pythonProcess.stdout.on('data', (data) => {
             console.log(`[Python stdout]: ${data.toString().trim()}`);
@@ -110,39 +94,59 @@ app.post('/api/videos/upload', upload.single('video'), async (req, res) => {
             console.log(`[Processing] Duration: ${duration} seconds`);
 
             if (code === 0) {
-                // Verify output file exists
                 if (fs.existsSync(outputPath)) {
-                    const outputSize = (fs.statSync(outputPath).size / 1024 / 1024).toFixed(2);
                     console.log(`[Success] Output file created: ${outputPath}`);
-                    console.log(`[Success] Output file size: ${outputSize} MB`);
-
-                    const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
-                    console.log(`[Success] Response URL: ${responseUrl}`);
-
-                    res.json({
-                        message: 'Video processed successfully',
-                        processedVideoUrl: responseUrl
-                    });
+                    resolve(outputPath);
                 } else {
-                    console.error('[Error] Output file was not created');
-                    res.status(500).json({ error: 'Output file was not created' });
+                    reject(new Error('Output file was not created'));
                 }
             } else {
-                console.error(`[Error] Python process failed with code ${code}`);
-                res.status(500).json({ error: 'Video processing failed', code });
+                reject(new Error(`Python process failed with code ${code}`));
             }
         });
 
         pythonProcess.on('error', (err) => {
             console.error('[Error] Failed to start Python process:', err.message);
-            console.error('[Error] Stack:', err.stack);
-            res.status(500).json({ error: 'Failed to start video processing', details: err.message });
+            reject(err);
+        });
+    });
+}
+
+// =============================================================================
+// POSE ESTIMATION ENDPOINT
+// =============================================================================
+// POST endpoint to upload and process video for pose estimation
+app.post('/api/videos/pose-estimation', upload.single('video'), async (req, res) => {
+    try {
+        const scriptPath = path.join(__dirname, 'python', 'landmarks_video.py');
+
+        // Validate upload
+        const validation = validateUpload(req, res, scriptPath);
+        if (!validation.valid) {
+            return res.status(400).json({ error: validation.error });
+        }
+
+        console.log('[Processing] Python script found');
+
+        const inputPath = req.file.path;
+        const outputFilename = 'processed-' + req.file.filename;
+        const outputPath = path.join(processedDir, outputFilename);
+
+        // Process video with Python
+        await processVideoWithPython(scriptPath, inputPath, outputPath, '--input', '--output');
+
+        // Send response with processed video URL
+        const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
+        console.log(`[Success] Response URL: ${responseUrl}`);
+
+        res.json({
+            message: 'Video processed successfully',
+            processedVideoUrl: responseUrl
         });
 
     } catch (error) {
-        console.error('[Error] Unexpected error:', error.message);
-        console.error('[Error] Stack:', error.stack);
-        return res.status(500).json({ error: 'Server error', details: error.message });
+        console.error('[Error] Processing failed:', error.message);
+        return res.status(500).json({ error: 'Video processing failed', details: error.message });
     }
 });
 
@@ -150,112 +154,53 @@ app.post('/api/videos/upload', upload.single('video'), async (req, res) => {
 // BARBELL TRACKING ENDPOINT
 // =============================================================================
 // POST endpoint to upload and process video for barbell tracking
-// This endpoint invokes barbell_tracking.py to detect and draw barbell trajectory
-app.post('/api/videos/barbell-track', upload.single('video'), async (req, res) => {
+app.post('/api/videos/barbell-tracking', upload.single('video'), async (req, res) => {
     console.log('\n=== New Barbell Tracking Request ===');
     console.log(`[Request] Received at: ${new Date().toISOString()}`);
 
     try {
-        // Validate file upload
-        if (!req.file) {
-            console.log('[Error] No file in request');
-            return res.status(400).json({ error: 'No video file uploaded' });
+        const scriptPath = path.join(__dirname, 'python', 'barbell_tracking.py');
+
+        // Validate upload
+        const validation = validateUpload(req, res, scriptPath);
+        if (!validation.valid) {
+            return res.status(400).json({ error: validation.error });
         }
 
-        console.log(`[Upload] File received: ${req.file.originalname}`);
-        console.log(`[Upload] File size: ${(req.file.size / 1024 / 1024).toFixed(2)} MB`);
-        console.log(`[Upload] MIME type: ${req.file.mimetype}`);
+        console.log('[Barbell Tracking] Python script found');
 
-        // Set up file paths
         const inputPath = req.file.path;
         const outputFilename = 'barbell-' + req.file.filename;
         const outputPath = path.join(processedDir, outputFilename);
-        const scriptPath = path.join(__dirname, 'python', 'barbell_tracking.py');
 
-        console.log(`[Barbell Tracking] Input path: ${inputPath}`);
-        console.log(`[Barbell Tracking] Output path: ${outputPath}`);
-        console.log(`[Barbell Tracking] Script path: ${scriptPath}`);
+        // Process video with Python (barbell tracking uses -i and -o flags)
+        await processVideoWithPython(scriptPath, inputPath, outputPath, '--i', '--o');
 
-        // Check if barbell tracking script exists
-        if (!fs.existsSync(scriptPath)) {
-            console.error(`[Error] Barbell tracking script not found at: ${scriptPath}`);
-            return res.status(500).json({ error: 'Barbell tracking script not found' });
-        }
-        console.log('[Barbell Tracking] Python script found');
+        // Send response with processed video URL
+        const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
+        console.log(`[Barbell Success] Response URL: ${responseUrl}`);
 
-        // Check if input file exists
-        if (!fs.existsSync(inputPath)) {
-            console.error(`[Error] Input file not found at: ${inputPath}`);
-            return res.status(500).json({ error: 'Input file not found' });
-        }
-        console.log('[Barbell Tracking] Input file verified');
-
-        console.log('[Barbell Tracking] Starting Python process...');
-        const startTime = Date.now();
-
-        // Spawn Python process for barbell tracking
-        // Uses command-line arguments: -i input_path -o output_path
-        const pythonProcess = spawn('python', [
-            scriptPath,
-            '-i', inputPath,
-            '-o', outputPath
-        ]);
-
-        console.log(`[Barbell Tracking] Python PID: ${pythonProcess.pid}`);
-
-        // Capture stdout for progress logging
-        pythonProcess.stdout.on('data', (data) => {
-            console.log(`[Barbell Python stdout]: ${data.toString().trim()}`);
-        });
-
-        // Capture stderr for error logging
-        pythonProcess.stderr.on('data', (data) => {
-            console.error(`[Barbell Python stderr]: ${data.toString().trim()}`);
-        });
-
-        // Handle process completion
-        pythonProcess.on('close', (code) => {
-            const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-            console.log(`[Barbell Tracking] Python process exited with code: ${code}`);
-            console.log(`[Barbell Tracking] Duration: ${duration} seconds`);
-
-            if (code === 0) {
-                // Verify output file exists
-                if (fs.existsSync(outputPath)) {
-                    const outputSize = (fs.statSync(outputPath).size / 1024 / 1024).toFixed(2);
-                    console.log(`[Barbell Success] Output file created: ${outputPath}`);
-                    console.log(`[Barbell Success] Output file size: ${outputSize} MB`);
-
-                    const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
-                    console.log(`[Barbell Success] Response URL: ${responseUrl}`);
-
-                    res.json({
-                        message: 'Barbell tracking completed successfully',
-                        processedVideoUrl: responseUrl
-                    });
-                } else {
-                    console.error('[Error] Barbell tracking output file was not created');
-                    res.status(500).json({ error: 'Output file was not created' });
-                }
-            } else {
-                console.error(`[Error] Barbell tracking failed with code ${code}`);
-                res.status(500).json({ error: 'Barbell tracking failed', code });
-            }
-        });
-
-        // Handle process spawn errors
-        pythonProcess.on('error', (err) => {
-            console.error('[Error] Failed to start barbell tracking process:', err.message);
-            console.error('[Error] Stack:', err.stack);
-            res.status(500).json({ error: 'Failed to start barbell tracking', details: err.message });
+        res.json({
+            message: 'Barbell tracking completed successfully',
+            processedVideoUrl: responseUrl
         });
 
     } catch (error) {
-        console.error('[Error] Unexpected error in barbell tracking:', error.message);
-        console.error('[Error] Stack:', error.stack);
-        return res.status(500).json({ error: 'Server error', details: error.message });
+        console.error('[Error] Barbell tracking failed:', error.message);
+        return res.status(500).json({ error: 'Barbell tracking failed', details: error.message });
     }
 });
+
+// =============================================================================
+// LOGIN ENDPOINT
+// =============================================================================
+
+
+
+// =============================================================================
+// REGISTER ENDPOINT
+// =============================================================================
+
 
 app.listen(port, () => {
     console.log(`\n=== Server Ready ===`);
