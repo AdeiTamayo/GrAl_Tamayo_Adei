@@ -195,12 +195,56 @@ app.post('/api/videos/barbell-tracking', upload.single('video'), async (req, res
 // LOGIN ENDPOINT
 // =============================================================================
 
+app.post('/api/auth/login', (req, res) => {
+    const { email, password } = req.body;
 
+    console.log('\n=== Login Request ===');
+    console.log(`[Login] Email: ${email}`);
+    console.log(`[Login] Password received: ${password ? 'Yes' : 'No'}`);
+
+    // Validate input
+    if (!email || !password) {
+        return res.status(400).json({
+            success: false,
+            error: 'Email and password are required'
+        });
+    }
+
+    console.log('[Login] Credentials received successfully');
+
+    res.json({
+        success: true,
+        message: 'Login successful',
+        user: { email }
+    });
+});
 
 // =============================================================================
 // REGISTER ENDPOINT
 // =============================================================================
 
+app.post('/api/auth/register', (req, res) => {
+    const { email, password } = req.body;
+
+    console.log('\n=== Register Request ===');
+    console.log(`[Register] Email: ${email}`);
+    console.log(`[Register] Password received: ${password ? 'Yes' : 'No'}`);
+
+    // Validate input
+    if (!email || !password) {
+        return res.status(400).json({
+            success: false,
+            error: 'Email and password are required'
+        });
+    }
+    console.log('[Register] User registered successfully');
+
+    res.json({
+        success: true,
+        message: 'Registration successful',
+        user: { email }
+    });
+});
 
 app.listen(port, () => {
     console.log(`\n=== Server Ready ===`);
