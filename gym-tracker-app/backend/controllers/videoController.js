@@ -1,5 +1,6 @@
 const path = require('path');
 const { validateUpload, processVideoWithPython } = require('../utils/videoProcessor');
+const Video = require('../models/Video');
 
 const processedDir = path.join(__dirname, '../media/output');
 const port = process.env.PORT || 8000;
@@ -29,6 +30,11 @@ exports.processPoseEstimation = async (req, res) => {
         // Send response with processed video URL
         const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
         console.log(`[Success] Response URL: ${responseUrl}`);
+
+        // Persist in database using authenticated user
+        if (req.user && req.user.userId) {
+            await Video.createVideo(req.user.userId, req.file.filename, 'pose_estimation', responseUrl);
+        }
 
         res.json({
             message: 'Video processed successfully',
@@ -73,6 +79,11 @@ exports.processBarbellTracking = async (req, res) => {
         const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
         console.log(`[Barbell Success] Response URL: ${responseUrl}`);
 
+        // Persist in database using authenticated user
+        if (req.user && req.user.userId) {
+            await Video.createVideo(req.user.userId, req.file.filename, 'barbell_tracking', responseUrl);
+        }
+
         res.json({
             message: 'Barbell tracking completed successfully',
             processedVideoUrl: responseUrl
@@ -84,5 +95,22 @@ exports.processBarbellTracking = async (req, res) => {
             error: 'Barbell tracking failed',
             details: error.message
         });
+    }
+};
+
+/**
+ * Get authenticated user's videos
+ */
+exports.getUserVideos = async (req, res) => {
+    try {
+        if (!req.user || !req.user.userId) {
+            return res.status(401).json({ success: false, error: 'Unauthorized' });
+        }
+
+        const videos = await Video.getVideosByUserId(req.user.userId);
+        res.json({ success: true, videos });
+    } catch (error) {
+        console.error('[Error] Fetching user videos failed:', error.message);
+        res.status(500).json({ success: false, error: 'Failed to fetch videos' });
     }
 };

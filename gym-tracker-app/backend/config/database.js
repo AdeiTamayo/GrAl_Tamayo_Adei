@@ -1,12 +1,11 @@
 const { Pool } = require('pg');
-require('dotenv').config();
 
 const pool = new Pool({
-    host: 'localhost',//process.env.DB_HOST,
-    port: 5432,//process.env.DB_PORT,
-    database: 'gym_tracker_db',//process.env.DB_NAME,
-    user: 'postgres', //process.env.DB_USER,
-    password: '12345678',//process.env.DB_PASSWORD,
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    database: process.env.DB_NAME || 'gym_tracker_db',
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '12345678',
 });
 
 pool.on('connect', () => {

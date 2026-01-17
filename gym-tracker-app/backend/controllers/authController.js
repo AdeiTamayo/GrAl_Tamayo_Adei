@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 /**
@@ -19,7 +20,7 @@ exports.login = async (req, res) => {
         }
 
         // Find user in database
-        const user = await User.findByEmail(email);
+        const user = await User.findUserByEmail(email);
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -36,11 +37,19 @@ exports.login = async (req, res) => {
             });
         }
 
+        // Generate JWT token with user ID and email
+        const token = jwt.sign(
+            { userId: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
         console.log('[Login] Successful');
 
         res.json({
             success: true,
             message: 'Login successful',
+            token,
             user: { id: user.id, email: user.email }
         });
     } catch (error) {
@@ -71,7 +80,7 @@ exports.register = async (req, res) => {
         }
 
         // Check if user already exists
-        const existingUser = await User.findByEmail(email);
+        const existingUser = await User.findUserByEmail(email);
         if (existingUser) {
             return res.status(409).json({
                 success: false,
@@ -80,7 +89,7 @@ exports.register = async (req, res) => {
         }
 
         // Create user with hashed password
-        const user = await User.create(email, password);
+        const user = await User.createUser(email, password);
 
         console.log('[Register] User registered successfully');
 

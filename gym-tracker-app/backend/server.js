@@ -1,5 +1,9 @@
-const express = require('express');
 const path = require('path');
+
+// Load environment variables from parent directory
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+
+const express = require('express');
 const fs = require('fs');
 const cors = require('cors');
 

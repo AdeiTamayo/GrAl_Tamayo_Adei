@@ -26,9 +26,18 @@ export default function UploadVideo() {
         try {
             setProgress('Tracking barbell path...');
 
+            // Get token from localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Please login first');
+            }
+
             // Send video to barbell tracking API endpoint
             const response = await fetch('http://localhost:8000/api/videos/barbell-tracking', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData
             });
 
@@ -117,8 +126,17 @@ export default function UploadVideo() {
         try {
             setProgress('Processing video...');
 
+            // Get token from localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Please login first');
+            }
+
             const response = await fetch('http://localhost:8000/api/videos/pose-estimation', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData
             });
 
