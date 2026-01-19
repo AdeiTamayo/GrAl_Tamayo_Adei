@@ -12,6 +12,7 @@ export default function UploadVideo() {
     // BARBELL TRACKING HANDLER
     // ==========================================================================
     // Sends video to barbell tracking endpoint and downloads the processed result
+
     const handleBarbellTracking = async () => {
         if (!file) return;
 
@@ -25,9 +26,18 @@ export default function UploadVideo() {
         try {
             setProgress('Tracking barbell path...');
 
+            // Get token from localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Please login first');
+            }
+
             // Send video to barbell tracking API endpoint
-            const response = await fetch('http://localhost:8000/api/videos/barbell-track', {
+            const response = await fetch('http://localhost:8000/api/videos/barbell-tracking', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData
             });
 
@@ -98,6 +108,11 @@ export default function UploadVideo() {
         }
     };
 
+    // ==========================================================================
+    // POSE ESTIMATION HANDLER
+    //==========================================================================
+    // Sends video to pose estimation endpoint and downloads the processed result
+
     const handleUpload = async () => {
         if (!file) return;
 
@@ -111,8 +126,17 @@ export default function UploadVideo() {
         try {
             setProgress('Processing video...');
 
-            const response = await fetch('http://localhost:8000/api/videos/upload', {
+            // Get token from localStorage
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Please login first');
+            }
+
+            const response = await fetch('http://localhost:8000/api/videos/pose-estimation', {
                 method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData
             });
 
@@ -190,7 +214,7 @@ export default function UploadVideo() {
             {/* Process Buttons */}
             {file && (
                 <div className="flex flex-col gap-3 mt-5">
-                    {/* Pose Estimation Button (existing functionality) */}
+                    {/* Pose Estimation Button*/}
                     <button
                         type="button"
                         onClick={handleUpload}
@@ -203,7 +227,7 @@ export default function UploadVideo() {
                         {isProcessing ? 'Processing...' : ' Pose Estimation'}
                     </button>
 
-                    {/* Barbell Tracking Button (new functionality) */}
+                    {/* Barbell Tracking Button*/}
                     <button
                         type="button"
                         onClick={handleBarbellTracking}
