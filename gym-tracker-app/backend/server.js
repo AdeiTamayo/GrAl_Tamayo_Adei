@@ -10,6 +10,7 @@ const cors = require('cors');
 // Import routes
 const authRoutes = require('./routes/auth');
 const videoRoutes = require('./routes/videos');
+const exerciseRoutes = require('./routes/exercises');
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -32,9 +33,11 @@ app.use(express.json());
 // Serve processed videos statically
 app.use('/media/output', express.static(processedDir));
 
+
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/videos', videoRoutes);
+app.use('/api/exercises', exerciseRoutes);
 
 app.listen(port, () => {
     console.log(`\n=== Server Ready ===`);
