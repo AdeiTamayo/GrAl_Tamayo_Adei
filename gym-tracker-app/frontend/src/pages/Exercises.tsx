@@ -61,13 +61,13 @@ export default function Exercises() {
                         <option value="descending">Descending</option>
                     </select>
                 </label>
-                <button type="button" onClick={handleFetchExercises} className="py-2 px-5 border rounded bg-blue-500 text-white">Load Exercises</button>
+                <button type="button" onClick={handleFetchExercises} className="border">Load Exercises</button>
             </div>
             {loading && <p>Loading...</p>}
             <ul>
                 {exercises.length > 0 ? (
                     exercises.map((ex: any) => (
-                        <li key={ex.id || ex.name} className="my-2 p-2 border-b">
+                        <li key={ex.id || ex.name} className="my-2 p-2 mb-5 border">
                             <strong>{ex.name}</strong> <br />
                             <span>Body Part: {ex.bodyPart}</span> <br />
                             <span>Target: {ex.target}</span> <br />
