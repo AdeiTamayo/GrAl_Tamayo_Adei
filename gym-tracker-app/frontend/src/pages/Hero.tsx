@@ -1,7 +1,16 @@
 
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+
+type LocationState = {
+    user?: { email?: string };
+    email?: string;
+};
 
 export default function Hero() {
+    const location = useLocation();
+    const { user, email } = (location.state as LocationState) || {};
+
+
     return (
         <>
             {/* Navigation */}
@@ -20,6 +29,11 @@ export default function Hero() {
                 <Link to="/goals">Goals</Link>
                 <Link to="/exercises">Exercises</Link>
             </nav>
+            <p>Email: {user?.email ?? email ?? 'N/A'}</p>
+
         </>
+
+
+
     );
 }
