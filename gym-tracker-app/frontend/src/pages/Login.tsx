@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
@@ -25,11 +27,18 @@ export default function Login() {
             if (data.success) {
                 // Store token in localStorage
                 if (data.token) {
-                    localStorage.setItem('token', data.token);
-                    console.log('Token stored successfully');
+                    localStorage.setItem('user_login_token', data.token);
                 }
-                setMessage('Login successful!');
-                console.log('Login successful:', data);
+
+                navigate("/", {
+                    replace: true, // Avoid users being able to go back
+                    state: {
+                        user: data.user,
+                        email: data.email,
+                        message: "Login succesful"
+                    }
+                });
+
             } else {
                 setMessage(data.error || 'Login failed');
             }

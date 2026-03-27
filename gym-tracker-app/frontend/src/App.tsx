@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import Hero from './components/Hero';
+import Hero from './pages/Hero';
 import UploadVideo from './pages/UploadVideo';
 import History from './pages/History';
 import Profile from './pages/Profile';

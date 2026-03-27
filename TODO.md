@@ -1,73 +1,74 @@
-# Proiektua: Smart Barbell Tracker
+# Proiektuaren atazak 
 
-## 1. FASEA: Konputazio Bisualaren Muina (Python)
+## 1. Algoritmoen Garapena
 
-### 1.1 FASEA: Barraren jarraipena (Barbell Tracker)
-* [ ] Barra Detektatzeko Algoritmoa: Inplementatu OpenCV detekzioa (kolore edo forma) edo YOLO/MediaPipe.
-* [ ] Koordenatuen Jarraipena: Lortu barra-aren (x, y) koordenatuak fotogramaz fotograma.
-* [ ] Kalibrazioa eta Eskuadra-neurketa: Bihurtu pixelak mundu errealeko unitateetara (mm/cm), erreferentzia-objektu bat erabiliz (adibidez, diskoaren diametroa).
-* [ ] Metrika Zinematikoen Kalkulua:
-    * [ ] Desplazamendua (bertikala eta horizontala).
-    * [ ] Abiadura eta azelerazio kurba.
-    * [ ] Abiadura eta azelerazioa kalkulatu: Errepikapen bakoitza isolatu + Errepikapen guztien media lortu.
-* [ ] Emaitzen Bistaratzeko Proba (Plotting): Sortu ibilbidearen eta abiaduraren lehen grafikoak.
-    * [ ] Aukera eskaini bi serie desberdinen artean alderatzeko (adibidez, 1. seriea vs azkena). -> Aldez aldeko irudikatzea edo metrikak.
-    * [ ] Konparazio-arazoak aztertu: Bideoak posizio desberdinetatik grabatuta badaude, kalibrazioa nola eragiten duen ebaluatu.
+### 1.1. Barraren Detekzio Algoritmoa
+- [X] 1.1.1. Algoritmoaren inplementazioa.
+- [ ] 1.1.2. Detekziotik metrikak eskuratzea: abiadura, desplazamendua eta erlazionatutako parametroak.
 
-### 1.2 FASEA: Erabiltzailearen formaren jarraipena (Pose Analysis)
-* [ ] MediaPipe vs openPose konparatu -> TFG dokumentuan idatzi emaitzak
-* [ ] Pose Estimazioa: aurreko atalean hautatutako modeloa inplementatu 
-* [ ] Ariketaren Detekzioa/Zehaztapena:
-    * [ ] **Hasierakoa:** Erabiltzaileak eskuz zehaztu beharko du egiten ari den ariketa (Sentadilla, Banca, Deadlift, etab.).
-    * [ ] **Aurreratua (Hobekuntza):** Pose-datuetan oinarritutako sailkatzaile bat entrenatu ariketa automatikoki detektatzeko.
-* [ ] Posturaren Zuzenketa (Formaren Analisia):
-    * [ ] Puntu garrantzitsuen arteko **angeluak** kalkulatu (adibidez, enborraren eta femurraren arteko angelua, belaunaren flexio-angelua).
-    * [ ] Angelsuak aurrez definitutako mugen aurka konparatu (adibidez, 'squat' sakontasuna edo 'deadlift' bizkarrezurraren angelua).
-    * [ ] Feedback bisuala sortu (adibidez, alerta bat "belaunak barrurantz" edo "bizkarra gehiegi okertuta" dagoenean).
-* [ ] Begiratu Mediapipen marrak txukuntzeko aukera -> Oraintxe oso zikina dago.
-
-
-## 2. FASEA: Aplikazioaren Garapena eta Integrazioa (Web/Backend)
-
-* [ ] Datu-basearen Diseinua (Zehatza):
-    * [ ] Erabiltzailearen ezaugarriak (Metrics, PRs, Ezaugarri fisikoak).
-    * [ ] Entrenamenduaren ezaugarriak (Data, Ariketa Zerrenda, Pisuak, Errepikapenak, Serieak).
-    * [ ] **Bideo-metadata** eta Analisi Emaitzak (Barraren Ibilbidea, Abiadura, etab.) Entrenamendu/Serie bakoitzarekin lotuta.
-* [ ] Backend APIaren Ezarpena: Typescript vs Python
-    * [ ] Endpointak definitu aukeratutako hizkuntzan
-        * [ ] Erabiltzailearen autentifikazioa (Izena eman, Sartu, Token kudeaketa).
-        * [ ] Entrenamendua (Sortu, Lortu, Eguneratu, Ezabatu).
-        * [ ] Bideoa **(Gorde (Kargatu)** $\rightarrow$ **S3/Google Cloud) / Bideorako esteka lortu.**
-        * [ ] Bideoa aztertu (Endpoint bat sortu, Konputazio Bisualeko modulua deituko duena).
-* [ ] Bideoen Biltegiratzea: Konfiguratu biltegiratze zerbitzua (AWS S3/Google Cloud Storage) bideo gordinetarako.
-* [ ] Atzeko Planoko Lanen Ilara (**Celery/Redis**): Konfiguratu bideoen analisia asinkronoki egiteko.
-* [ ] Frontend Oinarria (React): Sortu oinarrizko interfazea (Login, Bideoa Kargatzeko gunea). $\rightarrow$ Proba egiteko gutxieneko funtzionaltasunak.
-* [ ] **1. Demoa** 
-    * [ ] Erabiltzaile gutxi batzuei bideoak kargatu eta analisiaren lehen feedback-a jasotzeko aukera eman.
+### 1.2. Erabiltzailearen Formaren Jarraipena
+- [X] 1.2.1. Ereduaren inplementazioa.
+- [] 1.2.2. Formaren analisiaren algoritmoak eta erabiltzaileei formaren zuzenketa.
 
 ---
 
-##  3. FASEA: Bistaratzeko eta Kudeatzeko Sistemak
+## 2. Datu Basearen Diseinua
 
-* [ ] Analisiaren Ikuspegi Zehatza: Erakutsi:
-    * [ ] Barra-aren ibilbidearen grafiko interaktiboa (XY), errepikapen bakoitza nabarmenduz.
-    * [ ] Abiadura/Azelerazio grafikoak denboran zehar (tarteak mozteko aukerarekin).
-    * [ ] Formaren Analisiaren Feedbacka bistaratu (1.2 FASEA).
-* [ ] Entrenamenduak Gordetzeko Interfazea: Erabiltzaileei datuak (Pisua, Errep., Serieak, Oharrak) eskuz sartzeko aukera eman.
-* [ ] Uneko Entrenamendua Interfazea (Plangintza eta Grabaketa):
-    * [ ] **1. Aukera (Planifikatua):** Entrenamendua aurrez kargatu (ariketak, serieak, errepikapenak).
-        * [ ] Entrenamendua "Martxan jarri" $\rightarrow$ Uneko ariketa pantailan erakutsi.
-        * [ ] Atalekoa: Atsedena neurtzeko tenporizadorea.
-    * [ ] **2. Aukera (Momentukoa):** Informazioa momentuan gorde (Seriea amaitzean).
-    * [ ] Ariketa batean pisua, errepikapenak edo seriak aldatzeko aukera eman, jatorrizko planaren aurka.
-* [ ] Entrenamenduaren Inguruko Informazioaren Kalkulua eta Aurkeztea:
-    * [ ] Sobrecarga Progresiboaren Jarraipena (Astetik Astera, bolumenaren eta intentsitatearen metrika).
-    * [ ] PRak gordetzeko atala (1 Rep Max, 5 Rep Max, etab.).
-* [ ] **2. Demoa** publikatu interneten (Funtzionalitate osoa).
-    * [ ] Erabiltzaileen feedbacka jaso usagarritasunari eta funtzionalitateari buruz.
+- [ ] 2.1. Erabiltzaileen kudeaketa: saio hasiera, erregistroa eta profilaren edizioa.
+- [ ] 2.2. Erabiltzailearen ezaugarriak: metrikak, marka pertsonalak eta ezaugarri fisikoak.
+- [ ] 2.3. Entrenamenduaren ezaugarriak: data, ariketa zerrenda, pisuak, errepikapenak eta serieak.
+- [ ] 2.4. Bideo-metadata eta analisi emaitzak: barraren ibilbidea, abiadura eta bestelako parametroak serie bakoitzarekin lotuta.
+- [ ] 2.5. Bideoen biltegiratzea: hodeiko biltegiratze zerbitzuaren konfigurazioa.
 
 ---
 
-## 4. FASEA: Hobekuntzak eta Mantentze-lanak
-* [ ] Jasotako feedbacketik hobekuntzak egin (GUI/UX, Metrika berriak).
-* [ ] Segurtasun Proba Integralak eta Errendimenduaren Optimizazioa (Bideoen prozesamendu denbora murriztea).
+## 3. Oinarrizko Frontend
+
+- [ ] 3.1. Oinarrizko interfazearen garapena React erabiliz: saio hasiera eta bideoak kargatzeko gunea.
+- [ ] 3.2. Proba egiteko gutxieneko funtzionaltasunen inplementazioa.
+- [ ] 3.3. Demoaren argitalpena Interneten.
+- [ ] 3.4. Erabiltzaileen feedbackaren bilketa.
+
+---
+
+## 4. Frontend Aurreratua
+
+### 4.1. Entrenamenduen Gordetzeko Interfazea
+- [ ] 4.1.1. Erabiltzaileei datuak eskuz sartzeko aukera eskaintzea: pisua, errepikapenak, serieak eta oharrak.
+
+### 4.2. Uneko Entrenamendurako Interfazea
+
+#### 4.2.1. Planifikatutako entrenamendua
+- [ ] 4.2.1.1. Entrenamendua aurrez kargatzea (ariketak, serieak, errepikapenak).
+- [ ] 4.2.1.2. Entrenamendua martxan jartzea eta uneko ariketa pantailan bistaratzea.
+- [ ] 4.2.1.3. Atsedenaren tenporizadorea.
+
+#### 4.2.2. Momentuko entrenamendua
+- [ ] 4.2.2.1. Informazioa seriea amaitzean gordetzea.
+- [ ] 4.2.2.2. Ariketa batean pisua, errepikapenak edo serieak aldatzeko aukera, jatorrizko planaren aurka.
+
+### 4.3. Entrenamenduari buruzko Informazioaren Kalkulua eta Aurkezpena
+- [ ] 4.3.1. Sobrekarga progresiboaren jarraipena: bolumenaren eta intentsitatearen metriken azterketa astetik astera.
+- [ ] 4.3.2. Marka pertsonalen atala: 1 Rep Max, 5 Rep Max eta antzekoak.
+- [ ] 4.3.3. Funtzionalitate osoaren demoa argitaratzea.
+- [ ] 4.3.4. Erabiltzaileen feedbackaren bilketa usagarritasunari eta funtzionalitateari buruz.
+
+### 4.4. Algoritmoen Inplementazio Aurreratua
+
+#### 4.4.1. Barraren Detekzio Algoritmoa
+- [ ] 4.4.1.1. Metriken bistaratzea eta erabiltzaileari emaitzen itzulketa: desplazamenduaren irudikapen grafikoa, altxamendu-faseko abiadura desberdinen analisia eta antzekoak.
+
+#### 4.4.2. Erabiltzailearen Formaren Jarraipena
+- [ ] 4.4.2.1. Ariketa desberdinetarako zuzenketa espezifikoak: sentadilla, pisu hila eta flexioak.
+- [ ] 4.4.2.2. Angeluen konparazioa aurrez definitutako mugekiko.
+- [ ] 4.4.2.3. Feedback bisualaren sorkuntza (mugimendua non dagoen eta nola zuzendu erakustea).
+
+---
+
+## 5. Dokumentazioa eta Aurkezpena
+
+- [ ] 5.1. **Proiektuaren plangintza:** Eskakizunak identifikatu, atazen banaketa finkatu eta hasierako plangintza dokumentua.
+- [ ] 5.2. **Proiektuaren ataza guztien dokumentazioa:** Garapen prozesuaren jarraipen-txostena eta alderdi teknikoen deskribapena biltzea.
+- [ ] 5.3. **Proiektuaren itxiera:** Dokumentazioari amaiera eman: estimatutako eta benetako orduen konparaketa, hausnarketa eta eskerrak.
+- [ ] 5.4. **Entregagaien prestaketa:** Entregagai guztiak PDF formatuan prestatu eta entregatu.
+- [ ] 5.5. **Aurkezpena:** Aurkezpenaren prestakuntza (PowerPoint-a eta demoa).
