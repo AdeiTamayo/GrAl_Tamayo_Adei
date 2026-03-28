@@ -41,7 +41,7 @@ export default function Register() {
                 surname: toNullableString(surname),
                 email: email.trim(),
                 password,
-                gender_id: toNullableNumber(genderId),
+                gender_id: toNullableString(genderId),
                 weight: toNullableNumber(weight),
                 height: toNullableNumber(height),
                 birth_date: toNullableString(birthDate),
@@ -113,12 +113,13 @@ export default function Register() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
             />
 
-            <h4>Gender ID (optional)</h4>
-            <input
-                type="number"
-                value={genderId}
-                onChange={(e) => setGenderId(e.target.value)}
-            />
+            <h4>Gender (optional)</h4>
+            <select value={genderId} onChange={e => setGenderId(e.target.value)}>
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="non-binary">Other</option>
+            </select>
 
             <h4>Weight kg (optional)</h4>
             <input
@@ -155,6 +156,6 @@ export default function Register() {
             </button>
 
             {message && <p>{message}</p>}
-        </form>
+        </form >
     );
 }

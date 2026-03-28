@@ -70,6 +70,7 @@ exports.register = async (req, res) => {
 
         console.log('\n=== Register Request ===');
         console.log(`[Register] Email: ${email}`);
+        console.log(`[Register] User values: name=${name}, surname=${surname}, email=${email}, gender_id=${gender_id}, weight=${weight}, height=${height}, birth_date=${birth_date}, profile_picture=${profile_picture}`);
 
         // Validate input
         if (!email || !password) {
