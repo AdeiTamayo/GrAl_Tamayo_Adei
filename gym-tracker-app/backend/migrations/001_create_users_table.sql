@@ -7,15 +7,15 @@ INSERT INTO genders (name) VALUES ('male'), ('female'), ('non-binary');
 
 CREATE TABLE IF NOT EXISTS users (
     id              SERIAL PRIMARY KEY,
-    name            VARCHAR(255)        NOT NULL,
-    surname         VARCHAR(255)        NOT NULL,
+    name            VARCHAR(255),
+    surname         VARCHAR(255),
     email           VARCHAR(255) UNIQUE NOT NULL,
     password        VARCHAR(255)        NOT NULL,
     gender_id       INT                 REFERENCES genders(id),
     weight          DECIMAL(5,2),                    -- In kg
     height          DECIMAL(5,2),                    -- In cm
     birth_date      DATE,                            
-    profile_picture VARCHAR(255),                    -- The URL to the image
+    profile_picture VARCHAR(255)                   -- The URL to the image
 
     -- TODO: Implement the recovery tokens
     -- reset_token     VARCHAR(255),           

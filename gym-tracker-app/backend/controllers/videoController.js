@@ -1,6 +1,6 @@
 const path = require('path');
 const { validateUpload, processVideoWithPython } = require('../utils/videoProcessor');
-const Video = require('../models/Video');
+const Video = require('../models/video');
 
 const processedDir = path.join(__dirname, '../media/output');
 const port = process.env.PORT || 8000;

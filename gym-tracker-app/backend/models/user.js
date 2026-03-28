@@ -5,12 +5,15 @@ class User {
     /**
      * Create a new user
      */
-    static async createUser(email, password) {
+
+    static async createUser(name, surname, email, password, gender_id, weight, height, birth_date, profile_picture) {
         try {
+            if (!email || !password) {
+                throw new Error('Email and password are requiered');
+            }
             const hashedPassword = await bcrypt.hash(password, 10);
-            const query = 'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email, created_at';
-            const result = await pool.query(query, [email, hashedPassword]);
-            console.log('[User Model] User created:', result.rows[0].email);
+            const query = "INSERT INTO users (name, surname, email, password, gender_id, weight, height, birth_date, profile_picture) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id";
+            const result = await pool.query(query, [name ?? null, surname ?? null, email, hashedPassword, gender_id ?? null, weight ?? null, height ?? null, birth_date ?? null, profile_picture ?? null]);
             return result.rows[0];
         } catch (error) {
             console.error('[User Model] Error creating user:', error.message);
@@ -39,19 +42,6 @@ class User {
         return await bcrypt.compare(plainPassword, hashedPassword);
     }
 
-    /**
-     * Get all users
-     */
-    static async getAll() {
-        try {
-            const query = 'SELECT id, email, created_at FROM users ORDER BY created_at DESC';
-            const result = await pool.query(query);
-            return result.rows;
-        } catch (error) {
-            console.error('[User Model] Error fetching users:', error.message);
-            throw error;
-        }
-    }
 }
 
 module.exports = User;
