@@ -12,7 +12,7 @@ export default function Login() {
         e.preventDefault();
         setIsLoading(true);
         setMessage("");
-
+        console.log("token:", localStorage.getItem("token"));
         try {
             const response = await fetch('http://localhost:8000/api/auth/login', {
                 method: 'POST',
@@ -27,7 +27,7 @@ export default function Login() {
             if (data.success) {
                 // Store token in localStorage
                 if (data.token) {
-                    localStorage.setItem('user_login_token', data.token);
+                    localStorage.setItem('token', data.token);
                 }
 
                 navigate("/", {

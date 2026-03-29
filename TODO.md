@@ -14,7 +14,7 @@
 
 ## 2. Datu Basearen Diseinua
 
-- [ ] 2.1. Erabiltzaileen kudeaketa: saio hasiera, erregistroa eta profilaren edizioa.
+- [X] 2.1. Erabiltzaileen kudeaketa: saio hasiera, erregistroa eta profilaren edizioa.
 - [ ] 2.2. Erabiltzailearen ezaugarriak: metrikak, marka pertsonalak eta ezaugarri fisikoak.
 - [ ] 2.3. Entrenamenduaren ezaugarriak: data, ariketa zerrenda, pisuak, errepikapenak eta serieak.
 - [ ] 2.4. Bideo-metadata eta analisi emaitzak: barraren ibilbidea, abiadura eta bestelako parametroak serie bakoitzarekin lotuta.

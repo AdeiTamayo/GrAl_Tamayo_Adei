@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const videoController = require('../controllers/videoController');
 const upload = require('../middleware/upload');
-const { verifyToken } = require('../middleware/auth');
+const verifyToken = require('../middleware/auth');
 
 // All video routes require authentication
 router.use(verifyToken);
