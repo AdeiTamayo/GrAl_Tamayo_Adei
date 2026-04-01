@@ -12,6 +12,3 @@ CREATE TABLE IF NOT EXISTS videos (
 CREATE INDEX IF NOT EXISTS idx_videos_user_id ON videos(user_id);
 CREATE INDEX IF NOT EXISTS idx_videos_created_at ON videos(created_at);
 
-COMMENT ON TABLE videos IS 'Stores processed video records';
-COMMENT ON COLUMN videos.process_type IS 'Type of processing: pose_estimation or barbell_tracking';
-COMMENT ON COLUMN videos.processed_url IS 'URL to access the processed video';

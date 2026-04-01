@@ -20,13 +20,17 @@ CREATE TABLE IF NOT EXISTS users (
 
 
 
-COMMENT ON TABLE users IS 'Stores user account information';
-COMMENT ON COLUMN users.email IS 'User email address (unique)';
-COMMENT ON COLUMN users.password IS 'Hashed password using bcrypt';
-COMMENT ON COLUMN users.birth_date IS 'Used to calculate age dynamically';
-COMMENT ON COLUMN users.gender IS 'User gender stored as enum: male, female, non-binary';
-
-
 -- TODO: Implement the recovery tokens
 -- COMMENT ON COLUMN users.reset_token IS 'Time-limited token for password recovery';
 -- COMMENT ON COLUMN users.reset_token_expires_at IS 'Expiry timestamp for the reset token';
+
+-- Historical log of user body weight
+CREATE TABLE IF NOT EXISTS weight_history (
+    id      SERIAL       PRIMARY KEY,
+    user_id INTEGER      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    weight  DECIMAL(5,2) NOT NULL,
+    date    DATE         NOT NULL DEFAULT CURRENT_DATE
+);
+
+
+
