@@ -1,22 +1,24 @@
-const axios = require('axios');
-require('dotenv').config();
+const Exercise = require('../models/exercise');
 
-// Fetch exercises from ExerciseDB API
 exports.getExercises = async (req, res) => {
+  console.log("Get exercises request received");
   try {
-    const response = await axios.get("https://exercisedb.p.rapidapi.com/exercises", {
-      headers: {
-        'X-RapidAPI-Key': process.env.RapidAPI_Key,
-      },
-      params: req.query
-    });
-    res.json(response.data);
-  } catch (error) {
-    if (error.response) {
-      console.error('API response error:', error.response.status, error.response.data);
-    } else {
-      console.error('Error fetching exercises:', error.message);
+    // Currently hardcoded to fetch ID 1
+    const exercise = await Exercise.getExerciseById(1);
+
+    if (!exercise) {
+      return res.status(404).json({
+        success: false,
+        error: 'Exercise not found'
+      });
     }
-    res.status(500).json({ error: 'Failed to fetch exercises', details: error.message });
+
+    res.json({
+      success: true,
+      data: [exercise]
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Failed to get exercises' });
   }
 };
