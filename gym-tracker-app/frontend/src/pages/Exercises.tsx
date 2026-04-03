@@ -1,22 +1,5 @@
 import React, { useState } from 'react';
 
-// Justification: Call the backend endpoint with pagination and sorting parameters, not the external API directly.
-const getExercisesFromBackend = async (offset = 0, limit = 10, sortMethod = 'id', sortOrder = 'ascending') => {
-    try {
-        const params = new URLSearchParams({
-            offset: String(offset),
-            limit: String(limit),
-            sortMethod,
-            sortOrder
-        });
-        const response = await fetch(`/api/exercises?$`); // console.error('Error fetching exercises:', error);
-        if (!response.ok) throw new Error('Failed to fetch');
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching exercises:', error);
-        return [];
-    }
-};
 
 export default function Exercises() {
     const [exercises, setExercises] = useState([]);
@@ -25,12 +8,43 @@ export default function Exercises() {
     const [limit, setLimit] = useState(10);
     const [sortMethod, setSortMethod] = useState('id');
     const [sortOrder, setSortOrder] = useState('ascending');
+    const [error, setError] = useState("");
+
+    async function getExercise() {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await fetch("http://localhost:8000/api/exercises", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("user_login_token")}`,
+                },
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch exercise");
+
+            const result = await response.json();
+
+            if (result.success) {
+                // result.data is the array [result.rows[0]] from the backend
+                return result.data;
+            } else {
+                throw new Error(result.error || "Unknown error");
+            }
+
+        } catch (err: any) {
+            setError(err.message || "Could not load data.");
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const handleFetchExercises = async () => {
-        setLoading(true);
-        const data = await getExercisesFromBackend(offset, limit, sortMethod, sortOrder);
-        setExercises(data || []);
-        setLoading(false);
+        const data = await getExercise();
+        setExercises(data);
     };
 
     return (
