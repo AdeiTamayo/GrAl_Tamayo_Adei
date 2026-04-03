@@ -12,7 +12,8 @@ export default function Login() {
         e.preventDefault();
         setIsLoading(true);
         setMessage("");
-        console.log("token:", localStorage.getItem("token"));
+        console.log("token:", localStorage.getItem("user_login_token"));
+        console.log("email:", localStorage.getItem("email"))
         try {
             const response = await fetch('http://localhost:8000/api/auth/login', {
                 method: 'POST',
@@ -27,9 +28,10 @@ export default function Login() {
             if (data.success) {
                 // Store token in localStorage
                 if (data.token) {
-                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user_login_token', data.token);
+                    localStorage.setItem('email', data.user.email);
                 }
-
+                console.log(data.email);
                 navigate("/", {
                     replace: true, // Avoid users being able to go back
                     state: {
