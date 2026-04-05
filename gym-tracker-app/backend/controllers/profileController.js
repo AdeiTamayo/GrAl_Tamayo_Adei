@@ -18,6 +18,7 @@ exports.getProfile = async (req, res) => {
             user: user
         });
     } catch (error) {
+        console.error('Error fetching profile:', error);
         res.status(500).json({ success: false, error: 'Failed to fetch profile' });
     }
 };
@@ -25,9 +26,22 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     console.log('\n=== Profile Update Request ===');
     try {
-        await User.updateUser(req.userId, req.body);
-        res.json({ success: true });
+
+        const { username, email, height, weight } = req.body;
+
+        const updatedUser = await User.updateUser(req.userId, {
+            username,
+            email,
+            height,
+            weight
+        });
+
+        res.json({
+            success: true,
+            user: updatedUser
+        });
     } catch (error) {
+        console.error('Error updating profile:', error);
         res.status(500).json({ success: false, error: 'Failed to update profile' });
     }
 };
