@@ -42,7 +42,6 @@ export default function Profile() {
     }
 
     async function saveProfile() {
-        console.log("KAIXO KAIXO");
         if (!form) return;
         setSaving(true);
         setSuccess(null);

@@ -5,15 +5,15 @@ class Exercise {
         try {
             // Select everything EXCEPT description and instructions
             const query = `
-                SELECT 
-                    id, 
-                    name, 
-                    body_part, 
-                    target_muscle, 
-                    secondary_muscles, 
-                    equipment, 
-                    difficulty, 
-                    category, 
+                SELECT
+                    id,
+                    name,
+                    body_part,
+                    target_muscle,
+                    secondary_muscles,
+                    equipment,
+                    difficulty,
+                    category,
                     is_custom
                 FROM exercises
                 ORDER BY name ASC;
@@ -39,7 +39,7 @@ class Exercise {
                     difficulty, 
                     category, 
                     description, 
-                    secondary_muscles AS "secondaryMuscles", 
+                    secondary_muscles, 
                     instructions 
                 FROM exercises 
                 WHERE id = $1
@@ -122,10 +122,11 @@ class Exercise {
     }
 
     static async deleteExercise(id) {
+
         try {
             const query = `
-                DELETE FROM exercices
-                WHERE ID = $1 AND is_custom = true
+                DELETE FROM exercises
+                WHERE ID = $1
                 RETURNING id;
             `;
 
