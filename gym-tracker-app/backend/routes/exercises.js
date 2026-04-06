@@ -6,7 +6,7 @@ const authMiddleware = require('../middleware/auth');
 
 //-------------- Exercises --------------
 
-// GET /api/exercises - Get all exercises with filters
+// GET /api/exercises - Get all exercises with values to be able to filter
 router.get('/', authMiddleware, exerciseController.getExercises);
 
 // GET /api/exercises/filters - Get the filters in order to query exercices (muscle, equipment, exercice_type)

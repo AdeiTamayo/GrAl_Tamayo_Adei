@@ -31,7 +31,7 @@ exports.getExercises = async (req, res) => {
 exports.getExerciseById = async (req, res) => {
   console.log("Get exercices by id request received");
   try {
-    const exercice = await Exercise.getExerciseById(req.id);
+    const exercice = await Exercise.getExerciseById(req.params.id);
     if (!exercice) {
       return res.status(404).json({
         success: false,
@@ -86,6 +86,7 @@ exports.createExercise = async (req, res) => {
 exports.modifyExercise = async (req, res) => {
   console.log("Modify exercise request received");
   try {
+    id = req.params.id;
 
     const { exercice_name, body_part, target_muscle, secondary_muscles, equipment, difficulty, category, description, instructions } = req.body;
 
@@ -117,7 +118,7 @@ exports.modifyExercise = async (req, res) => {
 exports.deleteExercise = async (req, res) => {
   console.log("Delete exercise request received");
   try {
-    await Exercise.deleteExercise(req.id);
+    await Exercise.deleteExercise(req.params.id);
 
     return res.json({
       success: true,
