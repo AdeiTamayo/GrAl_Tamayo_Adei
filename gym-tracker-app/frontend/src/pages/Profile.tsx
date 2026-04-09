@@ -24,7 +24,7 @@ export default function Profile() {
 
     async function getProfile() {
         try {
-            const response = await fetch("http://localhost:8000/api/profile/getProfile", {
+            const response = await fetch("http://localhost:8000/api/user/getProfile", {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("user_login_token")}`,
@@ -47,7 +47,7 @@ export default function Profile() {
         setSuccess(null);
         setError(null);
         try {
-            const response = await fetch("http://localhost:8000/api/profile/updateProfile", {
+            const response = await fetch("http://localhost:8000/api/user/updateProfile", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -65,6 +65,14 @@ export default function Profile() {
             setSaving(false);
         }
     }
+
+    /*
+    async function deleteProfile() {
+        try{
+            const response = await fetch("http://localhost:8000/api/user/deleteProfile")
+        }
+    }
+        */
 
     function cancelEdit() {
         setForm(profile);   // discard changes

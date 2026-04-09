@@ -90,6 +90,7 @@ class User {
             throw error;
         }
     }
+
 }
 
 module.exports = User;
