@@ -1,4 +1,5 @@
 import { useState, FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
     const [name, setName] = useState("");
@@ -15,6 +16,8 @@ export default function Register() {
 
     const [message, setMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+
+    const navigate = useNavigate();
 
     function toNullableNumber(value: string) {
         return value.trim() === "" ? null : Number(value);
@@ -48,7 +51,7 @@ export default function Register() {
                 profile_picture: toNullableString(profilePicture)
             };
 
-            const response = await fetch("/api/auth/register", {
+            const response = await fetch("/api/user/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -59,7 +62,32 @@ export default function Register() {
             const data = await response.json();
 
             if (data.success) {
-                setMessage("Registration successful!");
+                const loginResponse = await fetch("/api/user/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email: email.trim(), password })
+                });
+
+                const loginData = await loginResponse.json();
+
+                if (loginData.success && loginData.token) {
+                    localStorage.setItem('user_login_token', loginData.token);
+                    localStorage.setItem('email', loginData.user.email);
+
+                    navigate("/", {
+                        replace: true,
+                        state: {
+                            user: loginData.user,
+                            email: loginData.user.email,
+                            message: "Registration and login successful"
+                        }
+                    });
+                } else {
+                    navigate("/login");
+                }
+
             } else {
                 setMessage(data.error || "Registration failed");
             }
