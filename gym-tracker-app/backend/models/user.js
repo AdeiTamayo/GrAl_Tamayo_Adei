@@ -91,6 +91,22 @@ class User {
         }
     }
 
+
+    static async deleteUser(id) {
+        try {
+            const query = `
+            DELETE FROM users
+            WHERE  id = $1
+             RETURNING id;
+            `;
+            const result = await pool.query(query, [id]);
+            return result.rowCount > 0;
+        } catch (error) {
+            console.error('[User Model] Error deleting user:', error.message);
+            throw error;
+        }
+    }
+
 }
 
 module.exports = User;

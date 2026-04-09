@@ -61,7 +61,7 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            error: 'Error deleting exercise'
+            error: 'Error deleting user'
         })
     }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
     name: string;
@@ -19,6 +20,8 @@ export default function Profile() {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+
+    const navigate = useNavigate();
 
     useEffect(() => { getProfile(); }, []);
 
@@ -66,13 +69,30 @@ export default function Profile() {
         }
     }
 
-    /*
+
+
     async function deleteProfile() {
-        try{
-            const response = await fetch("http://localhost:8000/api/user/deleteProfile")
+        try {
+            const response = await fetch("http://localhost:8000/api/user/deleteProfile", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${localStorage.getItem("user_login_token")}`
+                },
+            });
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error || "Unknown error");
+            localStorage.removeItem('user_login_token');
+            localStorage.removeItem('email');
+            navigate("/");
+
+        } catch (err: any) {
+            setError(err.message || "Could not delete data.");
+        } finally {
+            setLoading(false);
         }
     }
-        */
+
 
     function cancelEdit() {
         setForm(profile);   // discard changes
@@ -208,9 +228,12 @@ export default function Profile() {
                         <button onClick={cancelEdit}>Cancel</button>
                     </>
                 ) : (
-                    <button onClick={() => { setEditing(true); setSuccess(null); }}>
-                        Edit profile
-                    </button>
+                    <>
+                        <button onClick={() => { setEditing(true); setSuccess(null); }}>
+                            Edit profile
+                        </button>
+                        <button onClick={deleteProfile}>Delete User</button>
+                    </>
                 )}
             </div>
         </div>
