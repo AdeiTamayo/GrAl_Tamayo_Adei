@@ -58,7 +58,7 @@ exports.createRoutine = async (req, res) => {
 
         if (!routine) {
             console.log('Failed to create routine');
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 error: 'Could not create routine'
             })
@@ -133,7 +133,7 @@ exports.addExerciseToRoutine = async (req, res) => {
         const addedExercise = await Routines.addExerciseToRoutine(routineId, userId, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, note);
 
         if (!addedExercise) {
-            return res.status(400).json({ success: false, error: 'Failed to add exercise or unauthorized' });
+            return res.status(404).json({ success: false, error: 'Failed to add exercise or unauthorized' });
         }
 
         res.json({ success: true, data: addedExercise });
