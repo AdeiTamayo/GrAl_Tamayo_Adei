@@ -3,7 +3,6 @@ const pool = require('../config/database');
 class Exercise {
     static async getExercises() {
         try {
-            // Select everything EXCEPT description and instructions
             const query = `
                 SELECT
                     id,

@@ -6,7 +6,6 @@ import Profile from './pages/Profile';
 import Workouts from './pages/Workouts';
 import Settings from './pages/Settings';
 import Exercises from './pages/Exercises';
-import ExerciseDetail from './pages/ExerciseDetail';
 import Stats from './pages/Stats';
 import Goals from './pages/Goals';
 import Schedule from './pages/Schedule';
@@ -24,7 +23,6 @@ function App() {
       <Route path="/workouts" element={<Workouts />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/exercises" element={<Exercises />} />
-      <Route path="/exercises/:id" element={<ExerciseDetail />} />
       <Route path="/stats" element={<Stats />} />
       <Route path="/goals" element={<Goals />} />
       <Route path="/schedule" element={<Schedule />} />
