@@ -1,4 +1,5 @@
 const Workout = require('../models/workout');
+const PR = require('../models/pr');
 
 exports.getWorkouts = async (req, res) => {
     console.log("Get all workouts request received");
@@ -148,9 +149,13 @@ exports.insertSet = async (req, res) => {
     console.log("Insert set request received");
     try {
         const workoutId = req.params.id;
-        const { exercise_id, weight, reps } = req.body;
+        const { exercise_id, weight, reps, time } = req.body;
+        const userId = req.userId;
 
-        const set = await Workout.insertSet(workoutId, exercise_id, weight, reps);
+        const set = await Workout.insertSet(workoutId, exercise_id, weight, reps, time);
+
+        // TODO: Add date as 5. parameter
+        await PR.checkAndLogPR(userId, exercise_id, weight, reps, null, "");
 
         return res.status(201).json({
             success: true,

@@ -3,8 +3,9 @@ import { useState, useEffect, FormEvent, useMemo, useRef } from "react";
 interface Set {
     id: number;
     set_number: number;
-    weight: number;
-    repetitions: number;
+    weight: number | null;
+    repetitions: number | null;
+    time: number | null;
 }
 
 interface WorkoutExercise {
@@ -27,6 +28,7 @@ interface Workout {
 interface Exercise {
     id: number;
     name: string;
+    equipment?: string;
 }
 
 export default function Workouts() {
@@ -50,6 +52,7 @@ export default function Workouts() {
     const [searchQuery, setSearchQuery] = useState("");
     const [newSetWeight, setNewSetWeight] = useState<number | "">("");
     const [newSetReps, setNewSetReps] = useState<number | "">("");
+    const [newSetTime, setNewSetTime] = useState<number | "">("");
 
     // Dropdown handling
     const [showDropdown, setShowDropdown] = useState(false);
@@ -59,6 +62,11 @@ export default function Workouts() {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${localStorage.getItem("user_login_token")}`
     }), []);
+
+    const cardioEquipment = ['stationary bike', 'elliptical machine', 'stepmill machine', 'upper body ergometer'];
+    const isCardio = selectedExercise && selectedExercise.equipment
+        ? cardioEquipment.includes(selectedExercise.equipment.toLowerCase())
+        : false;
 
     // Initial Fetch
     useEffect(() => {
@@ -166,7 +174,11 @@ export default function Workouts() {
             return;
         }
 
-        if (newSetWeight === "" || newSetReps === "") return;
+        if (isCardio) {
+            if (newSetTime === "") return;
+        } else {
+            if (newSetWeight === "" || newSetReps === "") return;
+        }
 
         setIsAddingSet(true);
         setError(null);
@@ -176,16 +188,17 @@ export default function Workouts() {
                 headers,
                 body: JSON.stringify({
                     exercise_id: selectedExercise.id,
-                    weight: newSetWeight,
-                    reps: newSetReps
+                    weight: isCardio ? null : newSetWeight,
+                    reps: isCardio ? null : newSetReps,
+                    time: isCardio ? newSetTime : null
                 })
             });
             const data = await res.json();
             if (data.success) {
-                // Re-fetch details to get correct grouping and ordering from DB
                 await fetchWorkoutById(selectedWorkout.id);
                 setNewSetWeight("");
                 setNewSetReps("");
+                setNewSetTime("");
             } else {
                 setError(data.error);
             }
@@ -320,8 +333,14 @@ export default function Workouts() {
                                         <ul style={{ listStyleType: "circle", paddingLeft: "25px", margin: 0 }}>
                                             {ex.sets?.map(set => (
                                                 <li key={set.id} style={{ margin: "8px 0", display: "flex", alignItems: "center" }}>
-                                                    <span style={{ width: "150px" }}>Set {set.set_number}: <strong>{set.weight}kg</strong> × <strong>{set.repetitions} reps</strong></span>
-                                                    <button onClick={() => deleteSet(set.id)} style={{ cursor: "pointer", color: "red", fontSize: "0.8em", padding: "2px 6px", marginLeft: "10px" }}>Delete Set</button>
+                                                    <span style={{ width: "150px" }}>Set {set.set_number}:
+                                                        {set.time ? (
+                                                            <strong> {set.time} mins</strong>
+                                                        ) : (
+                                                            <strong> {set.weight}kg × {set.repetitions} reps</strong>
+                                                        )}
+                                                    </span>
+                                                    <button onClick={() => deleteSet(set.id)} style={{ cursor: "pointer", color: "red", fontSize: "0.8em", padding: "2px 6px", marginLeft: "10px", border: "1px solid #ccc", background: "none" }}>Delete Set</button>
                                                 </li>
                                             ))}
                                         </ul>
@@ -367,24 +386,37 @@ export default function Workouts() {
                             </div>
 
                             <div style={{ display: "flex", gap: "10px" }}>
-                                <input
-                                    type="number"
-                                    step="1"
-                                    placeholder="Weight (kg)"
-                                    value={newSetWeight}
-                                    onChange={e => setNewSetWeight(Number(e.target.value))}
-                                    required
-                                    style={{ padding: "8px", flex: 1 }}
-                                />
-                                <input
-                                    type="number"
-                                    placeholder="Reps"
-                                    value={newSetReps}
-                                    onChange={e => setNewSetReps(Number(e.target.value))}
-                                    required
-                                    style={{ padding: "8px", flex: 1 }}
-                                />
-                                <button type="submit" disabled={isAddingSet} style={{ padding: "8px", flex: 1, backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: isAddingSet ? "not-allowed" : "pointer", fontWeight: "bold" }}>
+                                {isCardio ? (
+                                    <input
+                                        type="number"
+                                        placeholder="Time (mins)"
+                                        value={newSetTime}
+                                        onChange={e => setNewSetTime(Number(e.target.value))}
+                                        required
+                                        style={{ padding: "8px", flex: 2 }}
+                                    />
+                                ) : (
+                                    <>
+                                        <input
+                                            type="number"
+                                            step="1"
+                                            placeholder="Weight (kg)"
+                                            value={newSetWeight}
+                                            onChange={e => setNewSetWeight(Number(e.target.value))}
+                                            required
+                                            style={{ padding: "8px", flex: 1 }}
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Reps"
+                                            value={newSetReps}
+                                            onChange={e => setNewSetReps(Number(e.target.value))}
+                                            required
+                                            style={{ padding: "8px", flex: 1 }}
+                                        />
+                                    </>
+                                )}
+                                <button type="submit" disabled={isAddingSet} style={{ padding: "8px", flex: 1, backgroundColor: "#fff", color: "#000", border: "1px solid #ccc", cursor: isAddingSet ? "not-allowed" : "pointer", fontWeight: "bold" }}>
                                     {isAddingSet ? "Adding..." : "+ Add Set"}
                                 </button>
                             </div>

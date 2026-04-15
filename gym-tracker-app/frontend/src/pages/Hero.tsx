@@ -37,6 +37,7 @@ export default function Hero() {
                 <Link to="/history" className="p-3 border text-center rounded hover:bg-gray-50">History</Link>
                 <Link to="/goals" className="p-3 border text-center rounded hover:bg-gray-50">Goals</Link>
                 <Link to="/stats" className="p-3 border text-center rounded hover:bg-gray-50">Stats</Link>
+                <Link to="/prs" className="p-3 border text-center rounded hover:bg-gray-50">PRs</Link>
             </nav>
         </div>
     );

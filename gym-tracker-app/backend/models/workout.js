@@ -134,15 +134,14 @@ class Workout {
     }
 
     // Insert a new set into a workout
-    static async insertSet(workoutId, exerciseId, weight, reps) {
+    static async insertSet(workoutId, exerciseId, weight, reps, time) {
         try {
-            // 1. Find or create the workout_exercise bridge entry
+            // Find or create the workout_exercise bridge entry
             let weQuery = `SELECT id FROM workout_exercises WHERE workout_id = $1 AND exercise_id = $2 LIMIT 1`;
             let weRes = await pool.query(weQuery, [workoutId, exerciseId]);
             let workoutExerciseId;
 
             if (weRes.rowCount === 0) {
-                // Determine next exercise order
                 let nextOrderRes = await pool.query(`SELECT COALESCE(MAX(exercise_order), 0) + 1 AS next_order FROM workout_exercises WHERE workout_id = $1`, [workoutId]);
                 let nextOrder = nextOrderRes.rows[0].next_order;
 
@@ -153,17 +152,17 @@ class Workout {
                 workoutExerciseId = weRes.rows[0].id;
             }
 
-            // 2. Determine the set_number
+            // Determine the set_number
             let setNumRes = await pool.query(`SELECT COALESCE(MAX(set_number), 0) + 1 AS next_set FROM sets WHERE workout_exercise_id = $1`, [workoutExerciseId]);
             let setNumber = setNumRes.rows[0].next_set;
 
-            // 3. Insert the actual set
+            // Insert the actual set including time
             const query = `
-                INSERT INTO sets (workout_exercise_id, set_number, weight, repetitions)
-                VALUES ($1, $2, $3, $4)
+                INSERT INTO sets (workout_exercise_id, set_number, weight, repetitions, time)
+                VALUES ($1, $2, $3, $4, $5)
                 RETURNING *;
             `;
-            const result = await pool.query(query, [workoutExerciseId, setNumber, weight, reps]);
+            const result = await pool.query(query, [workoutExerciseId, setNumber, weight, reps, time]);
             return result.rows[0];
         } catch (error) {
             console.error('[Workout Model] Error inserting set:', error.message);

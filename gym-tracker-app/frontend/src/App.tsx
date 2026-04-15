@@ -12,7 +12,7 @@ import Schedule from './pages/Schedule';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Video from './pages/Videos';
-
+import Pr from './pages/Prs'
 function App() {
   return (
     <Routes>
@@ -29,6 +29,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/videos" element={<Video />} />
+      <Route path="/prs" element={<Pr />} />
     </Routes>
   );
 }
