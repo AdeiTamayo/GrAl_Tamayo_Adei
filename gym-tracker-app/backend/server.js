@@ -14,6 +14,7 @@ const videoRoutes = require('./routes/videos');
 const exerciseRoutes = require('./routes/exercises');
 const routinesRoutes = require('./routes/routines');
 const userRoutes = require('./routes/user');
+const workoutRoutes = require('./routes/workouts');
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -44,6 +45,7 @@ app.use('/api/videos', videoRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/routines', routinesRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/workouts', workoutRoutes);
 
 
 app.listen(port, () => {
