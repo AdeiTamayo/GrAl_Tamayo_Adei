@@ -1,11 +1,9 @@
 const pool = require('../config/database');
 
 class PR {
-    // Get the absolute best PR for each exercise the user has performed
+    // Get the best PR for each exercise
     static async getPrSummary(userId) {
         try {
-            // DISTINCT ON gets the top row for each exercise_id
-            // ORDER BY defines what "top" means: highest weight, then highest reps
             const query = `
                 SELECT DISTINCT ON (p.exercise_id)
                     p.id, 
@@ -45,8 +43,11 @@ class PR {
         }
     }
 
-    // Creates a PR if it's better than the current max (Called automatically when a set is added)
+    // Creates a PR if it's better than the current max 
     static async checkAndLogPR(userId, exerciseId, weight, repetitions, date, note = null) {
+        if (weight === null || weight === undefined || repetitions === null || repetitions === undefined) {
+            return null;
+        }
         try {
             // Get current best PR
             const currentPrQuery = `
@@ -61,13 +62,13 @@ class PR {
             let isNewPr = false;
 
             if (currentPrResult.rowCount === 0) {
-                isNewPr = true; // First time doing this exercise
+                isNewPr = true;
             } else {
                 const current = currentPrResult.rows[0];
                 if (weight > current.weight) {
-                    isNewPr = true; // Heavier weight
+                    isNewPr = true;
                 } else if (Number(weight) === Number(current.weight) && repetitions > current.repetitions) {
-                    isNewPr = true; // Same weight, more reps
+                    isNewPr = true;
                 }
             }
 
@@ -82,14 +83,13 @@ class PR {
                 return insertResult.rows[0];
             }
 
-            return null; // Was not a PR
+            return null;
         } catch (error) {
             console.error('[PR Model] Error checking/logging PR:', error.message);
             throw error;
         }
     }
 
-    // Manual manual PR creation (if you have a form for it)
     static async createPR(userId, exerciseId, weight, repetitions, date, note) {
         try {
             const prDate = date || new Date().toISOString().split('T')[0];
@@ -102,6 +102,21 @@ class PR {
             return result.rows[0];
         } catch (error) {
             console.error('[PR Model] Error creating PR:', error.message);
+            throw error;
+        }
+    }
+
+    static async deletePR(userId, id) {
+        try {
+            const query = `
+                DELETE FROM pr 
+                WHERE id = $1 AND user_id = $2 
+                RETURNING id;
+            `;
+            const result = await pool.query(query, [id, userId]);
+            return result.rowCount > 0;
+        } catch (error) {
+            console.error('[PR Model] Error deleting PR:', error.message);
             throw error;
         }
     }

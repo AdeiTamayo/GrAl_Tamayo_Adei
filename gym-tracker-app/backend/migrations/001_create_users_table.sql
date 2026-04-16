@@ -10,19 +10,9 @@ CREATE TABLE IF NOT EXISTS users (
     gender          gender_type,
     weight          DECIMAL(5,2),                    -- In kg
     height          DECIMAL(5,2),                    -- In cm
-    birth_date      DATE,                            
-    profile_picture VARCHAR(255)                     -- The URL to the image
+    birth_date      date
+    );
 
-    -- TODO: Implement the recovery tokens
-    -- reset_token            VARCHAR(255),           
-    -- reset_token_expires_at TIMESTAMP,             
-);
-
-
-
--- TODO: Implement the recovery tokens
--- COMMENT ON COLUMN users.reset_token IS 'Time-limited token for password recovery';
--- COMMENT ON COLUMN users.reset_token_expires_at IS 'Expiry timestamp for the reset token';
 
 -- Historical log of user body weight
 CREATE TABLE IF NOT EXISTS weight_history (

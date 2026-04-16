@@ -12,4 +12,7 @@ router.get('/:exerciseId/history', authMiddleware, prController.getPrHistory);
 // POST /api/prs - Manually create a PR
 router.post('/', authMiddleware, prController.createPR);
 
+// DELETE /api/prs/:id - Delete a specific PR
+router.delete('/:id', authMiddleware, prController.deletePR);
+
 module.exports = router;

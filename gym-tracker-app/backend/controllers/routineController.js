@@ -15,7 +15,7 @@ exports.getUserRoutines = async (req, res) => {
 
         res.json({
             success: true,
-            routines: routines
+            data: routines
         })
 
     } catch (error) {
@@ -40,7 +40,7 @@ exports.getRoutineById = async (req, res) => {
 
         res.json({
             success: true,
-            routine: routine
+            data: routine
         })
     } catch (error) {
         console.log('Failed to fetch routine with id');
@@ -66,7 +66,7 @@ exports.createRoutine = async (req, res) => {
 
         res.json({
             success: true,
-            routine: routine
+            data: routine
         })
     } catch (error) {
         console.log('Failed to create routine');

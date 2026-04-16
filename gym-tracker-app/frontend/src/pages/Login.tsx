@@ -53,26 +53,48 @@ export default function Login() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h2>Login</h2>
-            {message && <p>{message}</p>}
-            <h4>Email</h4>
-            <input
-                type="email"
-                value={email}
-                required
-                onChange={e => setEmail(e.target.value)}
-            />
-            <h4>Password</h4>
-            <input
-                type="password"
-                value={password}
-                required
-                onChange={e => setPassword(e.target.value)}
-            />
-            <button type="submit" disabled={isLoading}>
-                {isLoading ? 'Logging in...' : 'Login'}
-            </button>
-        </form>
+        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", maxWidth: "400px", margin: "40px auto" }}>
+            <form onSubmit={handleSubmit} style={{ border: "1px solid", padding: "20px", display: "flex", flexDirection: "column", gap: "15px" }}>
+                <h2 style={{ margin: "0 0 10px 0" }}>Login</h2>
+                {message && <p style={{ fontWeight: "bold" }}>{message}</p>}
+
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Email</label>
+                    <input
+                        type="email"
+                        value={email}
+                        required
+                        onChange={e => setEmail(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Password</label>
+                    <input
+                        type="password"
+                        value={password}
+                        required
+                        onChange={e => setPassword(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    style={{
+                        padding: "10px",
+                        border: "1px solid",
+                        background: "none",
+                        cursor: isLoading ? "not-allowed" : "pointer",
+                        marginTop: "10px",
+                        fontWeight: "bold"
+                    }}
+                >
+                    {isLoading ? 'Logging in...' : 'Login'}
+                </button>
+            </form>
+        </div>
     );
 }

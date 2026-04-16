@@ -100,90 +100,135 @@ export default function Register() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h2>Register</h2>
+        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", maxWidth: "400px", margin: "40px auto" }}>
+            <form onSubmit={handleSubmit} style={{ border: "1px solid", padding: "20px", display: "flex", flexDirection: "column", gap: "15px" }}>
+                <h2 style={{ margin: "0 0 10px 0" }}>Register</h2>
+                {message && <p style={{ fontWeight: "bold" }}>{message}</p>}
 
-            <h4>Name (optional)</h4>
-            <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-            />
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Name (optional)</label>
+                    <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
 
-            <h4>Surname (optional)</h4>
-            <input
-                type="text"
-                value={surname}
-                onChange={(e) => setSurname(e.target.value)}
-            />
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Surname (optional)</label>
+                    <input
+                        type="text"
+                        value={surname}
+                        onChange={(e) => setSurname(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
 
-            <h4>Email</h4>
-            <input
-                type="email"
-                value={email}
-                required
-                onChange={(e) => setEmail(e.target.value)}
-            />
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Email</label>
+                    <input
+                        type="email"
+                        value={email}
+                        required
+                        onChange={(e) => setEmail(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
 
-            <h4>Password</h4>
-            <input
-                type="password"
-                value={password}
-                required
-                onChange={(e) => setPassword(e.target.value)}
-            />
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Password</label>
+                    <input
+                        type="password"
+                        value={password}
+                        required
+                        onChange={(e) => setPassword(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
 
-            <h4>Confirm Password</h4>
-            <input
-                type="password"
-                value={confirmPassword}
-                required
-                onChange={(e) => setConfirmPassword(e.target.value)}
-            />
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Confirm Password</label>
+                    <input
+                        type="password"
+                        value={confirmPassword}
+                        required
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
 
-            <h4>Gender (optional)</h4>
-            <select value={genderId} onChange={e => setGenderId(e.target.value)}>
-                <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="non-binary">Other</option>
-            </select>
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Gender (optional)</label>
+                    <select
+                        value={genderId}
+                        onChange={e => setGenderId(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    >
+                        <option value="">Select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="non-binary">Other</option>
+                    </select>
+                </div>
 
-            <h4>Weight kg (optional)</h4>
-            <input
-                type="number"
-                step="1"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-            />
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Weight kg (optional)</label>
+                    <input
+                        type="number"
+                        step="1"
+                        value={weight}
+                        onChange={(e) => setWeight(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
 
-            <h4>Height cm (optional)</h4>
-            <input
-                type="number"
-                step="1"
-                value={height}
-                onChange={(e) => setHeight(e.target.value)}
-            />
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Height cm (optional)</label>
+                    <input
+                        type="number"
+                        step="1"
+                        value={height}
+                        onChange={(e) => setHeight(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
 
-            <h4>Birth date (optional)</h4>
-            <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-            />
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Birth date (optional)</label>
+                    <input
+                        type="date"
+                        value={birthDate}
+                        onChange={(e) => setBirthDate(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
 
-            <h4>Profile picture URL (optional)</h4>
-            <input
-                type="url"
-                value={profilePicture}
-                onChange={(e) => setProfilePicture(e.target.value)}
-            />
+                <div>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Profile picture URL (optional)</label>
+                    <input
+                        type="url"
+                        value={profilePicture}
+                        onChange={(e) => setProfilePicture(e.target.value)}
+                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                    />
+                </div>
 
-            <button type="submit" disabled={isLoading}>
-                {isLoading ? "Registering..." : "Register"}
-            </button>
-
-            {message && <p>{message}</p>}
-        </form >
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    style={{
+                        padding: "10px",
+                        border: "1px solid",
+                        background: "none",
+                        cursor: isLoading ? "not-allowed" : "pointer",
+                        marginTop: "10px",
+                        fontWeight: "bold"
+                    }}
+                >
+                    {isLoading ? "Registering..." : "Register"}
+                </button>
+            </form>
+        </div>
     );
 }

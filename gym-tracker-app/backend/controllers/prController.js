@@ -31,3 +31,19 @@ exports.createPR = async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to manually create PR' });
     }
 };
+
+exports.deletePR = async (req, res) => {
+    try {
+        const prId = req.params.id;
+        const success = await PR.deletePR(req.userId, prId);
+
+        if (success) {
+            res.json({ success: true, message: 'PR deleted successfully' });
+        } else {
+            res.status(404).json({ success: false, error: 'PR not found or you do not have permission to delete it' });
+        }
+    } catch (error) {
+        console.error("Error deleting PR:", error);
+        res.status(500).json({ success: false, error: 'Failed to delete PR' });
+    }
+};

@@ -86,7 +86,7 @@ exports.createExercise = async (req, res) => {
 exports.modifyExercise = async (req, res) => {
   console.log("Modify exercise request received");
   try {
-    id = req.params.id;
+    const id = req.params.id;
 
     const { exercice_name, body_part, target_muscle, secondary_muscles, equipment, difficulty, category, description, instructions } = req.body;
 

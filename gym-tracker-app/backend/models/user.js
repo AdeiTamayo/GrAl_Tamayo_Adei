@@ -5,14 +5,14 @@ class User {
     /**
      * Create a new user
      */
-    static async createUser(name, surname, email, password, gender, weight, height, birth_date, profile_picture) {
+    static async createUser(name, surname, email, password, gender, weight, height, birth_date) {
         try {
             if (!email || !password) {
                 throw new Error('Email and password are required');
             }
             const hashedPassword = await bcrypt.hash(password, 10);
             const query = `
-                INSERT INTO users (name, surname, email, password, gender, weight, height, birth_date, profile_picture) 
+                INSERT INTO users (name, surname, email, password, gender, weight, height, birth_date) 
                 VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) 
                 RETURNING id
             `;
@@ -24,8 +24,7 @@ class User {
                 gender ?? null,
                 weight ?? null,
                 height ?? null,
-                birth_date ?? null,
-                profile_picture ?? null
+                birth_date ?? null
             ]);
             return result.rows[0];
         } catch (error) {
@@ -61,7 +60,7 @@ class User {
     static async findUserById(id) {
         try {
             const query = `
-                SELECT name, surname, email, gender, weight, height, birth_date, profile_picture 
+                SELECT name, surname, email, gender, weight, height, birth_date 
                 FROM users 
                 WHERE id = $1
             `;

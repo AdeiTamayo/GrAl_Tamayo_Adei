@@ -14,6 +14,7 @@ interface WorkoutExercise {
     exercise_order: number;
     name: string;
     sets: Set[];
+    category?: string;
 }
 
 interface Workout {
@@ -29,6 +30,7 @@ interface Exercise {
     id: number;
     name: string;
     equipment?: string;
+    category?: string;
 }
 
 export default function Workouts() {
@@ -53,6 +55,7 @@ export default function Workouts() {
     const [newSetWeight, setNewSetWeight] = useState<number | "">("");
     const [newSetReps, setNewSetReps] = useState<number | "">("");
     const [newSetTime, setNewSetTime] = useState<number | "">("");
+    const [newSetNote, setNewSetNote] = useState("");
 
     // Dropdown handling
     const [showDropdown, setShowDropdown] = useState(false);
@@ -63,9 +66,9 @@ export default function Workouts() {
         "Authorization": `Bearer ${localStorage.getItem("user_login_token")}`
     }), []);
 
-    const cardioEquipment = ['stationary bike', 'elliptical machine', 'stepmill machine', 'upper body ergometer'];
-    const isCardio = selectedExercise && selectedExercise.equipment
-        ? cardioEquipment.includes(selectedExercise.equipment.toLowerCase())
+
+    const isCardio = selectedExercise
+        ? selectedExercise.category === "cardio"
         : false;
 
     // Initial Fetch
@@ -76,6 +79,7 @@ export default function Workouts() {
     // Handle clicking outside the dropdown
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
+            console.log("click");
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setShowDropdown(false);
             }
@@ -87,7 +91,7 @@ export default function Workouts() {
     // --- Backend Calls ---
     async function fetchExercises() {
         try {
-            const res = await fetch("/api/exercises", { headers });
+            const res = await fetch("http://localhost:8000/api/exercises", { headers });
             const data = await res.json();
             if (data.success) setExercises(data.data);
         } catch (err: any) {
@@ -97,7 +101,7 @@ export default function Workouts() {
 
     async function fetchWorkouts() {
         try {
-            const res = await fetch("/api/workouts", { headers });
+            const res = await fetch("http://localhost:8000/api/workouts", { headers });
             const data = await res.json();
             if (data.success) setWorkouts(data.data);
             else setError(data.error);
@@ -108,7 +112,7 @@ export default function Workouts() {
 
     async function fetchWorkoutById(id: number) {
         try {
-            const res = await fetch(`/api/workouts/${id}`, { headers });
+            const res = await fetch(`http://localhost:8000/api/workouts/${id}`, { headers });
             const data = await res.json();
             if (data.success) setSelectedWorkout(data.data);
             else setError(data.error);
@@ -122,7 +126,7 @@ export default function Workouts() {
         setIsCreating(true);
         setError(null);
         try {
-            const res = await fetch("/api/workouts", {
+            const res = await fetch("http://localhost:8000/api/workouts", {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
@@ -152,7 +156,7 @@ export default function Workouts() {
 
     async function deleteWorkout(id: number) {
         try {
-            const res = await fetch(`/api/workouts/${id}`, { method: "DELETE", headers });
+            const res = await fetch(`http://localhost:8000/api/workouts/${id}`, { method: "DELETE", headers });
             const data = await res.json();
             if (data.success) {
                 setWorkouts(prev => prev.filter(w => w.id !== id));
@@ -183,14 +187,15 @@ export default function Workouts() {
         setIsAddingSet(true);
         setError(null);
         try {
-            const res = await fetch(`/api/workouts/${selectedWorkout.id}/sets`, {
+            const res = await fetch(`http://localhost:8000/api/workouts/${selectedWorkout.id}/sets`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
                     exercise_id: selectedExercise.id,
                     weight: isCardio ? null : newSetWeight,
                     reps: isCardio ? null : newSetReps,
-                    time: isCardio ? newSetTime : null
+                    time: isCardio ? newSetTime : null,
+                    note: newSetNote || undefined
                 })
             });
             const data = await res.json();
@@ -199,6 +204,7 @@ export default function Workouts() {
                 setNewSetWeight("");
                 setNewSetReps("");
                 setNewSetTime("");
+                setNewSetNote("");
             } else {
                 setError(data.error);
             }
@@ -225,7 +231,7 @@ export default function Workouts() {
         });
 
         try {
-            const res = await fetch(`/api/workouts/sets/${setId}`, { method: "DELETE", headers });
+            const res = await fetch(`http://localhost:8000/api/workouts/sets/${setId}`, { method: "DELETE", headers });
             const data = await res.json();
             if (!data.success) {
                 setError(data.error);
@@ -248,7 +254,7 @@ export default function Workouts() {
     return (
         <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
             <h1>Workouts Management</h1>
-            {error && <p style={{ color: "red", fontWeight: "bold" }}>Error: {error}</p>}
+            {error && <p style={{ fontWeight: "bold" }}>Error: {error}</p>}
 
             <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
 
@@ -256,8 +262,8 @@ export default function Workouts() {
                 <div style={{ flex: 1, maxWidth: "450px" }}>
 
                     {/* Create Form */}
-                    <div style={{ border: "1px solid #ccc", padding: "20px", borderRadius: "8px", marginBottom: "20px", backgroundColor: "#f9f9f9" }}>
-                        <h3>Create New Workout</h3>
+                    <div style={{ border: "1px solid", padding: "20px", marginBottom: "20px" }}>
+                        <h3 style={{ marginTop: 0 }}>Create New Workout</h3>
                         <form onSubmit={createWorkout} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                             <input
                                 type="text"
@@ -265,40 +271,40 @@ export default function Workouts() {
                                 value={newWorkoutName}
                                 onChange={e => setNewWorkoutName(e.target.value)}
                                 required
-                                style={{ padding: "8px" }}
+                                style={{ padding: "8px", border: "1px solid" }}
                             />
                             <input
                                 type="date"
                                 value={newWorkoutDate}
                                 onChange={e => setNewWorkoutDate(e.target.value)}
-                                style={{ padding: "8px" }}
+                                style={{ padding: "8px", border: "1px solid" }}
                             />
                             <input
                                 type="text"
                                 placeholder="Notes (optional)"
                                 value={newWorkoutNote}
                                 onChange={e => setNewWorkoutNote(e.target.value)}
-                                style={{ padding: "8px" }}
+                                style={{ padding: "8px", border: "1px solid" }}
                             />
-                            <button type="submit" disabled={isCreating} style={{ padding: "10px", cursor: isCreating ? "not-allowed" : "pointer", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px" }}>
+                            <button type="submit" disabled={isCreating} style={{ padding: "10px", border: "1px solid", background: "none", cursor: isCreating ? "not-allowed" : "pointer", fontWeight: "bold" }}>
                                 {isCreating ? "Creating..." : "Create Workout"}
                             </button>
                         </form>
                     </div>
 
                     {/* Workouts List */}
-                    <div style={{ border: "1px solid #ccc", padding: "20px", borderRadius: "8px" }}>
-                        <h2>All Workouts</h2>
+                    <div style={{ border: "1px solid", padding: "20px" }}>
+                        <h2 style={{ marginTop: 0 }}>All Workouts</h2>
                         <ul style={{ listStyleType: "none", padding: 0 }}>
                             {workouts.map(w => (
-                                <li key={w.id} style={{ borderBottom: "1px solid #ddd", padding: "15px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <li key={w.id} style={{ borderBottom: "1px solid", padding: "15px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <div>
                                         <strong style={{ fontSize: "1.1em" }}>{w.name}</strong><br />
-                                        <small style={{ color: "#666" }}>{w.date?.substring(0, 10)}</small>
+                                        <small>{w.date?.substring(0, 10)}</small>
                                     </div>
                                     <div style={{ display: "flex", gap: "10px" }}>
-                                        <button onClick={() => fetchWorkoutById(w.id)} style={{ cursor: "pointer", padding: "5px 10px" }}>View</button>
-                                        <button onClick={() => deleteWorkout(w.id)} style={{ cursor: "pointer", padding: "5px 10px", color: "red" }}>Delete</button>
+                                        <button onClick={() => fetchWorkoutById(w.id)} style={{ cursor: "pointer", padding: "5px 10px", border: "1px solid", background: "none" }}>View</button>
+                                        <button onClick={() => deleteWorkout(w.id)} style={{ cursor: "pointer", padding: "5px 10px", border: "1px solid", background: "none" }}>Delete</button>
                                     </div>
                                 </li>
                             ))}
@@ -308,39 +314,39 @@ export default function Workouts() {
 
                 {/* ---------- RIGHT COLUMN (DETAILS) ---------- */}
                 {selectedWorkout && (
-                    <div style={{ flex: 1.5, border: "2px solid #007bff", padding: "25px", borderRadius: "8px", backgroundColor: "#fdfdff" }}>
+                    <div style={{ flex: 1.5, border: "1px solid", padding: "25px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                             <div>
                                 <h2 style={{ marginTop: 0 }}>Workout: {selectedWorkout.name}</h2>
                                 <p style={{ margin: "5px 0" }}><strong>Date:</strong> {selectedWorkout.date?.substring(0, 10)}</p>
                                 <p style={{ margin: "5px 0" }}><strong>Note:</strong> {selectedWorkout.note || "No notes"}</p>
                             </div>
-                            <button onClick={() => setSelectedWorkout(null)} style={{ padding: "5px 10px", cursor: "pointer" }}>Close Panel</button>
+                            <button onClick={() => setSelectedWorkout(null)} style={{ padding: "5px 10px", cursor: "pointer", border: "1px solid", background: "none" }}>Close Panel</button>
                         </div>
 
-                        <hr style={{ margin: "20px 0" }} />
+                        <hr style={{ margin: "20px 0", border: "none", borderTop: "1px solid" }} />
 
                         <h3>Recorded Exercises & Sets</h3>
                         {!selectedWorkout.exercises || selectedWorkout.exercises.length === 0 ? (
-                            <p style={{ color: "#777", fontStyle: "italic" }}>No exercises logged for this workout yet.</p>
+                            <p style={{ fontStyle: "italic" }}>No exercises logged for this workout yet.</p>
                         ) : (
                             <ul style={{ listStyleType: "none", padding: 0 }}>
                                 {selectedWorkout.exercises.map(ex => (
-                                    <li key={ex.id} style={{ border: "1px solid #ccc", padding: "15px", marginBottom: "15px", borderRadius: "6px", backgroundColor: "#fff" }}>
-                                        <h4 style={{ margin: "0 0 10px 0", color: "#333" }}>
-                                            {ex.name} <small style={{ fontWeight: "normal", color: "#888" }}>Exercise: {ex.exercise_order}</small>
+                                    <li key={ex.id} style={{ border: "1px solid", padding: "15px", marginBottom: "15px" }}>
+                                        <h4 style={{ margin: "0 0 10px 0" }}>
+                                            {ex.name || `Unknown Exercise ${ex.exercise_id}`} <small style={{ fontWeight: "normal" }}>(Order: {ex.exercise_order})</small>
                                         </h4>
                                         <ul style={{ listStyleType: "circle", paddingLeft: "25px", margin: 0 }}>
                                             {ex.sets?.map(set => (
                                                 <li key={set.id} style={{ margin: "8px 0", display: "flex", alignItems: "center" }}>
-                                                    <span style={{ width: "150px" }}>Set {set.set_number}:
-                                                        {set.time ? (
+                                                    <span style={{ width: "200px" }}>Set {set.set_number}:
+                                                        {set.time != null ? (
                                                             <strong> {set.time} mins</strong>
                                                         ) : (
                                                             <strong> {set.weight}kg × {set.repetitions} reps</strong>
                                                         )}
                                                     </span>
-                                                    <button onClick={() => deleteSet(set.id)} style={{ cursor: "pointer", color: "red", fontSize: "0.8em", padding: "2px 6px", marginLeft: "10px", border: "1px solid #ccc", background: "none" }}>Delete Set</button>
+                                                    <button onClick={() => deleteSet(set.id)} style={{ cursor: "pointer", fontSize: "0.8em", padding: "2px 6px", marginLeft: "10px", border: "1px solid", background: "none" }}>Delete Set</button>
                                                 </li>
                                             ))}
                                         </ul>
@@ -349,10 +355,10 @@ export default function Workouts() {
                             </ul>
                         )}
 
-                        <hr style={{ margin: "20px 0" }} />
+                        <hr style={{ margin: "20px 0", border: "none", borderTop: "1px solid" }} />
 
                         <h3>Add New Set</h3>
-                        <form onSubmit={handleAddSet} style={{ display: "flex", flexDirection: "column", gap: "10px", backgroundColor: "#eef5ff", padding: "15px", borderRadius: "8px" }}>
+                        <form onSubmit={handleAddSet} style={{ display: "flex", flexDirection: "column", gap: "10px", border: "1px solid", padding: "15px" }}>
                             <div style={{ position: "relative" }} ref={dropdownRef}>
                                 <input
                                     type="text"
@@ -364,10 +370,10 @@ export default function Workouts() {
                                         setShowDropdown(true);
                                     }}
                                     onFocus={() => setShowDropdown(true)}
-                                    style={{ padding: "8px", width: "100%", boxSizing: "border-box", borderColor: !selectedExercise && searchQuery ? "red" : "#ccc" }}
+                                    style={{ padding: "8px", width: "100%", boxSizing: "border-box", border: "1px solid" }}
                                 />
                                 {showDropdown && filteredExercises.length > 0 && (
-                                    <ul style={{ position: "absolute", zIndex: 10, width: "100%", background: "#fff", border: "1px solid #ccc", listStyle: "none", padding: 0, margin: 0, maxHeight: "200px", overflowY: "auto", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
+                                    <ul style={{ position: "absolute", zIndex: 10, width: "100%", background: "white", border: "1px solid", listStyle: "none", padding: 0, margin: 0, maxHeight: "200px", overflowY: "auto" }}>
                                         {filteredExercises.map(ex => (
                                             <li
                                                 key={ex.id}
@@ -376,7 +382,7 @@ export default function Workouts() {
                                                     setSelectedExercise(ex);
                                                     setShowDropdown(false);
                                                 }}
-                                                style={{ padding: "10px", cursor: "pointer", borderBottom: "1px solid #eee" }}
+                                                style={{ padding: "10px", cursor: "pointer", borderBottom: "1px solid" }}
                                             >
                                                 {ex.name}
                                             </li>
@@ -393,18 +399,18 @@ export default function Workouts() {
                                         value={newSetTime}
                                         onChange={e => setNewSetTime(Number(e.target.value))}
                                         required
-                                        style={{ padding: "8px", flex: 2 }}
+                                        style={{ padding: "8px", flex: 2, border: "1px solid" }}
                                     />
                                 ) : (
                                     <>
                                         <input
                                             type="number"
-                                            step="1"
+                                            step="0.1"
                                             placeholder="Weight (kg)"
                                             value={newSetWeight}
                                             onChange={e => setNewSetWeight(Number(e.target.value))}
                                             required
-                                            style={{ padding: "8px", flex: 1 }}
+                                            style={{ padding: "8px", flex: 1, border: "1px solid" }}
                                         />
                                         <input
                                             type="number"
@@ -412,14 +418,21 @@ export default function Workouts() {
                                             value={newSetReps}
                                             onChange={e => setNewSetReps(Number(e.target.value))}
                                             required
-                                            style={{ padding: "8px", flex: 1 }}
+                                            style={{ padding: "8px", flex: 1, border: "1px solid" }}
                                         />
                                     </>
                                 )}
-                                <button type="submit" disabled={isAddingSet} style={{ padding: "8px", flex: 1, backgroundColor: "#fff", color: "#000", border: "1px solid #ccc", cursor: isAddingSet ? "not-allowed" : "pointer", fontWeight: "bold" }}>
-                                    {isAddingSet ? "Adding..." : "+ Add Set"}
-                                </button>
                             </div>
+                            <input
+                                type="text"
+                                placeholder="Note (optional)"
+                                value={newSetNote}
+                                onChange={e => setNewSetNote(e.target.value)}
+                                style={{ padding: "8px", width: "100%", boxSizing: "border-box", border: "1px solid" }}
+                            />
+                            <button type="submit" disabled={isAddingSet} style={{ padding: "8px", border: "1px solid", background: "none", cursor: isAddingSet ? "not-allowed" : "pointer", fontWeight: "bold" }}>
+                                {isAddingSet ? "Adding..." : "+ Add Set"}
+                            </button>
                         </form>
                     </div>
                 )}

@@ -9,7 +9,6 @@ interface UserProfile {
     weight: number | null;
     height: number | null;
     birth_date: string | null;
-    profile_picture: string | null;
 }
 
 export default function Profile() {
@@ -133,48 +132,47 @@ export default function Profile() {
     if (!profile || !form) return null;
 
     return (
-        <div>
+        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", maxWidth: "500px", margin: "40px auto", border: "1px solid" }}>
             {/* Header */}
-            <div>
-                {profile.profile_picture && (
-                    <img src={profile.profile_picture} alt="Profile" />
-                )}
+            <div style={{ display: "flex", alignItems: "center", gap: "20px", paddingBottom: "20px", borderBottom: "1px solid", marginBottom: "20px" }}>
                 <div>
-                    <h1>
-                        {profile.name} {profile.surname}
+                    <h1 style={{ margin: 0, fontWeight: "bold" }}>
+                        {profile.name}{profile.surname}
                     </h1>
                 </div>
             </div>
 
-            {/* Info */}
-            <div>
-                {[
-                    { label: "Weight", value: profile.weight ? `${profile.weight} kg` : "—" },
-                    { label: "Height", value: profile.height ? `${profile.height} cm` : "—" },
-                    { label: "Birthdate", value: formatBirthDate(profile.birth_date) },
-                ].map(({ label, value }) => (
-                    <div key={label}>
-                        <p>{label}</p>
-                        <p>{value}</p>
-                    </div>
-                ))}
-                <div>
-                    <span>Email: </span>
-                    <span>{profile.email}</span>
-                </div>
-                <div>
-                    <span>Gender: </span>
-                    <span>{profile.gender ?? "—"}</span>
-                </div>
-            </div>
-
             {/* Messages */}
-            {success && <p>{success}</p>}
-            {error && <p>{error}</p>}
+            {success && <p style={{ fontWeight: "bold" }}>{success}</p>}
+            {error && <p style={{ fontWeight: "bold" }}>{error}</p>}
+
+            {/* Read-only Info */}
+            {!editing && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+                    {[
+                        { label: "Weight", value: profile.weight ? `${profile.weight} kg` : "—" },
+                        { label: "Height", value: profile.height ? `${profile.height} cm` : "—" },
+                        { label: "Birthdate", value: formatBirthDate(profile.birth_date) },
+                    ].map(({ label, value }) => (
+                        <div key={label} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #ccc", paddingBottom: "5px" }}>
+                            <strong>{label}:</strong>
+                            <span>{value}</span>
+                        </div>
+                    ))}
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #ccc", paddingBottom: "5px" }}>
+                        <strong>Email: </strong>
+                        <span>{profile.email}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #ccc", paddingBottom: "5px" }}>
+                        <strong>Gender: </strong>
+                        <span>{profile.gender ?? "—"}</span>
+                    </div>
+                </div>
+            )}
 
             {/* Editable fields */}
             {editing &&
-                <div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "15px", marginBottom: "20px" }}>
                     {[
                         { label: "Name", field: "name" as keyof UserProfile, type: "text" },
                         { label: "Surname", field: "surname" as keyof UserProfile, type: "text" },
@@ -183,56 +181,65 @@ export default function Profile() {
                         { label: "Birth date", field: "birth_date" as keyof UserProfile, type: "date" },
                     ].map(({ label, field, type }) => (
                         <div key={field}>
-                            <span>{label}</span>
-                            {editing ? (
-                                <input
-                                    type={type}
-                                    value={getFormValue(field)}
-                                    onChange={e => handleChange(field, e.target.value)}
-                                />
-                            ) : (
-                                <span>
-                                    {field === "birth_date" ? formatBirthDate(profile.birth_date) : ((profile as any)[field] ?? "—")}
-                                </span>
-                            )}
+                            <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>{label}</label>
+                            <input
+                                type={type}
+                                value={getFormValue(field)}
+                                onChange={e => handleChange(field, e.target.value)}
+                                style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                            />
                         </div>
                     ))}
 
                     {/* Gender — select */}
                     <div>
-                        <span>Gender</span>
-                        {editing ? (
-                            <select
-                                value={form.gender ?? ""}
-                                onChange={e => handleChange("gender", e.target.value)}
-                            >
-                                <option value="">—</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="non-binary">Non-binary</option>
-                            </select>
-                        ) : (
-                            <span>{profile.gender ?? "—"}</span>
-                        )}
+                        <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Gender</label>
+                        <select
+                            value={form.gender ?? ""}
+                            onChange={e => handleChange("gender", e.target.value)}
+                            style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                        >
+                            <option value="">—</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="non-binary">Non-binary</option>
+                        </select>
                     </div>
                 </div>
             }
 
             {/* Action buttons */}
-            <div>
+            <div style={{ display: "flex", gap: "10px" }}>
                 {editing ? (
                     <>
-                        <button onClick={saveProfile} disabled={saving}>
+                        <button
+                            onClick={saveProfile}
+                            disabled={saving}
+                            style={{ flex: 1, padding: "10px", border: "1px solid", background: "none", cursor: saving ? "not-allowed" : "pointer", fontWeight: "bold" }}
+                        >
                             {saving ? "Saving..." : "Save changes"}
                         </button>
-                        <button onClick={cancelEdit}>Cancel</button>
+                        <button
+                            onClick={cancelEdit}
+                            style={{ flex: 1, padding: "10px", border: "1px solid", background: "none", cursor: "pointer", fontWeight: "bold" }}
+                        >
+                            Cancel
+                        </button>
                     </>
                 ) : (
                     <>
-                        <button onClick={() => { setEditing(true); setSuccess(null); }}>
+                        <button
+                            onClick={() => { setEditing(true); setSuccess(null); }}
+                            style={{ flex: 1, padding: "10px", border: "1px solid", background: "none", cursor: "pointer", fontWeight: "bold" }}
+                        >
                             Edit profile
                         </button>
-                        <button onClick={deleteProfile}>Delete User</button>
+                        <button
+                            onClick={deleteProfile}
+                            style={{ flex: 1, padding: "10px", border: "1px solid", background: "none", cursor: "pointer", fontWeight: "bold" }}
+                        >
+                            Delete User
+                        </button>
                     </>
                 )}
             </div>

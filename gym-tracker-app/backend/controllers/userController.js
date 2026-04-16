@@ -132,11 +132,11 @@ exports.login = async (req, res) => {
  */
 exports.register = async (req, res) => {
     try {
-        const { name, surname, email, password, gender_id, weight, height, birth_date, profile_picture } = req.body;
+        const { name, surname, email, password, gender_id, weight, height, birth_date } = req.body;
 
         console.log('\n=== Register Request ===');
         console.log(`[Register] Email: ${email}`);
-        console.log(`[Register] User values: name=${name}, surname=${surname}, email=${email}, gender_id=${gender_id}, weight=${weight}, height=${height}, birth_date=${birth_date}, profile_picture=${profile_picture}`);
+        console.log(`[Register] User values: name=${name}, surname=${surname}, email=${email}, gender_id=${gender_id}, weight=${weight}, height=${height}, birth_date=${birth_date}`);
 
         // Validate input
         if (!email || !password) {
@@ -156,7 +156,7 @@ exports.register = async (req, res) => {
         }
 
         // Create user with hashed password
-        const user = await User.createUser(name, surname, email, password, gender_id, weight, height, birth_date, profile_picture);
+        const user = await User.createUser(name, surname, email, password, gender_id, weight, height, birth_date);
 
         console.log('[Register] User registered successfully');
 

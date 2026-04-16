@@ -138,21 +138,26 @@ class Exercise {
     }
 
     static async getFilterOptions() {
-        const equipmentQuery = `SELECT unnest(enum_range(NULL::equipment_type))::text AS name`;
-        const targetMusclesQuery = `SELECT DISTINCT target_muscle AS name FROM exercises WHERE target_muscle IS NOT NULL ORDER BY name`;
-        const categoryType = `SELECT unnest(enum_range(NULL::category_type))::text AS name`;
+        const equipmentQuery = `SELECT DISTINCT equipment AS name FROM exercises WHERE equipment IS NOT NULL AND equipment != '' ORDER BY equipment`;
+        const targetMusclesQuery = `SELECT DISTINCT target_muscle AS name FROM exercises WHERE target_muscle IS NOT NULL AND target_muscle != '' ORDER BY name`;
+        const categoryTypeQuery = `SELECT DISTINCT category AS name FROM exercises WHERE category IS NOT NULL AND category != '' ORDER BY category`;
 
-        const [equipmentRes, musclesRes, categoryTypeRes] = await Promise.all([
-            pool.query(equipmentQuery),
-            pool.query(targetMusclesQuery),
-            pool.query(categoryType)
-        ]);
+        try {
+            const [equipmentRes, musclesRes, categoryTypeRes] = await Promise.all([
+                pool.query(equipmentQuery),
+                pool.query(targetMusclesQuery),
+                pool.query(categoryTypeQuery)
+            ]);
 
-        return {
-            equipment: equipmentRes.rows.map(row => row.name),
-            muscles: musclesRes.rows.map(row => row.name),
-            categoryType: categoryTypeRes.rows.map(row => row.name)
-        };
+            return {
+                equipment: equipmentRes.rows.map(row => row.name),
+                muscles: musclesRes.rows.map(row => row.name),
+                categoryType: categoryTypeRes.rows.map(row => row.name)
+            };
+        } catch (error) {
+            console.error('[Exercise Model] Error fetching filter options:', error.message);
+            throw error;
+        }
     }
 
 }

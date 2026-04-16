@@ -95,7 +95,7 @@ exports.createWorkout = async (req, res) => {
 exports.updateWorkout = async (req, res) => {
     console.log("Modify workout request received");
     try {
-        id = req.params.id;
+        const id = req.params.id;
 
         const { name, date, note } = req.body;
 
@@ -175,9 +175,9 @@ exports.updateSet = async (req, res) => {
     console.log("Update set request received");
     try {
         const setId = req.params.setId;
-        const { weight, reps } = req.body;
+        const { weight, reps, time } = req.body;
 
-        const updatedSet = await Workout.updateSet(setId, weight, reps);
+        const updatedSet = await Workout.updateSet(setId, weight, reps, time);
 
         return res.json({
             success: true,

@@ -6,31 +6,31 @@ const authMiddleware = require('../middleware/auth');
 //-------------- Routines --------------
 
 // GET /api/exercises/routines - Get all routines for the logged-in user
-router.get('/routines', authMiddleware, routineController.getUserRoutines);
+router.get('/', authMiddleware, routineController.getUserRoutines);
 
 // GET /api/exercises/routines/:id - Get a specific routine + its exercises
-router.get('/routines/:id', authMiddleware, routineController.getRoutineById);
+router.get('/:id', authMiddleware, routineController.getRoutineById);
 
 // POST /api/exercises/routines - Create a new routine (e.g., "Leg Day")
-router.post('/routines', authMiddleware, routineController.createRoutine);
+router.post('', authMiddleware, routineController.createRoutine);
 
 // PUT /api/exercises/routines/:id - Update routine name or notes
-router.put('/routines/:id', authMiddleware, routineController.updateRoutine);
+router.put('/:id', authMiddleware, routineController.updateRoutine);
 
 // DELETE /api/exercises/routines/:id - Delete a routine
-router.delete('/routines/:id', authMiddleware, routineController.deleteRoutine);
+router.delete('/:id', authMiddleware, routineController.deleteRoutine);
 
 
 //-------------- Routine Exercises --------------
 
 // POST /api/exercises/routines/:id/exercises - Add an exercise to a routine
-router.post('/routines/:id/exercises', authMiddleware, routineController.addExerciseToRoutine);
+router.post('/:id/exercises', authMiddleware, routineController.addExerciseToRoutine);
 
 // PUT /api/exercises/routines/exercises/:item_id - Update planned sets/reps for a specific item
-router.put('/routines/exercises/:item_id', authMiddleware, routineController.updateRoutineExercise);
+router.put('/exercises/:item_id', authMiddleware, routineController.updateRoutineExercise);
 
 // DELETE /api/exercises/routines/exercises/:item_id - Remove an exercise from a routine
-router.delete('/routines/exercises/:item_id', authMiddleware, routineController.removeExerciseFromRoutine);
+router.delete('/exercises/:item_id', authMiddleware, routineController.removeExerciseFromRoutine);
 
 
 module.exports = router;

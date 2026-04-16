@@ -12,32 +12,42 @@ export default function Hero() {
     // Logic: Look at localStorage first, then navigation state, then N/A
     const displayEmail = localStorage.getItem('email') || user?.email || stateEmail || 'N/A';
 
+    const linkStyle = {
+        padding: "15px",
+        border: "1px solid",
+        textAlign: "center" as const,
+        textDecoration: "none",
+        color: "inherit",
+        fontWeight: "bold",
+        display: "block"
+    };
+
     return (
-        <div className="p-6 max-w-4xl mx-auto">
+        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", maxWidth: "800px", margin: "40px auto" }}>
             {/* Header / User Info Area */}
-            <div className="flex justify-between items-center mb-8 pb-4 border-b">
-                <h1 className="text-xl font-bold">Fitness App</h1>
-                <p className="text-sm font-medium">
-                    Logged in as: <span className="font-normal italic">{displayEmail}</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px", paddingBottom: "15px", borderBottom: "1px solid" }}>
+                <h1 style={{ margin: 0, fontWeight: "bold" }}>Fitness App</h1>
+                <p style={{ margin: 0, fontWeight: "bold" }}>
+                    Logged in as: <span style={{ fontWeight: "normal", fontStyle: "italic" }}>{displayEmail}</span>
                 </p>
             </div>
 
             {/* Navigation Grid */}
-            <nav className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-                <Link to="/login" className="p-3 border text-center rounded hover:bg-gray-50">Login</Link>
-                <Link to="/register" className="p-3 border text-center rounded hover:bg-gray-50">Register</Link>
-                <Link to="/profile" className="p-3 border text-center rounded hover:bg-gray-50">Profile</Link>
+            <nav style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "15px" }}>
+                <Link to="/login" style={linkStyle}>Login</Link>
+                <Link to="/register" style={linkStyle}>Register</Link>
+                <Link to="/profile" style={linkStyle}>Profile</Link>
 
-                <Link to="/workouts" className="p-3 border text-center rounded hover:bg-gray-50">Workouts</Link>
-                <Link to="/exercises" className="p-3 border text-center rounded hover:bg-gray-50">Exercises</Link>
-                <Link to="/videos" className="p-3 border text-center rounded hover:bg-gray-50">Videos</Link>
-                <Link to="/upload" className="p-3 border text-center rounded hover:bg-gray-50">Upload</Link>
+                <Link to="/workouts" style={linkStyle}>Workouts</Link>
+                <Link to="/exercises" style={linkStyle}>Exercises</Link>
+                <Link to="/videos" style={linkStyle}>Videos</Link>
+                <Link to="/upload" style={linkStyle}>Upload</Link>
 
-                <Link to="/schedule" className="p-3 border text-center rounded hover:bg-gray-50">Schedule</Link>
-                <Link to="/history" className="p-3 border text-center rounded hover:bg-gray-50">History</Link>
-                <Link to="/goals" className="p-3 border text-center rounded hover:bg-gray-50">Goals</Link>
-                <Link to="/stats" className="p-3 border text-center rounded hover:bg-gray-50">Stats</Link>
-                <Link to="/prs" className="p-3 border text-center rounded hover:bg-gray-50">PRs</Link>
+                <Link to="/schedule" style={linkStyle}>Schedule</Link>
+                <Link to="/history" style={linkStyle}>History</Link>
+                <Link to="/goals" style={linkStyle}>Goals</Link>
+                <Link to="/stats" style={linkStyle}>Stats</Link>
+                <Link to="/prs" style={linkStyle}>PRs</Link>
             </nav>
         </div>
     );

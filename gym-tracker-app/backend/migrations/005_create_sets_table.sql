@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS sets (
     set_number          INTEGER      NOT NULL,
     weight              DECIMAL(5,2),
     repetitions         INTEGER,
-    note                VARCHAR(255)
+    note                VARCHAR(255), 
+    time                INTEGER
 );
 
