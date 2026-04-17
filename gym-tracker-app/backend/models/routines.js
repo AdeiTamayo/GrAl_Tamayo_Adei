@@ -22,22 +22,34 @@ class Routine {
             const routine = routineResult.rows[0];
 
             const exercisesQuery = `
-                SELECT 
-                    re.id AS item_id, 
-                    re.exercise_order, 
-                    re.planned_sets, 
-                    re.planned_reps, 
-                    re.planned_weight, 
-                    re.note,
-                    e.id AS exercise_id, 
-                    e.name AS exercise_name, 
-                    e.body_part, 
-                    e.equipment
-                FROM routine_exercises re
-                JOIN exercises e ON re.exercise_id = e.id
-                WHERE re.routine_id = $1
-                ORDER BY re.exercise_order ASC;
-            `;
+            SELECT
+                re.id AS item_id,
+                re.exercise_order,
+                re.note,
+                e.id AS exercise_id,
+                e.name AS exercise_name,
+                e.body_part,
+                e.equipment,
+                COALESCE(
+                    json_agg(
+                        json_build_object(
+                            'id', rs.id,
+                            'set_number', rs.set_number,
+                            'planned_weight', rs.planned_weight,
+                            'planned_reps', rs.planned_reps,
+                            'planned_time', rs.planned_time
+                        )
+                        ORDER BY rs.set_number
+                    ) FILTER (WHERE rs.id IS NOT NULL),
+                    '[]'::json
+                ) AS sets
+            FROM routine_exercises re
+            JOIN exercises e ON re.exercise_id = e.id
+            LEFT JOIN routine_sets rs ON rs.routine_exercise_id = re.id
+            WHERE re.routine_id = $1
+            GROUP BY re.id, e.id, e.name, e.body_part, e.equipment
+            ORDER BY re.exercise_order ASC;
+        `;
             const exercisesResult = await pool.query(exercisesQuery, [routineId]);
 
             routine.exercises = exercisesResult.rows;
@@ -146,6 +158,46 @@ class Routine {
             return result.rowCount > 0;
         } catch (error) {
             console.error('[Routine Model] Error removing exercise from routine:', error);
+            throw error;
+        }
+    }
+
+    static async addSetToRoutineExercise(routineExerciseId, setNumber, weight, reps, time) {
+        try {
+            const query = `
+            INSERT INTO routine_sets (routine_exercise_id, set_number, planned_weight, planned_reps, planned_time) 
+            VALUES ($1, $2, $3, $4, $5) RETURNING *;
+        `;
+            const { rows } = await pool.query(query, [routineExerciseId, setNumber, weight, reps, time]);
+            return rows[0];
+        } catch (error) {
+            console.error('[Routine Model] Error adding set to routine:', error);
+            throw error;
+        }
+    }
+
+    static async updateRoutineSet(setId, weight, reps, time) {
+        try {
+            const query = `
+            UPDATE routine_sets 
+            SET planned_weight = $1, planned_reps = $2, planned_time = $3
+            WHERE id = $4 RETURNING *;
+        `;
+            const { rows } = await pool.query(query, [weight, reps, time, setId]);
+            return rows[0];
+        } catch (error) {
+            console.error('[Routine Model] Error updating routine set:', error);
+            throw error;
+        }
+    }
+
+    static async deleteRoutineSet(setId) {
+        try {
+            const query = `DELETE FROM routine_sets WHERE id = $1 RETURNING id;`;
+            const { rowCount } = await pool.query(query, [setId]);
+            return rowCount > 0;
+        } catch (error) {
+            console.error('[Routine Model] Error removing set from routine:', error);
             throw error;
         }
     }

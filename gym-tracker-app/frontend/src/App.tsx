@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Video from './pages/Videos';
 import Pr from './pages/Prs'
+import Routine from './pages/Routines';
 function App() {
   return (
     <Routes>
@@ -26,6 +27,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/videos" element={<Video />} />
       <Route path="/prs" element={<Pr />} />
+      <Route path="/routines" element={<Routine />} />
     </Routes>
   );
 }

@@ -46,7 +46,8 @@ export default function Hero() {
                 <Link to="/schedule" style={linkStyle}>Schedule</Link>
                 <Link to="/goals" style={linkStyle}>Goals</Link>
                 <Link to="/prs" style={linkStyle}>PRs</Link>
+                <Link to="/routines" style={linkStyle}>Routines</Link>
             </nav>
-        </div>
+        </div >
     );
 }

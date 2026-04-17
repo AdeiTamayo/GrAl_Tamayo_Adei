@@ -32,5 +32,9 @@ router.put('/exercises/:item_id', authMiddleware, routineController.updateRoutin
 // DELETE /api/exercises/routines/exercises/:item_id - Remove an exercise from a routine
 router.delete('/exercises/:item_id', authMiddleware, routineController.removeExerciseFromRoutine);
 
+router.post('/exercises/:item_id/sets', authMiddleware, routineController.addSetToRoutineExercise);
+router.put('/sets/:set_id', authMiddleware, routineController.updateRoutineSet);
+router.delete('/sets/:set_id', authMiddleware, routineController.deleteRoutineSet);
+
 
 module.exports = router;

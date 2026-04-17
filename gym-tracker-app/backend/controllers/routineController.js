@@ -15,7 +15,7 @@ exports.getUserRoutines = async (req, res) => {
 
         res.json({
             success: true,
-            data: routines
+            routines
         })
 
     } catch (error) {
@@ -181,3 +181,32 @@ exports.removeExerciseFromRoutine = async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to remove exercise from routine' });
     }
 }
+
+exports.addSetToRoutineExercise = async (req, res) => {
+    try {
+        const { set_number, planned_weight, planned_reps, planned_time } = req.body;
+        const set = await Routines.addSetToRoutineExercise(req.params.item_id, set_number, planned_weight, planned_reps, planned_time);
+        res.json({ success: true, set });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to add set' });
+    }
+};
+
+exports.updateRoutineSet = async (req, res) => {
+    try {
+        const { planned_weight, planned_reps, planned_time } = req.body;
+        const updated = await Routines.updateRoutineSet(req.params.set_id, planned_weight, planned_reps, planned_time);
+        res.json({ success: true, set: updated });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to update set' });
+    }
+};
+
+exports.deleteRoutineSet = async (req, res) => {
+    try {
+        const deleted = await Routines.deleteRoutineSet(req.params.set_id);
+        res.json({ success: deleted });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to delete set' });
+    }
+};
