@@ -1,5 +1,6 @@
 import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../utils/api";
 
 export default function Register() {
     const [name, setName] = useState("");
@@ -51,7 +52,7 @@ export default function Register() {
                 profile_picture: toNullableString(profilePicture)
             };
 
-            const response = await fetch("/api/user/register", {
+            const response = await apiFetch("/api/user/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -62,7 +63,7 @@ export default function Register() {
             const data = await response.json();
 
             if (data.success) {
-                const loginResponse = await fetch("/api/user/login", {
+                const loginResponse = await apiFetch("/api/user/login", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"

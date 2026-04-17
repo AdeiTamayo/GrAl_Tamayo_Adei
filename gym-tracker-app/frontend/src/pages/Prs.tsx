@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { apiFetch } from "../utils/api";
 
 interface PRSummary {
     id: number;
@@ -67,7 +68,7 @@ export default function PersonalRecords() {
 
     async function fetchExercises() {
         try {
-            const res = await fetch("http://localhost:8000/api/exercises", { headers });
+            const res = await apiFetch("/api/exercises", { headers });
             const data = await res.json();
             if (data.success) setExercises(data.data);
         } catch (err: any) {
@@ -77,7 +78,7 @@ export default function PersonalRecords() {
 
     async function fetchPrSummary() {
         try {
-            const res = await fetch("http://localhost:8000/api/prs", { headers });
+            const res = await apiFetch("/api/prs", { headers });
             const data = await res.json();
             if (data.success) {
                 setPrSummary(data.data);
@@ -91,7 +92,7 @@ export default function PersonalRecords() {
 
     async function fetchPrHistory(exerciseId: number, exerciseName: string) {
         try {
-            const res = await fetch(`http://localhost:8000/api/prs/${exerciseId}/history`, { headers });
+            const res = await apiFetch(`/api/prs/${exerciseId}/history`, { headers });
             const data = await res.json();
             if (data.success) {
                 setPrHistory(data.data);
@@ -110,7 +111,7 @@ export default function PersonalRecords() {
         setIsCreating(true);
         setError(null);
         try {
-            const res = await fetch("http://localhost:8000/api/prs", {
+            const res = await apiFetch("/api/prs", {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
@@ -149,7 +150,7 @@ export default function PersonalRecords() {
     async function deletePR(prId: number) {
         if (!window.confirm("Are you sure you want to delete this PR?")) return;
         try {
-            const res = await fetch(`http://localhost:8000/api/prs/${prId}`, {
+            const res = await apiFetch(`/api/prs/${prId}`, {
                 method: "DELETE",
                 headers
             });

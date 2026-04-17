@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent, useMemo, useRef } from "react";
+import { apiFetch } from "../utils/api";
 
 interface Set {
     id: number;
@@ -91,7 +92,7 @@ export default function Workouts() {
     // --- Backend Calls ---
     async function fetchExercises() {
         try {
-            const res = await fetch("http://localhost:8000/api/exercises", { headers });
+            const res = await apiFetch("/api/exercises", { headers });
             const data = await res.json();
             if (data.success) setExercises(data.data);
         } catch (err: any) {
@@ -101,7 +102,7 @@ export default function Workouts() {
 
     async function fetchWorkouts() {
         try {
-            const res = await fetch("http://localhost:8000/api/workouts", { headers });
+            const res = await apiFetch("/api/workouts", { headers });
             const data = await res.json();
             if (data.success) setWorkouts(data.data);
             else setError(data.error);
@@ -112,7 +113,7 @@ export default function Workouts() {
 
     async function fetchWorkoutById(id: number) {
         try {
-            const res = await fetch(`http://localhost:8000/api/workouts/${id}`, { headers });
+            const res = await apiFetch(`/api/workouts/${id}`, { headers });
             const data = await res.json();
             if (data.success) setSelectedWorkout(data.data);
             else setError(data.error);
@@ -126,7 +127,7 @@ export default function Workouts() {
         setIsCreating(true);
         setError(null);
         try {
-            const res = await fetch("http://localhost:8000/api/workouts", {
+            const res = await apiFetch("/api/workouts", {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
@@ -156,7 +157,7 @@ export default function Workouts() {
 
     async function deleteWorkout(id: number) {
         try {
-            const res = await fetch(`http://localhost:8000/api/workouts/${id}`, { method: "DELETE", headers });
+            const res = await apiFetch(`/api/workouts/${id}`, { method: "DELETE", headers });
             const data = await res.json();
             if (data.success) {
                 setWorkouts(prev => prev.filter(w => w.id !== id));
@@ -187,7 +188,7 @@ export default function Workouts() {
         setIsAddingSet(true);
         setError(null);
         try {
-            const res = await fetch(`http://localhost:8000/api/workouts/${selectedWorkout.id}/sets`, {
+            const res = await apiFetch(`/api/workouts/${selectedWorkout.id}/sets`, {
                 method: "POST",
                 headers,
                 body: JSON.stringify({
@@ -231,7 +232,7 @@ export default function Workouts() {
         });
 
         try {
-            const res = await fetch(`http://localhost:8000/api/workouts/sets/${setId}`, { method: "DELETE", headers });
+            const res = await apiFetch(`/api/workouts/sets/${setId}`, { method: "DELETE", headers });
             const data = await res.json();
             if (!data.success) {
                 setError(data.error);

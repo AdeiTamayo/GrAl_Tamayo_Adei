@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 
 import { Video } from '../../types';
+import { apiFetch } from '../utils/api';
 
 
 export default function UserVideos() {
@@ -17,7 +18,7 @@ export default function UserVideos() {
             setError('Please login first');
         }
 
-        fetch('http://localhost:8000/api/videos', {
+        apiFetch('/api/videos', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

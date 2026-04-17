@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../utils/api";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ export default function Login() {
         console.log("token:", localStorage.getItem("user_login_token"));
         console.log("email:", localStorage.getItem("email"))
         try {
-            const response = await fetch('http://localhost:8000/api/user/login', {
+            const response = await apiFetch('/api/user/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { apiFetch } from '../utils/api';
 
 type Exercise = {
     id: number;
@@ -86,7 +87,7 @@ export default function Exercises() {
 
     async function getFilterOptions() {
         try {
-            const response = await fetch("http://localhost:8000/api/exercises/filters", {
+            const response = await apiFetch("/api/exercises/filters", {
                 method: "GET",
                 headers
             });
@@ -102,7 +103,7 @@ export default function Exercises() {
         try {
             setLoading(true);
             setError("");
-            const response = await fetch("http://localhost:8000/api/exercises", {
+            const response = await apiFetch("/api/exercises", {
                 method: "GET",
                 headers
             });
@@ -121,7 +122,7 @@ export default function Exercises() {
         try {
             setLoading(true);
             setError("");
-            const response = await fetch("http://localhost:8000/api/exercises/" + id, {
+            const response = await apiFetch("/api/exercises/" + id, {
                 method: "GET",
                 headers
             });
@@ -140,7 +141,7 @@ export default function Exercises() {
         try {
             setLoading(true);
             setError("");
-            const response = await fetch("http://localhost:8000/api/exercises/" + id, {
+            const response = await apiFetch("/api/exercises/" + id, {
                 method: "DELETE",
                 headers
             });
@@ -163,7 +164,7 @@ export default function Exercises() {
         setError("");
         setSuccess(null);
         try {
-            const response = await fetch("http://localhost:8000/api/exercises", {
+            const response = await apiFetch("/api/exercises", {
                 method: "POST",
                 headers,
                 body: JSON.stringify(newExerciseData),
@@ -189,7 +190,7 @@ export default function Exercises() {
         setError("");
         setSuccess(null);
         try {
-            const response = await fetch("http://localhost:8000/api/exercises/" + id, {
+            const response = await apiFetch("/api/exercises/" + id, {
                 method: "PUT",
                 headers,
                 body: JSON.stringify(updatedExerciseData),

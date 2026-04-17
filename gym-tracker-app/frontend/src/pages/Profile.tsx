@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiFetch } from "../utils/api";
 
 interface UserProfile {
     name: string;
@@ -26,7 +27,7 @@ export default function Profile() {
 
     async function getProfile() {
         try {
-            const response = await fetch("http://localhost:8000/api/user/getProfile", {
+            const response = await apiFetch("/api/user/getProfile", {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("user_login_token")}`,
@@ -49,7 +50,7 @@ export default function Profile() {
         setSuccess(null);
         setError(null);
         try {
-            const response = await fetch("http://localhost:8000/api/user/updateProfile", {
+            const response = await apiFetch("/api/user/updateProfile", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -72,7 +73,7 @@ export default function Profile() {
 
     async function deleteProfile() {
         try {
-            const response = await fetch("http://localhost:8000/api/user/deleteProfile", {
+            const response = await apiFetch("/api/user/deleteProfile", {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",

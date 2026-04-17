@@ -1,4 +1,5 @@
 import { useState, useRef, DragEvent } from 'react';
+import { apiFetch } from '../utils/api';
 
 export default function UploadVideo() {
     const [file, setFile] = useState<File | null>(null);
@@ -33,7 +34,7 @@ export default function UploadVideo() {
             }
 
             // Send video to barbell tracking API endpoint
-            const response = await fetch('http://localhost:8000/api/videos/barbell-tracking', {
+            const response = await apiFetch('/api/videos/barbell-tracking', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -132,7 +133,7 @@ export default function UploadVideo() {
                 throw new Error('Please login first');
             }
 
-            const response = await fetch('http://localhost:8000/api/videos/pose-estimation', {
+            const response = await apiFetch('/api/videos/pose-estimation', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

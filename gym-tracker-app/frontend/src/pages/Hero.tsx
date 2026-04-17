@@ -44,9 +44,7 @@ export default function Hero() {
                 <Link to="/upload" style={linkStyle}>Upload</Link>
 
                 <Link to="/schedule" style={linkStyle}>Schedule</Link>
-                <Link to="/history" style={linkStyle}>History</Link>
                 <Link to="/goals" style={linkStyle}>Goals</Link>
-                <Link to="/stats" style={linkStyle}>Stats</Link>
                 <Link to="/prs" style={linkStyle}>PRs</Link>
             </nav>
         </div>
