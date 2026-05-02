@@ -21,6 +21,3 @@ CREATE TABLE IF NOT EXISTS weight_history (
     weight  DECIMAL(5,2) NOT NULL,
     date    DATE         NOT NULL DEFAULT CURRENT_DATE
 );
-
-
-
