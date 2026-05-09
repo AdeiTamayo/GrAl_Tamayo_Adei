@@ -21,47 +21,55 @@ class Workout {
     static async getWorkoutById(id) {
         try {
             const workoutQuery = `
-                SELECT * FROM workouts
-                WHERE id = $1;
-            `;
+            SELECT *
+            FROM workouts
+            WHERE id = $1;
+        `;
             const workoutResult = await pool.query(workoutQuery, [id]);
 
             if (workoutResult.rows.length === 0) return null;
+
             const exercisesQuery = `
-                SELECT 
-                    we.id AS workout_exercise_id,
-                    we.exercise_id,
-                    we.exercise_order,
-                    we.note AS exercise_note,
-                    e.name AS exercise_name,  
-                    s.id AS set_id,
-                    s.set_number,
-                    s.weight,
-                    s.repetitions,
-                    s.time AS set_time,       
-                    s.note AS set_note
-                FROM workout_exercises we
-                JOIN exercises e ON we.exercise_id = e.id  
-                JOIN sets s ON we.id = s.workout_exercise_id
-                WHERE we.workout_id = $1
-                ORDER BY we.exercise_order ASC, s.set_number ASC;
-            `;
+            SELECT
+                we.id AS workout_exercise_id,
+                we.exercise_id,
+                we.exercise_order,
+                we.note AS exercise_note,
+                e.name AS exercise_name,
+                s.id AS set_id,
+                s.set_number,
+                s.weight,
+                s.repetitions,
+                s.time AS set_time,
+                s.note AS set_note
+            FROM workout_exercises we
+            JOIN exercises e ON we.exercise_id = e.id
+            LEFT JOIN sets s ON we.id = s.workout_exercise_id
+            WHERE we.workout_id = $1
+            ORDER BY we.exercise_order ASC, s.set_number ASC;
+        `;
             const exercisesResult = await pool.query(exercisesQuery, [id]);
 
             const workout = workoutResult.rows[0];
-
-            // Format the result to group sets inside their respective exercise
             const exercisesMap = {};
-            exercisesResult.rows.forEach(row => {
+
+            exercisesResult.rows.forEach((row) => {
+                const normalizedExerciseNote =
+                    (row.exercise_note && String(row.exercise_note).trim()) ||
+                    (row.set_note && String(row.set_note).trim()) ||
+                    null;
+
                 if (!exercisesMap[row.workout_exercise_id]) {
                     exercisesMap[row.workout_exercise_id] = {
                         id: row.workout_exercise_id,
                         exercise_id: row.exercise_id,
                         exercise_order: row.exercise_order,
-                        name: row.exercise_name, // ADDED: Mapping the name
-                        note: row.exercise_note,
+                        name: row.exercise_name,
+                        note: normalizedExerciseNote,
                         sets: []
                     };
+                } else if (!exercisesMap[row.workout_exercise_id].note && normalizedExerciseNote) {
+                    exercisesMap[row.workout_exercise_id].note = normalizedExerciseNote;
                 }
 
                 if (row.set_id) {
@@ -70,7 +78,7 @@ class Workout {
                         set_number: row.set_number,
                         weight: row.weight,
                         repetitions: row.repetitions,
-                        time: row.set_time, // ADDED: Mapping the time
+                        time: row.set_time,
                         note: row.set_note
                     });
                 }
@@ -78,6 +86,7 @@ class Workout {
 
             workout.exercises = Object.values(exercisesMap);
 
+            console.log("Workout in model", workout);
             return workout;
         } catch (error) {
             console.error('[Workout Model] Error fetching workout by ID:', error.message);
@@ -137,7 +146,7 @@ class Workout {
     }
 
     // Insert a new set into a workout
-    static async insertSet(workoutId, exerciseId, weight, reps, time) {
+    static async insertSet(workoutId, exerciseId, weight, reps, time, note) {
         try {
             // Find or create the workout_exercise bridge entry
             let weQuery = `SELECT id FROM workout_exercises WHERE workout_id = $1 AND exercise_id = $2 LIMIT 1`;
@@ -166,11 +175,11 @@ class Workout {
 
             // Insert the actual set including time
             const query = `
-                INSERT INTO sets (workout_exercise_id, set_number, weight, repetitions, time)
-                VALUES ($1, $2, $3, $4, $5)
+                INSERT INTO sets (workout_exercise_id, set_number, weight, repetitions, time, note)
+                VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *;
             `;
-            const result = await pool.query(query, [workoutExerciseId, setNumber, weight, reps, time]);
+            const result = await pool.query(query, [workoutExerciseId, setNumber, weight, reps, time, note]);
             return result.rows[0];
         } catch (error) {
             console.error('[Workout Model] Error inserting set:', error.message);

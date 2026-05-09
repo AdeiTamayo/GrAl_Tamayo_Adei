@@ -27,7 +27,7 @@ export default function Profile() {
 
     async function getProfile() {
         try {
-            const response = await apiFetch("/api/user/getProfile", {
+            const response = await apiFetch("/api/user/", {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("user_login_token")}`,
@@ -50,7 +50,7 @@ export default function Profile() {
         setSuccess(null);
         setError(null);
         try {
-            const response = await apiFetch("/api/user/updateProfile", {
+            const response = await apiFetch("/api/user", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -59,7 +59,7 @@ export default function Profile() {
                 body: JSON.stringify(form),
             });
             if (!response.ok) throw new Error("Failed to save");
-            setProfile(form);   // update displayed data
+            setProfile(form);
             setEditing(false);
             setSuccess("Profile updated successfully.");
         } catch (error) {
@@ -73,7 +73,7 @@ export default function Profile() {
 
     async function deleteProfile() {
         try {
-            const response = await apiFetch("/api/user/deleteProfile", {
+            const response = await apiFetch("/api/user/", {
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json",
@@ -125,6 +125,9 @@ export default function Profile() {
         if (!form) return "";
         const val = (form as any)[field];
         if (val === null || val === undefined) return "";
+        if (field === "birth_date") {
+            return formatBirthDate(val);
+        }
         return String(val);
     }
 
@@ -187,6 +190,7 @@ export default function Profile() {
                                 type={type}
                                 value={getFormValue(field)}
                                 onChange={e => handleChange(field, e.target.value)}
+                                max={type === "date" ? new Date().toISOString().slice(0, 10) : undefined}
                                 style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
                             />
                         </div>

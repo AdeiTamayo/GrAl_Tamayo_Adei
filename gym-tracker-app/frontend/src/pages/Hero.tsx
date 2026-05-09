@@ -47,6 +47,7 @@ export default function Hero() {
                 <Link to="/goals" style={linkStyle}>Goals</Link>
                 <Link to="/prs" style={linkStyle}>PRs</Link>
                 <Link to="/routines" style={linkStyle}>Routines</Link>
+                <Link to="/Weight_history" style={linkStyle}>Weight History</Link>
             </nav>
         </div >
     );

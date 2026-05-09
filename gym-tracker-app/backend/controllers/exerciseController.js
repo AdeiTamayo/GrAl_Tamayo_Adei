@@ -13,7 +13,7 @@ exports.getExercises = async (req, res) => {
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
       data: exercices
     });
@@ -39,7 +39,7 @@ exports.getExerciseById = async (req, res) => {
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
       data: exercice
     })
@@ -70,7 +70,7 @@ exports.createExercise = async (req, res) => {
       })
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       data: exercice
     })
@@ -100,7 +100,7 @@ exports.modifyExercise = async (req, res) => {
       })
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       data: exercice
     })
@@ -120,7 +120,7 @@ exports.deleteExercise = async (req, res) => {
   try {
     await Exercise.deleteExercise(req.params.id);
 
-    return res.json({
+    return res.status(200).json({
       success: true,
     })
 
@@ -147,7 +147,7 @@ exports.getFilterOptions = async (req, res) => {
       });
     }
 
-    res.json({
+    res.status(200).json({
       success: true,
       data: filters
     });

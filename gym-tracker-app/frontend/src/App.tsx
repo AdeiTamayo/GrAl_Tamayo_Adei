@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import Video from './pages/Videos';
 import Pr from './pages/Prs'
 import Routine from './pages/Routines';
+import WeightHistory from './pages/Weight_history';
 function App() {
   return (
     <Routes>
@@ -28,6 +29,7 @@ function App() {
       <Route path="/videos" element={<Video />} />
       <Route path="/prs" element={<Pr />} />
       <Route path="/routines" element={<Routine />} />
+      <Route path="/Weight_history" element={<WeightHistory />} />
     </Routes>
   );
 }

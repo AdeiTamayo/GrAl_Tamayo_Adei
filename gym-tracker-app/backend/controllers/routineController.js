@@ -64,7 +64,7 @@ exports.createRoutine = async (req, res) => {
             })
         }
 
-        res.json({
+        res.status(201).json({
             success: true,
             data: routine
         })

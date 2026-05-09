@@ -42,6 +42,8 @@ exports.getWorkoutById = async (req, res) => {
             });
         }
 
+        console.log("Workout in controller", workout);
+
         res.json({
             success: true,
             data: workout
@@ -55,6 +57,8 @@ exports.getWorkoutById = async (req, res) => {
         });
 
     }
+
+
 }
 
 exports.createWorkout = async (req, res) => {
@@ -149,10 +153,10 @@ exports.insertSet = async (req, res) => {
     console.log("Insert set request received");
     try {
         const workoutId = req.params.id;
-        const { exercise_id, weight, reps, time } = req.body;
+        const { exercise_id, weight, reps, time, note } = req.body;
         const userId = req.userId;
 
-        const set = await Workout.insertSet(workoutId, exercise_id, weight, reps, time);
+        const set = await Workout.insertSet(workoutId, exercise_id, weight, reps, time, note);
 
         // TODO: Add date as 5. parameter
         await PR.checkAndLogPR(userId, exercise_id, weight, reps, null, "");

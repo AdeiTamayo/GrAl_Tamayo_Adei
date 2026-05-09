@@ -201,6 +201,7 @@ export default function Register() {
                         type="date"
                         value={birthDate}
                         onChange={(e) => setBirthDate(e.target.value)}
+                        max={new Date().toISOString().slice(0, 10)}
                         style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
                     />
                 </div>

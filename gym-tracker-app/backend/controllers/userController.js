@@ -28,13 +28,16 @@ exports.updateProfile = async (req, res) => {
     console.log('Profile Update Request');
     try {
 
-        const { username, email, height, weight } = req.body;
+        const { name, surname, email, gender, height, weight, birth_date } = req.body;
 
         const updatedUser = await User.updateUser(req.userId, {
-            username,
+            name,
+            surname,
             email,
+            gender,
+            weight,
             height,
-            weight
+            birth_date
         });
 
         res.json({
@@ -160,7 +163,7 @@ exports.register = async (req, res) => {
 
         console.log('[Register] User registered successfully');
 
-        res.status(200).json({
+        res.status(201).json({
             success: true,
             message: 'Registration successful',
             user: { id: user.id, email: user.email }
@@ -170,6 +173,112 @@ exports.register = async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Registration failed'
+        });
+    }
+};
+
+exports.getWeightHistory = async (req, res) => {
+    try {
+        console.log('\n=== Get Weight History Request ===');
+
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                error: 'User ID is required'
+            });
+        }
+
+        const weightHistory = await User.getWeightHistory(userId);
+
+        return res.status(200).json({
+            success: true,
+            data: weightHistory
+        });
+    } catch (error) {
+        console.error('[Get Weight History Error]:', error.message);
+        return res.status(500).json({
+            success: false,
+            error: 'Get weight history failed'
+        });
+    }
+};
+
+exports.addWeight = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { weight, date } = req.body;
+
+        if (!userId || weight == null || !date) {
+            return res.status(400).json({
+                success: false,
+                error: 'userId, weight and date are required'
+            });
+        }
+
+        const newWeightEntry = await User.addWeight(userId, weight, date);
+        const currentWeight = await User.syncProfileWeightFromHistory(userId);
+
+        return res.status(201).json({
+            success: true,
+            data: newWeightEntry,
+            currentWeight
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: 'Add weight failed'
+        });
+    }
+};
+
+exports.updateWeight = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { id, weight, date } = req.body;
+
+        if (!id || weight == null || !date) {
+            return res.status(400).json({
+                success: false,
+                error: 'id, weight and date are required'
+            });
+        }
+
+        const updatedWeight = await User.updateWeight(id, weight, date, userId); // ensure ownership
+        await User.syncProfileWeightFromHistory(userId);
+
+        return res.status(200).json({
+            success: true,
+            data: updatedWeight
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: 'Update weight failed'
+        });
+    }
+};
+
+exports.deleteWeight = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: 'id is required'
+            });
+        }
+
+        await User.deleteWeight(id, userId); // ensure ownership
+        await User.syncProfileWeightFromHistory(userId);
+
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: 'Delete weight failed'
         });
     }
 };
