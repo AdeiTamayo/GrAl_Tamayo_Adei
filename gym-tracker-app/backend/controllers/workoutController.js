@@ -41,9 +41,6 @@ exports.getWorkoutById = async (req, res) => {
                 error: 'Workout not found'
             });
         }
-
-        console.log("Workout in controller", workout);
-
         res.json({
             success: true,
             data: workout
@@ -147,71 +144,73 @@ exports.deleteWorkout = async (req, res) => {
     }
 }
 
-
-// insertSet
-exports.insertSet = async (req, res) => {
-    console.log("Insert set request received");
+exports.addWorkoutExercise = async (req, res) => {
     try {
         const workoutId = req.params.id;
-        const { exercise_id, weight, reps, time, note } = req.body;
-        const userId = req.userId;
+        const { exercise_id, note } = req.body;
 
-        const set = await Workout.insertSet(workoutId, exercise_id, weight, reps, time, note);
-
-        // TODO: Add date as 5. parameter
-        await PR.checkAndLogPR(userId, exercise_id, weight, reps, null, "");
-
-        return res.status(201).json({
-            success: true,
-            data: set
-        });
+        const row = await Workout.addWorkoutExercise(workoutId, exercise_id, note);
+        return res.status(201).json({ success: true, data: row });
     } catch (error) {
-        console.log("Couldn't insert set", error);
-        return res.status(500).json({
-            success: false,
-            error: 'Error inserting set'
-        });
+        console.error('[Controller] Add Workout Exercise Error:', error);
+        return res.status(500).json({ success: false, error: 'Failed to add exercise' });
     }
 };
 
+exports.deleteWorkoutExercise = async (req, res) => {
+    try {
+        const workoutExerciseId = req.params.workoutExerciseId;
+        await Workout.deleteWorkoutExercise(workoutExerciseId);
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('[Controller] Delete Workout Exercise Error:', error);
+        return res.status(500).json({ success: false, error: 'Failed to delete exercise from workout' });
+    }
+};
+
+exports.addSet = async (req, res) => {
+    try {
+        const workoutExerciseId = req.params.workoutExerciseId;
+        const { weight, reps, time, note } = req.body;
+
+        const row = await Workout.insertSet(workoutExerciseId, weight, reps, time, note);
+        return res.status(201).json({ success: true, data: row });
+    } catch (error) {
+        console.error('[Controller] Add Set Error:', error);
+        return res.status(500).json({ success: false, error: 'Failed to add set' });
+    }
+};
+
+
 // updateSet
 exports.updateSet = async (req, res) => {
-    console.log("Update set request received");
     try {
         const setId = req.params.setId;
-        const { weight, reps, time } = req.body;
+        const { weight, reps, time, note } = req.body;
 
-        const updatedSet = await Workout.updateSet(setId, weight, reps, time);
+        const query = `
+            UPDATE sets 
+            SET weight = $1, repetitions = $2, time = $3, note = $4
+            WHERE id = $5 RETURNING *;
+        `;
+        const pool = require('../config/database');
+        const result = await pool.query(query, [weight, reps, time, note, setId]);
 
-        return res.json({
-            success: true,
-            data: updatedSet
-        });
+        return res.status(200).json({ success: true, data: result.rows[0] });
     } catch (error) {
-        console.log("Couldn't update set", error);
-        return res.status(500).json({
-            success: false,
-            error: 'Error updating set'
-        });
+        console.error('[Controller] Update Set Error:', error);
+        return res.status(500).json({ success: false, error: 'Failed to update set' });
     }
 };
 
 // deleteSet
 exports.deleteSet = async (req, res) => {
-    console.log("Delete set request received");
     try {
         const setId = req.params.setId;
-
         await Workout.deleteSet(setId);
-
-        return res.json({
-            success: true
-        });
+        return res.status(200).json({ success: true });
     } catch (error) {
-        console.log("Couldn't delete set", error);
-        return res.status(500).json({
-            success: false,
-            error: 'Error deleting set'
-        });
+        console.error('[Controller] Delete Set Error:', error);
+        return res.status(500).json({ success: false, error: 'Failed to delete set' });
     }
 };

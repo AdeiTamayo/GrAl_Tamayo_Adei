@@ -21,42 +21,40 @@ class Workout {
     static async getWorkoutById(id) {
         try {
             const workoutQuery = `
-            SELECT *
-            FROM workouts
-            WHERE id = $1;
-        `;
+                SELECT *
+                FROM workouts
+                WHERE id = $1;
+            `;
             const workoutResult = await pool.query(workoutQuery, [id]);
-
             if (workoutResult.rows.length === 0) return null;
 
             const exercisesQuery = `
-            SELECT
-                we.id AS workout_exercise_id,
-                we.exercise_id,
-                we.exercise_order,
-                we.note AS exercise_note,
-                e.name AS exercise_name,
-                s.id AS set_id,
-                s.set_number,
-                s.weight,
-                s.repetitions,
-                s.time AS set_time,
-                s.note AS set_note
-            FROM workout_exercises we
-            JOIN exercises e ON we.exercise_id = e.id
-            LEFT JOIN sets s ON we.id = s.workout_exercise_id
-            WHERE we.workout_id = $1
-            ORDER BY we.exercise_order ASC, s.set_number ASC;
-        `;
+                SELECT
+                    we.id AS workout_exercise_id,
+                    we.exercise_id,
+                    we.exercise_order,
+                    we.note AS exercise_note,
+                    e.name AS exercise_name,
+                    s.id AS set_id,
+                    s.set_number,
+                    s.weight,
+                    s.repetitions,
+                    s.time AS set_time,
+                    s.note AS set_note
+                FROM workout_exercises we
+                JOIN exercises e ON we.exercise_id = e.id
+                LEFT JOIN sets s ON we.id = s.workout_exercise_id
+                WHERE we.workout_id = $1
+                ORDER BY we.exercise_order ASC, s.set_number ASC;
+            `;
             const exercisesResult = await pool.query(exercisesQuery, [id]);
 
             const workout = workoutResult.rows[0];
             const exercisesMap = {};
 
             exercisesResult.rows.forEach((row) => {
-                const normalizedExerciseNote =
+                const note =
                     (row.exercise_note && String(row.exercise_note).trim()) ||
-                    (row.set_note && String(row.set_note).trim()) ||
                     null;
 
                 if (!exercisesMap[row.workout_exercise_id]) {
@@ -65,11 +63,9 @@ class Workout {
                         exercise_id: row.exercise_id,
                         exercise_order: row.exercise_order,
                         name: row.exercise_name,
-                        note: normalizedExerciseNote,
+                        note,
                         sets: []
                     };
-                } else if (!exercisesMap[row.workout_exercise_id].note && normalizedExerciseNote) {
-                    exercisesMap[row.workout_exercise_id].note = normalizedExerciseNote;
                 }
 
                 if (row.set_id) {
@@ -85,8 +81,6 @@ class Workout {
             });
 
             workout.exercises = Object.values(exercisesMap);
-
-            console.log("Workout in model", workout);
             return workout;
         } catch (error) {
             console.error('[Workout Model] Error fetching workout by ID:', error.message);
@@ -146,40 +140,70 @@ class Workout {
     }
 
     // Insert a new set into a workout
-    static async insertSet(workoutId, exerciseId, weight, reps, time, note) {
+    static async addWorkoutExercise(workoutId, exerciseId, note = null) {
         try {
-            // Find or create the workout_exercise bridge entry
-            let weQuery = `SELECT id FROM workout_exercises WHERE workout_id = $1 AND exercise_id = $2 LIMIT 1`;
-            let weRes = await pool.query(weQuery, [workoutId, exerciseId]);
-            let workoutExerciseId;
+            const orderRes = await pool.query(
+                `SELECT COALESCE(MAX(exercise_order), 0) + 1 AS next_order
+                 FROM workout_exercises
+                 WHERE workout_id = $1`,
+                [workoutId]
+            );
 
-            const isMissing = (value) => value === null || value === undefined;
+            const nextOrder = orderRes.rows[0].next_order;
+
+            const query = `
+                INSERT INTO workout_exercises (workout_id, exercise_id, exercise_order, note)
+                VALUES ($1, $2, $3, $4)
+                RETURNING *;
+            `;
+            const result = await pool.query(query, [workoutId, exerciseId, nextOrder, note]);
+            return result.rows[0];
+        } catch (error) {
+            console.error('[Workout Model] Error adding workout exercise:', error.message);
+            throw error;
+        }
+    }
+
+    static async deleteWorkoutExercise(workoutExerciseId) {
+        try {
+            // Delete the workout_exercises row by ID
+            const query = `DELETE FROM workout_exercises WHERE id = $1 RETURNING id;`;
+            const result = await pool.query(query, [workoutExerciseId]);
+            return result.rowCount > 0;
+        } catch (error) {
+            console.error('[Workout Model] Error deleting workout exercise:', error.message);
+            throw error;
+        }
+    }
+
+    static async insertSet(workoutExerciseId, weight, reps, time, note) {
+        try {
+            const isMissing = (v) => v === null || v === undefined;
             if (isMissing(weight) && isMissing(reps) && isMissing(time)) {
-                throw new Error("Cannot insert a completely empty set. Please provide weight, reps, or time.");
+                throw new Error('Cannot insert an empty set.');
             }
 
-            if (weRes.rowCount === 0) {
-                let nextOrderRes = await pool.query(`SELECT COALESCE(MAX(exercise_order), 0) + 1 AS next_order FROM workout_exercises WHERE workout_id = $1`, [workoutId]);
-                let nextOrder = nextOrderRes.rows[0].next_order;
+            const setNumRes = await pool.query(
+                `SELECT COALESCE(MAX(set_number), 0) + 1 AS next_set
+                 FROM sets
+                 WHERE workout_exercise_id = $1`,
+                [workoutExerciseId]
+            );
+            const setNumber = setNumRes.rows[0].next_set;
 
-                let insertWe = `INSERT INTO workout_exercises (workout_id, exercise_id, exercise_order) VALUES ($1, $2, $3) RETURNING id`;
-                let insertWeRes = await pool.query(insertWe, [workoutId, exerciseId, nextOrder]);
-                workoutExerciseId = insertWeRes.rows[0].id;
-            } else {
-                workoutExerciseId = weRes.rows[0].id;
-            }
-
-            // Determine the set_number
-            let setNumRes = await pool.query(`SELECT COALESCE(MAX(set_number), 0) + 1 AS next_set FROM sets WHERE workout_exercise_id = $1`, [workoutExerciseId]);
-            let setNumber = setNumRes.rows[0].next_set;
-
-            // Insert the actual set including time
             const query = `
                 INSERT INTO sets (workout_exercise_id, set_number, weight, repetitions, time, note)
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING *;
             `;
-            const result = await pool.query(query, [workoutExerciseId, setNumber, weight, reps, time, note]);
+            const result = await pool.query(query, [
+                workoutExerciseId,
+                setNumber,
+                weight,
+                reps,
+                time,
+                note
+            ]);
             return result.rows[0];
         } catch (error) {
             console.error('[Workout Model] Error inserting set:', error.message);
@@ -204,40 +228,17 @@ class Workout {
         }
     }
 
-    // Delete a specific set
     static async deleteSet(setId) {
         try {
-            // First, find which workout_exercise this set belongs to
-            const getWeQuery = `SELECT workout_exercise_id FROM sets WHERE id = $1`;
-            const weRes = await pool.query(getWeQuery, [setId]);
-
-            if (weRes.rowCount === 0) return false;
-            const weId = weRes.rows[0].workout_exercise_id;
-
-            // Delete the set
-            const query = `
-                DELETE FROM sets
-                WHERE id = $1
-                RETURNING id;
-            `;
+            const query = `DELETE FROM sets WHERE id = $1 RETURNING id;`;
             const result = await pool.query(query, [setId]);
-
-            // Clean up: If that was the last set for this exercise, delete the workout_exercise link too
-            if (result.rowCount > 0) {
-                const checkCountQuery = `SELECT COUNT(*) FROM sets WHERE workout_exercise_id = $1`;
-                const countRes = await pool.query(checkCountQuery, [weId]);
-
-                if (parseInt(countRes.rows[0].count) === 0) {
-                    await pool.query(`DELETE FROM workout_exercises WHERE id = $1`, [weId]);
-                }
-            }
-
             return result.rowCount > 0;
         } catch (error) {
             console.error('[Workout Model] Error deleting set:', error.message);
             throw error;
         }
     }
+
 }
 
 module.exports = Workout;
