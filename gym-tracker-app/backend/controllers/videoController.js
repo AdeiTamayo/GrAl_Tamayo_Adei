@@ -1,6 +1,6 @@
 const path = require('path');
 const { validateUpload, processVideoWithPython } = require('../utils/videoProcessor');
-const Video = require('../models/Video');
+const Video = require('../models/video');
 
 const processedDir = path.join(__dirname, '../media/output');
 const port = process.env.PORT || 8000;
@@ -15,7 +15,7 @@ exports.processPoseEstimation = async (req, res) => {
         // Validate upload
         const validation = validateUpload(req, scriptPath);
         if (!validation.valid) {
-            return res.status(400).json({ error: validation.error });
+            return res.status(404).json({ error: validation.error });
         }
 
         console.log('[Processing] Python script found');
@@ -63,7 +63,7 @@ exports.processBarbellTracking = async (req, res) => {
         // Validate upload
         const validation = validateUpload(req, scriptPath);
         if (!validation.valid) {
-            return res.status(400).json({ error: validation.error });
+            return res.status(404).json({ error: validation.error });
         }
 
         console.log('[Barbell Tracking] Python script found');
@@ -104,7 +104,7 @@ exports.processBarbellTracking = async (req, res) => {
 exports.getUserVideos = async (req, res) => {
     try {
         if (!req.user || !req.user.userId) {
-            return res.status(401).json({ success: false, error: 'Unauthorized' });
+            return res.status(404).json({ success: false, error: 'Unauthorized' });
         }
 
         const videos = await Video.getVideosByUserId(req.user.userId);

@@ -8,9 +8,15 @@ const fs = require('fs');
 const cors = require('cors');
 
 // Import routes
-const authRoutes = require('./routes/auth');
+// const authRoutes = require('./routes/auth');
+// const profileRoutes = require('./routes/profile');
 const videoRoutes = require('./routes/videos');
 const exerciseRoutes = require('./routes/exercises');
+const routinesRoutes = require('./routes/routines');
+const userRoutes = require('./routes/user');
+const workoutRoutes = require('./routes/workouts');
+const prRoutes = require('./routes/prs');
+const goalRoutes = require('./routes/goals');
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -35,9 +41,14 @@ app.use('/media/output', express.static(processedDir));
 
 
 // Mount routes
-app.use('/api/auth', authRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/exercises', exerciseRoutes);
+app.use('/api/routines', routinesRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/workouts', workoutRoutes);
+app.use('/api/prs', prRoutes);
+app.use('/api/goals', goalRoutes);
+
 
 app.listen(port, () => {
     console.log(`\n=== Server Ready ===`);
