@@ -33,11 +33,12 @@ interface Exercise {
     category?: string;
 }
 
+type EditableSetField = "weight" | "repetitions" | "time" | "note";
+
 export default function Workouts() {
     const [workouts, setWorkouts] = useState<Workout[]>([]);
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
-
     const [isLoadingInit, setIsLoadingInit] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -46,35 +47,41 @@ export default function Workouts() {
     const [newWorkoutDate, setNewWorkoutDate] = useState(new Date().toISOString().slice(0, 10));
     const [newWorkoutNote, setNewWorkoutNote] = useState("");
 
+    // Edit workout form
+    const [isEditingWorkout, setIsEditingWorkout] = useState(false);
+    const [editName, setEditName] = useState("");
+    const [editDate, setEditDate] = useState("");
+    const [editNote, setEditNote] = useState("");
+
     // Add exercise search
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Inline Add/Edit Set State
-    const [editingSetId, setEditingSetId] = useState<number | null>(null);
+    // Add set form state
     const [addingSetToBlockId, setAddingSetToBlockId] = useState<number | null>(null);
-    const [openExerciseNoteId, setOpenExerciseNoteId] = useState<number | null>(null);
-    const [expandedNoteSetId, setExpandedNoteSetId] = useState<number | null>(null);
-
-    // Form for set (shared by Add & Edit)
-    const [setWeight, setSetWeight] = useState<number | "">("");
-    const [setReps, setSetReps] = useState<number | "">("");
-    const [setTime, setSetTime] = useState<number | "">("");
-    const [setNoteText, setSetNoteText] = useState("");
+    const [newSetWeight, setNewSetWeight] = useState<number | "">("");
+    const [newSetReps, setNewSetReps] = useState<number | "">("");
+    const [newSetTime, setNewSetTime] = useState<number | "">("");
+    const [newSetNote, setNewSetNote] = useState("");
 
     const token = localStorage.getItem("user_login_token");
-    const headers = useMemo(() => ({
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-    }), [token]);
+    const headers = useMemo(
+        () => ({
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+        }),
+        [token]
+    );
 
     const fetchWorkouts = useCallback(async () => {
         try {
             const res = await apiFetch("/api/workouts", { headers });
             const data = await res.json();
-            if (data.success) setWorkouts(data.data);
+            if (data.success) {
+                setWorkouts(data.data || []);
+            }
         } catch (err: any) {
             console.error("Failed to fetch workouts", err);
         }
@@ -84,7 +91,9 @@ export default function Workouts() {
         try {
             const res = await apiFetch("/api/exercises", { headers });
             const data = await res.json();
-            if (data.success) setExercises(data.data || data.exercises || []);
+            if (data.success) {
+                setExercises(data.data || data.exercises || []);
+            }
         } catch (err: any) {
             console.error("Failed to fetch exercises", err);
         }
@@ -107,16 +116,22 @@ export default function Workouts() {
     async function fetchWorkoutById(id: number) {
         try {
             setError(null);
-            const res = await apiFetch(`/api/workouts/${id}`, { headers });
+            const res = await apiFetch("/api/workouts/" + id, { headers });
             const data = await res.json();
             if (data.success) {
-                setSelectedWorkout(data.data);
+                const workoutData = data.data;
+                if (workoutData && Array.isArray(workoutData.exercises)) {
+                    workoutData.exercises = workoutData.exercises.map((ex: WorkoutExercise) => ({
+                        ...ex,
+                        sets: Array.isArray(ex.sets) ? ex.sets : [],
+                    }));
+                }
+                setSelectedWorkout(workoutData);
                 setSearchQuery("");
                 setSelectedExercise(null);
                 setAddingSetToBlockId(null);
-                setEditingSetId(null);
             } else {
-                setError(data.error);
+                setError(data.error || "Failed to load workout details");
             }
         } catch (err: any) {
             setError("Failed to load workout details");
@@ -125,17 +140,18 @@ export default function Workouts() {
 
     async function createWorkout(e: FormEvent) {
         e.preventDefault();
+        setError(null);
 
         const tempId = -Date.now();
         const tempWorkout: Workout = {
             id: tempId,
             name: newWorkoutName,
             date: newWorkoutDate,
-            note: newWorkoutNote,
-            exercises: []
+            note: newWorkoutNote || null,
+            exercises: [],
         };
 
-        setWorkouts(prev => [tempWorkout, ...prev]);
+        setWorkouts((prev) => [tempWorkout, ...prev]);
         setNewWorkoutName("");
         setNewWorkoutNote("");
 
@@ -143,33 +159,82 @@ export default function Workouts() {
             const res = await apiFetch("/api/workouts", {
                 method: "POST",
                 headers,
-                body: JSON.stringify({ name: tempWorkout.name, date: tempWorkout.date, note: tempWorkout.note })
+                body: JSON.stringify({
+                    name: tempWorkout.name,
+                    date: tempWorkout.date,
+                    note: tempWorkout.note,
+                }),
             });
             const data = await res.json();
 
             if (res.ok && data.success && data.data) {
-                setWorkouts(prev => prev.map(w => w.id === tempId ? { ...w, id: data.data.id } : w));
+                setWorkouts((prev) =>
+                    prev.map((w) => (w.id === tempId ? { ...w, id: data.data.id } : w))
+                );
             } else {
                 await fetchWorkouts();
             }
         } catch (err: any) {
             setError("Failed to create workout");
-            setWorkouts(prev => prev.filter(w => w.id !== tempId));
+            setWorkouts((prev) => prev.filter((w) => w.id !== tempId));
+        }
+    }
+
+    function openEditWorkout() {
+        if (!selectedWorkout) return;
+        setEditName(selectedWorkout.name);
+        setEditDate(selectedWorkout.date?.substring(0, 10));
+        setEditNote(selectedWorkout.note || "");
+        setIsEditingWorkout(true);
+    }
+
+    function cancelEditWorkout() {
+        setIsEditingWorkout(false);
+    }
+
+    async function saveWorkoutEdit() {
+        if (!selectedWorkout) return;
+
+        try {
+            const res = await apiFetch("/api/workouts/" + selectedWorkout.id, {
+                method: "PUT",
+                headers,
+                body: JSON.stringify({
+                    name: editName,
+                    date: editDate,
+                    note: editNote,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                setSelectedWorkout(data.data);
+                setWorkouts((prev) =>
+                    prev.map((w) => (w.id === selectedWorkout.id ? data.data : w))
+                );
+                setIsEditingWorkout(false);
+            } else {
+                setError(data.error || "Update failed");
+            }
+        } catch (err: any) {
+            console.error(err);
+            setError("Failed to update workout");
         }
     }
 
     async function deleteWorkout(id: number) {
         if (!window.confirm("Are you sure you want to delete this workout?")) return;
 
-        setWorkouts(prev => prev.filter(w => w.id !== id));
+        setWorkouts((prev) => prev.filter((w) => w.id !== id));
         if (selectedWorkout && selectedWorkout.id === id) {
             setSelectedWorkout(null);
         }
 
         try {
-            await apiFetch(`/api/workouts/${id}`, { method: "DELETE", headers });
-        } catch (err) {
-            console.error("Delete workout failed");
+            await apiFetch("/api/workouts/" + id, { method: "DELETE", headers });
+        } catch (err: any) {
+            console.error("Delete workout failed", err);
             await fetchWorkouts();
         }
     }
@@ -178,21 +243,26 @@ export default function Workouts() {
         e.preventDefault();
         if (!selectedWorkout || !selectedExercise) return;
 
+        setError(null);
+
         const tempId = -Date.now();
         const selectedExName = selectedExercise.name;
         const selectedExId = selectedExercise.id;
 
-        setSelectedWorkout(prev => {
+        setSelectedWorkout((prev) => {
             if (!prev) return prev;
             return {
                 ...prev,
-                exercises: [...(prev.exercises || []), {
-                    id: tempId,
-                    exercise_id: selectedExId,
-                    exercise_order: (prev.exercises?.length || 0) + 1,
-                    name: selectedExName,
-                    sets: []
-                }]
+                exercises: [
+                    ...(prev.exercises || []),
+                    {
+                        id: tempId,
+                        exercise_id: selectedExId,
+                        exercise_order: (prev.exercises?.length || 0) + 1,
+                        name: selectedExName,
+                        sets: [],
+                    },
+                ],
             };
         });
 
@@ -200,19 +270,23 @@ export default function Workouts() {
         setSelectedExercise(null);
 
         try {
-            const res = await apiFetch(`/api/workouts/${selectedWorkout.id}/exercises`, {
+            const res = await apiFetch("/api/workouts/" + selectedWorkout.id + "/exercises", {
                 method: "POST",
                 headers,
-                body: JSON.stringify({ exercise_id: selectedExId })
+                body: JSON.stringify({ exercise_id: selectedExId }),
             });
             const data = await res.json();
 
             if (res.ok && data.success && data.data) {
-                setSelectedWorkout(prev => {
+                setSelectedWorkout((prev) => {
                     if (!prev) return prev;
                     return {
                         ...prev,
-                        exercises: prev.exercises?.map(ex => ex.id === tempId ? { ...ex, id: data.data.id, exercise_order: data.data.exercise_order } : ex)
+                        exercises: prev.exercises?.map((ex) =>
+                            ex.id === tempId
+                                ? { ...ex, id: data.data.id, exercise_order: data.data.exercise_order }
+                                : ex
+                        ),
                     };
                 });
             } else {
@@ -220,9 +294,12 @@ export default function Workouts() {
             }
         } catch (err: any) {
             setError("Failed to add exercise");
-            setSelectedWorkout(prev => {
+            setSelectedWorkout((prev) => {
                 if (!prev) return prev;
-                return { ...prev, exercises: prev.exercises?.filter(ex => ex.id !== tempId) };
+                return {
+                    ...prev,
+                    exercises: prev.exercises?.filter((ex) => ex.id !== tempId),
+                };
             });
         }
     }
@@ -231,224 +308,246 @@ export default function Workouts() {
         if (!selectedWorkout) return;
         if (!window.confirm("Remove this exercise from the workout? All sets will be lost.")) return;
 
-        setSelectedWorkout(prev => {
-            if (!prev) return prev;
-            return { ...prev, exercises: prev.exercises?.filter(ex => ex.id !== workoutExerciseId) };
-        });
-
         try {
-            await apiFetch(`/api/workouts/exercises/${workoutExerciseId}`, { method: "DELETE", headers });
-        } catch (err) {
-            console.error("Delete exercise failed");
-            await fetchWorkoutById(selectedWorkout.id);
-        }
-    }
-
-    function openAddSet(workoutExerciseId: number) {
-        setAddingSetToBlockId(workoutExerciseId);
-        setEditingSetId(null);
-        setSetWeight("");
-        setSetReps("");
-        setSetTime("");
-        setSetNoteText("");
-    }
-
-    function openEditSet(set: SetEntry, blockId: number) {
-        setEditingSetId(set.id);
-        setAddingSetToBlockId(blockId);
-        setSetWeight(set.weight ?? "");
-        setSetReps(set.repetitions ?? "");
-        setSetTime(set.time ?? "");
-        setSetNoteText(set.note ?? "");
-    }
-
-    async function submitSet(workoutExerciseId: number) {
-        if (!selectedWorkout) return;
-
-        const payload = {
-            weight: setWeight === "" ? null : Number(setWeight),
-            reps: setReps === "" ? null : Number(setReps),
-            time: setTime === "" ? null : Number(setTime),
-            note: setNoteText === "" ? null : setNoteText,
-        };
-
-        const isEdit = !!editingSetId;
-        const tempId = isEdit ? editingSetId : -Date.now();
-
-        setSelectedWorkout(prev => {
-            if (!prev) return prev;
-            return {
-                ...prev,
-                exercises: prev.exercises?.map(ex => {
-                    if (ex.id !== workoutExerciseId) return ex;
-
-                    if (isEdit) {
-                        return {
-                            ...ex,
-                            sets: ex.sets.map(s => s.id === editingSetId ? {
-                                ...s,
-                                weight: payload.weight,
-                                repetitions: payload.reps, // map reps to repetitions
-                                time: payload.time,
-                                note: payload.note
-                            } : s)
-                        };
-                    } else {
-                        const nextSetNumber = ex.sets.length > 0 ? Math.max(...ex.sets.map(s => s.set_number)) + 1 : 1;
-                        const newSet: SetEntry = {
-                            id: tempId,
-                            set_number: nextSetNumber,
-                            weight: payload.weight,
-                            repetitions: payload.reps, // map reps to repetitions
-                            time: payload.time,
-                            note: payload.note
-                        };
-                        return { ...ex, sets: [...ex.sets, newSet] };
-                    }
-                })
-            };
-        });
-
-
-        const savedEditingId = editingSetId;
-        setAddingSetToBlockId(null);
-        setEditingSetId(null);
-        setSetWeight("");
-        setSetReps("");
-        setSetTime("");
-        setSetNoteText("");
-
-        try {
-            let res;
-            if (isEdit) {
-                res = await apiFetch(`/api/workouts/sets/${savedEditingId}`, {
-                    method: "PUT",
-                    headers,
-                    body: JSON.stringify(payload)
-                });
-            } else {
-                res = await apiFetch(`/api/workouts/exercises/${workoutExerciseId}/sets`, {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify(payload)
-                });
-            }
+            const res = await apiFetch("/api/workouts/exercises/" + workoutExerciseId, {
+                method: "DELETE",
+                headers,
+            });
             const data = await res.json();
 
-            if (res.ok && data.success && data.data) {
-                if (!isEdit) {
-                    setSelectedWorkout(prev => {
-                        if (!prev) return prev;
-                        return {
-                            ...prev,
-                            exercises: prev.exercises?.map(ex => {
-                                if (ex.id !== workoutExerciseId) return ex;
-                                return {
-                                    ...ex,
-                                    sets: ex.sets.map(s => s.id === tempId ? { ...s, id: data.data.id, set_number: data.data.set_number } : s)
-                                };
-                            })
-                        };
-                    });
-                }
-            } else {
+            if (data.success) {
                 await fetchWorkoutById(selectedWorkout.id);
+            } else {
+                setError(data.error || "Failed to remove exercise");
             }
-        } catch (err) {
-            console.error(err);
-            await fetchWorkoutById(selectedWorkout.id);
+        } catch (err: any) {
+            setError("Failed to remove exercise");
         }
     }
 
-    async function deleteSet(setId: number) {
-        if (!selectedWorkout) return;
-        if (!window.confirm("Delete this set?")) return;
+    // ---- SET MANAGEMENT (ROUTINES-LIKE LOGIC + UI) ----
 
-        setSelectedWorkout(prev => {
-            if (!prev) return prev;
-            return {
-                ...prev,
-                exercises: prev.exercises?.map(ex => ({
-                    ...ex,
-                    sets: ex.sets.filter(s => s.id !== setId)
-                }))
-            };
-        });
+    function handleOpenAddSetForm(exercise: WorkoutExercise) {
+        setAddingSetToBlockId(exercise.id);
+
+        const sets = exercise.sets || [];
+        if (sets.length > 0) {
+            const lastSet = sets[sets.length - 1];
+            setNewSetWeight(lastSet.weight ?? "");
+            setNewSetReps(lastSet.repetitions ?? "");
+            setNewSetTime(lastSet.time ?? "");
+            setNewSetNote(lastSet.note ?? "");
+        } else {
+            setNewSetWeight("");
+            setNewSetReps("");
+            setNewSetTime("");
+            setNewSetNote("");
+        }
+    }
+
+    async function submitNewSet(exercise: WorkoutExercise) {
+        if (!selectedWorkout) return;
+
+        const sets = exercise.sets || [];
+        const nextSetNum = sets.length + 1;
 
         try {
-            await apiFetch(`/api/workouts/sets/${setId}`, { method: "DELETE", headers });
-        } catch (err) {
-            console.error("Delete set failed", err);
-            await fetchWorkoutById(selectedWorkout.id);
+            const res = await apiFetch("/api/workouts/exercises/" + exercise.id + "/sets", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                    set_number: nextSetNum,
+                    weight: newSetWeight === "" ? null : Number(newSetWeight),
+                    reps: newSetReps === "" ? null : Number(newSetReps),
+                    time: newSetTime === "" ? null : Number(newSetTime),
+                    note: newSetNote.trim() === "" ? null : newSetNote.trim(),
+                }),
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                await fetchWorkoutById(selectedWorkout.id);
+                setAddingSetToBlockId(null);
+            } else {
+                setError(data.error || "Failed to add set");
+            }
+        } catch (err: any) {
+            setError("Failed to add set");
         }
     }
 
-    function formatWeight(w: number | string | null): string {
-        if (w === null || w === undefined || w === "") return "—";
-        const num = Number(w);
-        if (isNaN(num)) return "—";
-        return Number.isInteger(num) ? String(num) : num.toFixed(2);
+    async function handleRemoveSet(setId: number) {
+        if (!selectedWorkout) return;
+
+        try {
+            const res = await apiFetch("/api/workouts/sets/" + setId, {
+                method: "DELETE",
+                headers,
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                await fetchWorkoutById(selectedWorkout.id);
+            } else {
+                setError(data.error || "Failed to remove set");
+            }
+        } catch (err: any) {
+            setError("Failed to remove set");
+        }
     }
 
-    const filteredExercises = exercises.filter(ex => ex.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    function handleSetChange(
+        workoutExerciseId: number,
+        setId: number,
+        field: EditableSetField,
+        value: string
+    ) {
+        if (!selectedWorkout) return;
+
+        const updatedExercises = selectedWorkout.exercises?.map((ex) => {
+            if (ex.id !== workoutExerciseId) return ex;
+
+            const updatedSets = ex.sets?.map((set) => {
+                if (set.id !== setId) return set;
+
+                if (field === "note") {
+                    return { ...set, note: value === "" ? null : value };
+                }
+
+                const numericValue = value === "" ? null : Number(value);
+                if (field === "weight") return { ...set, weight: numericValue };
+                if (field === "repetitions") return { ...set, repetitions: numericValue };
+                return { ...set, time: numericValue };
+            });
+
+            return { ...ex, sets: updatedSets };
+        });
+
+        setSelectedWorkout({ ...selectedWorkout, exercises: updatedExercises });
+    }
+
+    async function handleSetBlur(workoutExerciseId: number, setId: number) {
+        if (!selectedWorkout) return;
+
+        const exercise = selectedWorkout.exercises?.find((ex) => ex.id === workoutExerciseId);
+        const set = exercise?.sets?.find((s) => s.id === setId);
+        if (!set) return;
+
+        try {
+            await apiFetch("/api/workouts/sets/" + setId, {
+                method: "PUT",
+                headers,
+                body: JSON.stringify({
+                    weight: set.weight,
+                    reps: set.repetitions,
+                    time: set.time,
+                    note: set.note ?? null,
+                }),
+            });
+        } catch (err: any) {
+            console.error("Failed to save set update");
+        }
+    }
+
+    const filteredExercises = exercises.filter((ex) =>
+        ex.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     if (isLoadingInit) return <p>Loading...</p>;
 
-    // --- UI Render ---
     return (
         <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
             <h1>Workouts Management</h1>
             {error && <p style={{ fontWeight: "bold", color: "red" }}>Error: {error}</p>}
 
             <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
-
-                {/* ---------- LEFT COLUMN ---------- */}
                 <div style={{ flex: 1, maxWidth: "450px" }}>
-
-                    {/* Create Form */}
                     <div style={{ border: "1px solid", padding: "20px", marginBottom: "20px" }}>
                         <h3 style={{ marginTop: 0 }}>Create New Workout</h3>
-                        <form onSubmit={createWorkout} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <form
+                            onSubmit={createWorkout}
+                            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+                        >
                             <input
                                 type="text"
                                 placeholder="Workout Name"
                                 value={newWorkoutName}
-                                onChange={e => setNewWorkoutName(e.target.value)}
+                                onChange={(e) => setNewWorkoutName(e.target.value)}
                                 required
                                 style={{ padding: "8px", border: "1px solid" }}
                             />
                             <input
                                 type="date"
                                 value={newWorkoutDate}
-                                onChange={e => setNewWorkoutDate(e.target.value)}
+                                onChange={(e) => setNewWorkoutDate(e.target.value)}
                                 style={{ padding: "8px", border: "1px solid" }}
                             />
                             <input
                                 type="text"
                                 placeholder="Notes (optional)"
                                 value={newWorkoutNote}
-                                onChange={e => setNewWorkoutNote(e.target.value)}
+                                onChange={(e) => setNewWorkoutNote(e.target.value)}
                                 style={{ padding: "8px", border: "1px solid" }}
                             />
-                            <button type="submit" style={{ padding: "10px", border: "1px solid", background: "none", cursor: "pointer", fontWeight: "bold" }}>
+                            <button
+                                type="submit"
+                                style={{
+                                    padding: "10px",
+                                    border: "1px solid",
+                                    background: "none",
+                                    cursor: "pointer",
+                                    fontWeight: "bold",
+                                }}
+                            >
                                 Create Workout
                             </button>
                         </form>
                     </div>
 
-                    {/* Workouts List */}
                     <div style={{ border: "1px solid", padding: "20px" }}>
                         <h2 style={{ marginTop: 0 }}>All Workouts</h2>
                         <ul style={{ listStyleType: "none", padding: 0 }}>
-                            {workouts.map(w => (
-                                <li key={w.id} style={{ borderBottom: "1px solid", padding: "15px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            {workouts.map((w) => (
+                                <li
+                                    key={w.id}
+                                    style={{
+                                        borderBottom: "1px solid",
+                                        padding: "15px 0",
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                    }}
+                                >
                                     <div>
-                                        <strong style={{ fontSize: "1.1em" }}>{w.name}</strong><br />
+                                        <strong style={{ fontSize: "1.1em" }}>{w.name}</strong>
+                                        <br />
                                         <small>{w.date?.substring(0, 10)}</small>
                                     </div>
                                     <div style={{ display: "flex", gap: "10px" }}>
-                                        <button onClick={() => fetchWorkoutById(w.id)} style={{ cursor: "pointer", padding: "5px 10px", border: "1px solid", background: "none" }}>View</button>
-                                        <button onClick={() => deleteWorkout(w.id)} style={{ cursor: "pointer", padding: "5px 10px", border: "1px solid", background: "none", color: "red" }}>Delete</button>
+                                        <button
+                                            onClick={() => fetchWorkoutById(w.id)}
+                                            style={{
+                                                cursor: "pointer",
+                                                padding: "5px 10px",
+                                                border: "1px solid",
+                                                background: "none",
+                                            }}
+                                        >
+                                            View
+                                        </button>
+                                        <button
+                                            onClick={() => deleteWorkout(w.id)}
+                                            style={{
+                                                cursor: "pointer",
+                                                padding: "5px 10px",
+                                                border: "1px solid",
+                                                background: "none",
+                                                color: "red",
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                 </li>
                             ))}
@@ -456,115 +555,311 @@ export default function Workouts() {
                     </div>
                 </div>
 
-                {/* ---------- RIGHT COLUMN (DETAILS) ---------- */}
                 {selectedWorkout && (
                     <div style={{ flex: 1.5, border: "1px solid", padding: "25px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                             <div>
-                                <h2 style={{ marginTop: 0 }}>Workout: {selectedWorkout.name}</h2>
-                                <p style={{ margin: "5px 0" }}><strong>Date:</strong> {selectedWorkout.date?.substring(0, 10)}</p>
-                                <p style={{ margin: "5px 0" }}><strong>Note:</strong> {selectedWorkout.note || "No notes"}</p>
+                                {!isEditingWorkout ? (
+                                    <>
+                                        <p>
+                                            <strong>Workout:</strong> {selectedWorkout.name}
+                                        </p>
+                                        <p>
+                                            <strong>Date:</strong> {selectedWorkout.date?.substring(0, 10)}
+                                        </p>
+                                        <p>
+                                            <strong>Note:</strong> {selectedWorkout.note || "No notes"}
+                                        </p>
+                                    </>
+                                ) : (
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "10px",
+                                            marginTop: "10px",
+                                        }}
+                                    >
+                                        <input
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            placeholder="Workout name"
+                                        />
+
+                                        <input
+                                            type="date"
+                                            value={editDate}
+                                            onChange={(e) => setEditDate(e.target.value)}
+                                        />
+
+                                        <input
+                                            value={editNote}
+                                            onChange={(e) => setEditNote(e.target.value)}
+                                            placeholder="Note"
+                                        />
+
+                                        <div style={{ display: "flex", gap: "10px" }}>
+                                            <button onClick={saveWorkoutEdit}>Save</button>
+                                            <button onClick={cancelEditWorkout}>Cancel</button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <button onClick={() => setSelectedWorkout(null)} style={{ padding: "5px 10px", cursor: "pointer", border: "1px solid", background: "none" }}>Close Panel</button>
+
+                            <div style={{ display: "flex", gap: "10px" }}>
+                                {!isEditingWorkout && <button onClick={openEditWorkout}>Edit</button>}
+                                <button
+                                    onClick={() => setSelectedWorkout(null)}
+                                    style={{
+                                        padding: "5px 10px",
+                                        cursor: "pointer",
+                                        border: "1px solid",
+                                        background: "none",
+                                    }}
+                                >
+                                    Close Workout
+                                </button>
+                            </div>
                         </div>
 
                         <hr style={{ margin: "20px 0", border: "none", borderTop: "1px solid" }} />
 
-                        <h3>Recorded Exercises & Sets</h3>
+                        <h3>Recorded Exercises and Sets</h3>
                         {!selectedWorkout.exercises || selectedWorkout.exercises.length === 0 ? (
                             <p style={{ fontStyle: "italic" }}>No exercises logged for this workout yet.</p>
                         ) : (
                             <ul style={{ listStyleType: "none", padding: 0 }}>
-                                {selectedWorkout.exercises.map(ex => {
-                                    const isCardio = exercises.find(e => e.id === ex.exercise_id)?.category?.toLowerCase() === 'cardio';
+                                {selectedWorkout.exercises.map((ex) => (
+                                    <li key={ex.id} style={{ border: "1px solid", padding: "15px", marginBottom: "15px" }}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                alignItems: "center",
+                                                marginBottom: "10px",
+                                            }}
+                                        >
+                                            <h4 style={{ margin: 0 }}>
+                                                {ex.name || "Unknown Exercise " + ex.exercise_id}{" "}
+                                                <small style={{ fontWeight: "normal" }}>
+                                                    (Exercise: {ex.exercise_order})
+                                                </small>
+                                            </h4>
+                                            <button
+                                                onClick={() => deleteWorkoutExercise(ex.id)}
+                                                style={{
+                                                    cursor: "pointer",
+                                                    border: "1px solid",
+                                                    background: "none",
+                                                    padding: "4px 8px",
+                                                    color: "red",
+                                                }}
+                                            >
+                                                Remove Exercise
+                                            </button>
+                                        </div>
 
-                                    return (
-                                        <li key={ex.id} style={{ border: "1px solid", padding: "15px", marginBottom: "15px" }}>
-                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                                <h4 style={{ margin: "0 0 10px 0" }}>
-                                                    {ex.name || `Unknown Exercise ${ex.exercise_id}`}{" "}
-                                                    <small style={{ fontWeight: "normal" }}>(Exercise: {ex.exercise_order})</small>
-                                                </h4>
-                                                <button onClick={() => deleteWorkoutExercise(ex.id)} style={{ cursor: "pointer", border: "1px solid", background: "none", padding: "4px 8px", color: "red" }}>
-                                                    Remove Exercise
+                                        {ex.sets && ex.sets.length > 0 ? (
+                                            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px" }}>
+                                                <thead>
+                                                    <tr>
+                                                        <th
+                                                            style={{
+                                                                textAlign: "left",
+                                                                padding: "5px",
+                                                                borderBottom: "1px solid #ccc",
+                                                                width: "40px",
+                                                            }}
+                                                        >
+                                                            Set
+                                                        </th>
+                                                        <th style={{ textAlign: "left", padding: "5px", borderBottom: "1px solid #ccc" }}>
+                                                            Weight (kg)
+                                                        </th>
+                                                        <th style={{ textAlign: "left", padding: "5px", borderBottom: "1px solid #ccc" }}>
+                                                            Reps
+                                                        </th>
+                                                        <th style={{ textAlign: "left", padding: "5px", borderBottom: "1px solid #ccc" }}>
+                                                            Time
+                                                        </th>
+                                                        <th style={{ textAlign: "left", padding: "5px", borderBottom: "1px solid #ccc" }}>
+                                                            Note
+                                                        </th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {ex.sets.map((set) => (
+                                                        <tr key={set.id}>
+                                                            <td
+                                                                style={{
+                                                                    padding: "5px",
+                                                                    borderBottom: "1px solid #eee",
+                                                                    fontWeight: "bold",
+                                                                }}
+                                                            >
+                                                                {set.set_number}
+                                                            </td>
+                                                            <td style={{ padding: "5px", borderBottom: "1px solid #eee" }}>
+                                                                <input
+                                                                    type="number"
+                                                                    value={set.weight ?? ""}
+                                                                    onChange={(e) =>
+                                                                        handleSetChange(ex.id, set.id, "weight", e.target.value)
+                                                                    }
+                                                                    onBlur={() => handleSetBlur(ex.id, set.id)}
+                                                                    style={{ width: "80px", padding: "4px" }}
+                                                                    placeholder="kg"
+                                                                />
+                                                            </td>
+                                                            <td style={{ padding: "5px", borderBottom: "1px solid #eee" }}>
+                                                                <input
+                                                                    type="number"
+                                                                    value={set.repetitions ?? ""}
+                                                                    onChange={(e) =>
+                                                                        handleSetChange(ex.id, set.id, "repetitions", e.target.value)
+                                                                    }
+                                                                    onBlur={() => handleSetBlur(ex.id, set.id)}
+                                                                    style={{ width: "80px", padding: "4px" }}
+                                                                    placeholder="reps"
+                                                                />
+                                                            </td>
+                                                            <td style={{ padding: "5px", borderBottom: "1px solid #eee" }}>
+                                                                <input
+                                                                    type="number"
+                                                                    value={set.time ?? ""}
+                                                                    onChange={(e) =>
+                                                                        handleSetChange(ex.id, set.id, "time", e.target.value)
+                                                                    }
+                                                                    onBlur={() => handleSetBlur(ex.id, set.id)}
+                                                                    style={{ width: "80px", padding: "4px" }}
+                                                                    placeholder="time"
+                                                                />
+                                                            </td>
+                                                            <td style={{ padding: "5px", borderBottom: "1px solid #eee" }}>
+                                                                <input
+                                                                    type="text"
+                                                                    value={set.note ?? ""}
+                                                                    onChange={(e) =>
+                                                                        handleSetChange(ex.id, set.id, "note", e.target.value)
+                                                                    }
+                                                                    onBlur={() => handleSetBlur(ex.id, set.id)}
+                                                                    style={{ width: "100%", minWidth: "120px", padding: "4px" }}
+                                                                    placeholder="note"
+                                                                />
+                                                            </td>
+                                                            <td
+                                                                style={{
+                                                                    padding: "5px",
+                                                                    borderBottom: "1px solid #eee",
+                                                                    textAlign: "right",
+                                                                }}
+                                                            >
+                                                                <button
+                                                                    onClick={() => handleRemoveSet(set.id)}
+                                                                    style={{
+                                                                        background: "none",
+                                                                        border: "none",
+                                                                        color: "red",
+                                                                        cursor: "pointer",
+                                                                        fontSize: "1.2em",
+                                                                        fontWeight: "bold",
+                                                                    }}
+                                                                >
+                                                                    x
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        ) : (
+                                            <p style={{ fontStyle: "italic", fontSize: "0.9em", margin: "5px 0" }}>
+                                                No sets logged.
+                                            </p>
+                                        )}
+
+                                        {addingSetToBlockId === ex.id ? (
+                                            <div style={{ display: "flex", gap: "10px", marginTop: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                                                <input
+                                                    type="number"
+                                                    placeholder="kg"
+                                                    value={newSetWeight}
+                                                    onChange={(e) =>
+                                                        setNewSetWeight(e.target.value === "" ? "" : Number(e.target.value))
+                                                    }
+                                                    style={{ width: "70px", padding: "5px", border: "1px solid" }}
+                                                />
+                                                <input
+                                                    type="number"
+                                                    placeholder="reps"
+                                                    value={newSetReps}
+                                                    onChange={(e) =>
+                                                        setNewSetReps(e.target.value === "" ? "" : Number(e.target.value))
+                                                    }
+                                                    style={{ width: "70px", padding: "5px", border: "1px solid" }}
+                                                />
+                                                <input
+                                                    type="number"
+                                                    placeholder="time"
+                                                    value={newSetTime}
+                                                    onChange={(e) =>
+                                                        setNewSetTime(e.target.value === "" ? "" : Number(e.target.value))
+                                                    }
+                                                    style={{ width: "70px", padding: "5px", border: "1px solid" }}
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="note"
+                                                    value={newSetNote}
+                                                    onChange={(e) => setNewSetNote(e.target.value)}
+                                                    style={{ minWidth: "140px", padding: "5px", border: "1px solid" }}
+                                                />
+                                                <button
+                                                    onClick={() => submitNewSet(ex)}
+                                                    style={{ background: "none", border: "1px solid", padding: "5px 10px", cursor: "pointer" }}
+                                                >
+                                                    Save Set
+                                                </button>
+                                                <button
+                                                    onClick={() => setAddingSetToBlockId(null)}
+                                                    style={{ background: "none", border: "1px solid", padding: "5px 10px", cursor: "pointer" }}
+                                                >
+                                                    Cancel
                                                 </button>
                                             </div>
-
-                                            {ex.note && (
-                                                <div style={{ marginBottom: "10px" }}>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setOpenExerciseNoteId(openExerciseNoteId === ex.id ? null : ex.id)}
-                                                        style={{ cursor: "pointer", border: "1px solid", background: "none", padding: "4px 8px" }}
-                                                    >
-                                                        {openExerciseNoteId === ex.id ? "Hide Note" : "Show Note"}
-                                                    </button>
-                                                    {openExerciseNoteId === ex.id && (
-                                                        <div style={{ marginTop: "8px", padding: "8px", border: "1px solid" }}>{ex.note}</div>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            <ul style={{ listStyleType: "circle", paddingLeft: "25px", margin: 0 }}>
-                                                {ex.sets?.map(set => (
-                                                    <div key={set.id}>
-                                                        <li style={{ margin: "8px 0", display: "flex", alignItems: "center" }}>
-                                                            <span style={{ width: "200px" }}>
-                                                                Set {set.set_number}:
-                                                                {set.time != null ? (
-                                                                    <strong> {set.time} mins</strong>
-                                                                ) : (
-                                                                    <strong> {formatWeight(set.weight)}kg × {set.repetitions} reps</strong>
-                                                                )}
-                                                            </span>
-                                                            {set.note && (
-                                                                <button onClick={() => setExpandedNoteSetId(expandedNoteSetId === set.id ? null : set.id)} style={{ cursor: "pointer", fontSize: "0.8em", padding: "2px 6px", marginLeft: "10px", border: "1px solid", background: "none" }}>Expand Note</button>
-                                                            )}
-                                                            <button onClick={() => openEditSet(set, ex.id)} style={{ cursor: "pointer", fontSize: "0.8em", padding: "2px 6px", marginLeft: "10px", border: "1px solid", background: "none" }}>Edit Set</button>
-                                                            <button onClick={() => deleteSet(set.id)} style={{ cursor: "pointer", fontSize: "0.8em", padding: "2px 6px", marginLeft: "10px", border: "1px solid", background: "none" }}>Delete Set</button>
-                                                        </li>
-                                                        {expandedNoteSetId === set.id && set.note && (
-                                                            <div style={{ padding: "5px 10px", backgroundColor: "#f9f9f9", fontStyle: "italic", fontSize: "0.9em", borderLeft: "3px solid #ccc", marginBottom: "5px" }}>
-                                                                Note: {set.note}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </ul>
-
-                                            {addingSetToBlockId === ex.id ? (
-                                                <div style={{ marginTop: "15px", display: "flex", flexWrap: "wrap", gap: "10px", border: "1px dashed #ccc", padding: "10px" }}>
-                                                    {isCardio ? (
-                                                        <input type="number" min="0" placeholder="Time (mins)" value={setTime === 0 ? "" : setTime} onChange={e => setSetTime(e.target.value === "" ? "" : Number(e.target.value))} required style={{ padding: "8px", border: "1px solid", width: "100px" }} />
-                                                    ) : (
-                                                        <>
-                                                            <input type="number" min="0" step="0.1" placeholder="Weight (kg)" value={setWeight === 0 ? "" : setWeight} onChange={e => setSetWeight(e.target.value === "" ? "" : Number(e.target.value))} required style={{ padding: "8px", border: "1px solid", width: "100px" }} />
-                                                            <input type="number" min="0" placeholder="Reps" value={setReps === 0 ? "" : setReps} onChange={e => setSetReps(e.target.value === "" ? "" : Number(e.target.value))} required style={{ padding: "8px", border: "1px solid", width: "80px" }} />
-                                                        </>
-                                                    )}
-                                                    <input type="text" placeholder="Note (optional)" value={setNoteText} onChange={e => setSetNoteText(e.target.value)} style={{ padding: "8px", border: "1px solid", flex: 1, minWidth: "150px" }} />
-                                                    <button onClick={() => submitSet(ex.id)} style={{ padding: "8px 15px", cursor: "pointer" }}>Save</button>
-                                                    <button onClick={() => { setAddingSetToBlockId(null); setEditingSetId(null); }} style={{ padding: "8px 15px", cursor: "pointer" }}>Cancel</button>
-                                                </div>
-                                            ) : (
-                                                <button onClick={() => openAddSet(ex.id)} style={{ cursor: "pointer", marginTop: "15px", padding: "6px 12px", border: "1px solid", background: "none" }}>+ Add Set</button>
-                                            )}
-                                        </li>
-                                    );
-                                })}
+                                        ) : (
+                                            <button
+                                                onClick={() => handleOpenAddSetForm(ex)}
+                                                style={{ background: "none", border: "1px solid", padding: "5px 10px", cursor: "pointer", marginTop: "10px" }}
+                                            >
+                                                + Add Set
+                                            </button>
+                                        )}
+                                    </li>
+                                ))}
                             </ul>
                         )}
 
                         <hr style={{ margin: "20px 0", border: "none", borderTop: "1px solid" }} />
 
                         <h3>Add New Exercise to Workout</h3>
-                        <form onSubmit={handleAddExercise} style={{ display: "flex", flexDirection: "column", gap: "10px", border: "1px solid", padding: "15px" }}>
+                        <form
+                            onSubmit={handleAddExercise}
+                            style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "10px",
+                                border: "1px solid",
+                                padding: "15px",
+                            }}
+                        >
                             <div style={{ position: "relative" }} ref={dropdownRef}>
                                 <input
                                     type="text"
                                     placeholder="Search and select exercise..."
                                     value={searchQuery}
-                                    onChange={e => {
+                                    onChange={(e) => {
                                         setSearchQuery(e.target.value);
                                         setSelectedExercise(null);
                                         setShowDropdown(true);
@@ -573,8 +868,21 @@ export default function Workouts() {
                                     style={{ padding: "8px", width: "100%", boxSizing: "border-box", border: "1px solid" }}
                                 />
                                 {showDropdown && filteredExercises.length > 0 && (
-                                    <ul style={{ position: "absolute", zIndex: 10, width: "100%", background: "white", border: "1px solid", listStyle: "none", padding: 0, margin: 0, maxHeight: "200px", overflowY: "auto" }}>
-                                        {filteredExercises.map(ex => (
+                                    <ul
+                                        style={{
+                                            position: "absolute",
+                                            zIndex: 10,
+                                            width: "100%",
+                                            background: "white",
+                                            border: "1px solid",
+                                            listStyle: "none",
+                                            padding: 0,
+                                            margin: 0,
+                                            maxHeight: "200px",
+                                            overflowY: "auto",
+                                        }}
+                                    >
+                                        {filteredExercises.map((ex) => (
                                             <li
                                                 key={ex.id}
                                                 onClick={() => {
@@ -591,7 +899,17 @@ export default function Workouts() {
                                 )}
                             </div>
 
-                            <button type="submit" disabled={!selectedExercise} style={{ padding: "8px", border: "1px solid", background: "none", cursor: (!selectedExercise) ? "not-allowed" : "pointer", fontWeight: "bold" }}>
+                            <button
+                                type="submit"
+                                disabled={!selectedExercise}
+                                style={{
+                                    padding: "8px",
+                                    border: "1px solid",
+                                    background: "none",
+                                    cursor: !selectedExercise ? "not-allowed" : "pointer",
+                                    fontWeight: "bold",
+                                }}
+                            >
                                 + Add Exercise block to Workout
                             </button>
                         </form>

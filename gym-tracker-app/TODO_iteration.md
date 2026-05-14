@@ -1,5 +1,5 @@
-[] Edit Workout details
-[] Improve create exercise interface
+[X] Edit Workout details
+[X] Improve create exercise interface
 [] Fix videos module
 [] 
 []
