@@ -258,8 +258,9 @@ class VideoProcessor:
         self.tracker.init(init_frame, init_bbox)
         
         # Create video writer
+        temp_output_path = output_path + ".tmp.mp4"
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+        out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
         
         frame_count = 0
         print("Processing video...")
@@ -292,23 +293,32 @@ class VideoProcessor:
         ffmpeg_cmd = [
             FFMPEG_PATH,
             "-y",
-            "-i", output_path,
+            "-i", temp_output_path,
             "-c:v", "libx264",
             "-preset", "fast",
             "-movflags", "+faststart",
             "-pix_fmt", "yuv420p",
-            output_path + "_final.mp4"
+            output_path
         ]
 
-        subprocess.run(ffmpeg_cmd, check=True)
-
-        os.replace(output_path + "_final.mp4", output_path)
-        
-        print(f"\nProcessing complete!")
-        print(f"Total frames: {frame_count}")
-        print(f"Output saved to: {output_path}")
-        
-        return True
+        try:
+            subprocess.run(ffmpeg_cmd, check=True)
+            print(f"\nProcessing complete!")
+            print(f"Total frames: {frame_count}")
+            print(f"Output saved to: {output_path}")
+            return True
+        except Exception as e:
+            print(f"Error executing FFmpeg or saving final output: {e}")
+            return False
+        finally:
+            # Clean up the intermediate raw video file
+            if os.path.exists(temp_output_path):
+                os.remove(temp_output_path)
+            
+            # DELETE INPUT FILE: Safely removes the uploaded input video once done
+            if os.path.exists(input_path):
+                print(f"[Cleanup] Deleting input file: {input_path}")
+                os.remove(input_path)
 
 
 # =============================================================================

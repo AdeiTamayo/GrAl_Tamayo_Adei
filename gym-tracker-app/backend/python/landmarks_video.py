@@ -82,7 +82,7 @@ def main(input_path, output_path):
     try:
         options = vision.PoseLandmarkerOptions(
             base_options=mp.tasks.BaseOptions(model_asset_path=model_path),
-            running_mode=vision.RunningMode.VIDEO # Optimized for sequential video frames
+            running_mode=vision.RunningMode.VIDEO 
         )
         landmarker = vision.PoseLandmarker.create_from_options(options)
     except Exception as e:
@@ -95,61 +95,66 @@ def main(input_path, output_path):
         print(f"Error: Cannot open input video {input_path}")
         return
 
-    # Extract video metadata: frames per second, width, and height
+    # Extract video metadata
     fps = cap.get(cv2.CAP_PROP_FPS)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    # Define the codec and create a VideoWriter object to save the output
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v') # MP4 codec
-    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+    # --- MODIFICATION START ---
+    # Define a temporary path for the raw OpenCV video output
+    temp_output_path = output_path + ".tmp.mp4"
+    
+    # Write the intermediate video to the temporary path instead
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
+    out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
+    # --- MODIFICATION END ---
 
     frame_idx = 0
 
     # Loop through the video until it ends or is closed
     while cap.isOpened():
-        # Read the next frame from the video
         success, frame = cap.read()
         if not success:
-            break # End of video
+            break 
 
-        # Convert BGR (OpenCV default) to RGB (MediaPipe requirement)
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        # Wrap the numpy array in a MediaPipe Image object
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_image)
 
-        # Calculate the timestamp for the current frame in milliseconds
         timestamp_ms = int((frame_idx / fps) * 1000) if fps else frame_idx
-        # Perform pose detection on the current frame
         detection_result = landmarker.detect_for_video(mp_image, timestamp_ms)
 
-        # Draw the detected landmarks on the RGB frame
         annotated_rgb = draw_landmarks_on_image(rgb_image, detection_result)
-        # Convert the annotated frame back to BGR for saving with OpenCV
         annotated_bgr = cv2.cvtColor(annotated_rgb, cv2.COLOR_RGB2BGR)
 
-        # Write the processed frame to the output video file
         out.write(annotated_bgr)
         frame_idx += 1
 
-    # Release the video capture and writer objects to free up system resources
     cap.release()
     out.release()
 
     print("[FFmpeg] Converting video...")
 
+    # --- MODIFICATION START ---
+    # FFmpeg reads from the temp file and writes directly to your requested output_path
     ffmpeg_cmd = [
         FFMPEG_PATH,
         "-y",
-        "-i", output_path,
+        "-i", temp_output_path,         # Input is the temp file
         "-c:v", "libx264",
         "-preset", "fast",
         "-movflags", "+faststart",
         "-pix_fmt", "yuv420p",
-        output_path + "_final.mp4"
+        output_path                    # Output is the clean, original path
     ]
 
-    subprocess.run(ffmpeg_cmd, check=True)
+    try:
+        subprocess.run(ffmpeg_cmd, check=True)
+        print(f"Success! Final video saved to: {output_path}")
+    finally:
+        # Clean up the temporary OpenCV file so it doesn't clutter your folder
+        if os.path.exists(temp_output_path):
+            os.remove(temp_output_path)
+            os.remove(input_path)
 
 
 

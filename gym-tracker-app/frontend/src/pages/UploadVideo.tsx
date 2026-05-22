@@ -48,24 +48,24 @@ export default function UploadVideo() {
                 throw new Error(data.error || 'Barbell tracking failed');
             }
 
-            setProgress('Downloading tracked video...');
+            // setProgress('Downloading tracked video...');
 
             // Fetch the processed video from the returned URL
-            const videoResponse = await fetch(data.processedVideoUrl);
-            const blob = await videoResponse.blob();
-            const url = window.URL.createObjectURL(blob);
+            // const videoResponse = await fetch(data.processedVideoUrl);
+            // const blob = await videoResponse.blob();
+            // const url = window.URL.createObjectURL(blob);
 
             // Trigger download of the processed video
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `barbell-tracked-${file.name}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // const link = document.createElement('a');
+            // link.href = url;
+            // link.download = `barbell-tracked-${file.name}`;
+            // document.body.appendChild(link);
+            // link.click();
+            // document.body.removeChild(link);
 
-            window.URL.revokeObjectURL(url);
+            // window.URL.revokeObjectURL(url);
 
-            setProgress('Barbell tracking complete! Download started.');
+            setProgress('Barbell tracking complete!');
             setFile(null);
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
@@ -146,22 +146,22 @@ export default function UploadVideo() {
                 throw new Error(data.error || 'Processing failed');
             }
 
-            setProgress('Downloading processed video...');
+            // setProgress('Downloading processed video...');
 
-            const videoResponse = await fetch(data.processedVideoUrl);
-            const blob = await videoResponse.blob();
-            const url = window.URL.createObjectURL(blob);
+            // const videoResponse = await fetch(data.processedVideoUrl);
+            // const blob = await videoResponse.blob();
+            // const url = window.URL.createObjectURL(blob);
 
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `processed-${file.name}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // const link = document.createElement('a');
+            // link.href = url;
+            // link.download = `processed-${file.name}`;
+            // document.body.appendChild(link);
+            // link.click();
+            // document.body.removeChild(link);
 
-            window.URL.revokeObjectURL(url);
+            // window.URL.revokeObjectURL(url);
 
-            setProgress('Download complete!');
+            setProgress('Pose Estimation complete!');
             setFile(null);
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';

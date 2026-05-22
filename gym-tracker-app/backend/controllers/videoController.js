@@ -22,7 +22,7 @@ exports.processPoseEstimation = async (req, res) => {
         console.log('[Processing] Python script found');
 
         const inputPath = req.file.path;
-        const outputFilename = 'processed-' + req.file.filename;
+        const outputFilename = 'PoseEstimation-' + req.file.filename;
         const outputPath = path.join(processedDir, outputFilename);
 
         // Process video with Python
