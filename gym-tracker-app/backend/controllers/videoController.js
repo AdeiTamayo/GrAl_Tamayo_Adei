@@ -1,12 +1,16 @@
 const path = require('path');
 const { validateUpload, processVideoWithPython } = require('../utils/videoProcessor');
 const Video = require('../models/video');
+const fs = require('fs').promises;
 
 const processedDir = path.join(__dirname, '../media/output');
 const port = process.env.PORT || 8000;
 
 /**
  * Process video for pose estimation
+ */
+/**
+ * Process video for pose estimation (Normal or Squat specific mode)
  */
 exports.processPoseEstimation = async (req, res) => {
     try {
@@ -20,12 +24,25 @@ exports.processPoseEstimation = async (req, res) => {
 
         console.log('[Processing] Python script found');
 
+        // 1. Get the mode from the request body (default to 'normal' if not provided)
+        const mode = req.body.mode || 'normal';
+
+        // Safety check to ensure valid flags are used
+        const allowedModes = ['normal', 'squat'];
+        const selectedMode = allowedModes.includes(mode.toLowerCase()) ? mode.toLowerCase() : 'normal';
+
         const inputPath = req.file.path;
-        const outputFilename = 'processed-' + req.file.filename;
+
+        // Add mode prefix to filename to make identification easy down the road
+        const prefix = selectedMode === 'squat' ? 'SquatAnalysis-' : 'PoseEstimation-';
+        const outputFilename = prefix + req.file.filename;
         const outputPath = path.join(processedDir, outputFilename);
 
-        // Process video with Python
-        await processVideoWithPython(scriptPath, inputPath, outputPath, '--input', '--output');
+        // 2. Build the extra args array to pass down to Python
+        const extraArgs = ['--mode', selectedMode];
+
+        // Process video with Python including our new mode parameter configurations
+        await processVideoWithPython(scriptPath, inputPath, outputPath, '--input', '--output', extraArgs);
 
         // Send response with processed video URL
         const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
@@ -33,11 +50,13 @@ exports.processPoseEstimation = async (req, res) => {
 
         // Persist in database using authenticated user
         if (req.user && req.user.userId) {
-            await Video.createVideo(req.user.userId, req.file.filename, 'pose_estimation', responseUrl);
+            // Log target metadata context type safely inside the DB record
+            const dbProcessType = selectedMode === 'squat' ? 'squat_analysis' : 'pose_estimation';
+            await Video.createVideo(req.user.userId, req.file.filename, dbProcessType, responseUrl);
         }
 
         res.json({
-            message: 'Video processed successfully',
+            message: `Video processed successfully using ${selectedMode} mode`,
             processedVideoUrl: responseUrl
         });
 
@@ -103,14 +122,41 @@ exports.processBarbellTracking = async (req, res) => {
  */
 exports.getUserVideos = async (req, res) => {
     try {
-        if (!req.user || !req.user.userId) {
-            return res.status(404).json({ success: false, error: 'Unauthorized' });
-        }
+        const directoryPath = path.join(__dirname, '../media/output');
 
-        const videos = await Video.getVideosByUserId(req.user.userId);
-        res.json({ success: true, videos });
+        const files = await fs.readdir(directoryPath);
+
+
+        const videoExtensions = ['.mp4'];
+        const videoFiles = files.filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return videoExtensions.includes(ext);
+        });
+
+        const videos = await Promise.all(videoFiles.map(async (file, index) => {
+            const filePath = path.join(directoryPath, file);
+
+            const stats = await fs.stat(filePath);
+
+            return {
+                id: file,
+                process_type: file.includes('pose') ? 'Pose Estimation' : 'Barbell Tracking',
+                processed_url: `/media/output/${file}`,
+                created_at: stats.birthtime
+            };
+        }));
+
+        // 5. Send the response
+        res.json({
+            success: true,
+            videos: videos
+        });
+
     } catch (error) {
-        console.error('[Error] Fetching user videos failed:', error.message);
-        res.status(500).json({ success: false, error: 'Failed to fetch videos' });
+        console.error("Error reading video directory:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to retrieve videos"
+        });
     }
 };

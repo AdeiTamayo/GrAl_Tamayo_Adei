@@ -25,16 +25,20 @@ function validateUpload(req, scriptPath) {
  * Processes video using Python script
  * Returns a Promise that resolves with the output path or rejects with an error
  */
-function processVideoWithPython(scriptPath, inputPath, outputPath, inputFlag = '-i', outputFlag = '-o') {
+function processVideoWithPython(scriptPath, inputPath, outputPath, inputFlag = '-i', outputFlag = '-o', extraArgs = []) {
     return new Promise((resolve, reject) => {
         console.log('[Processing] Starting Python process...');
         const startTime = Date.now();
 
-        const pythonProcess = spawn('python', [
+        // Combine base arguments with any extra parameters (like --mode squat)
+        const args = [
             scriptPath,
             inputFlag, inputPath,
-            outputFlag, outputPath
-        ]);
+            outputFlag, outputPath,
+            ...extraArgs
+        ];
+
+        const pythonProcess = spawn('python', args);
 
         pythonProcess.stdout.on('data', (data) => {
             console.log(`[Python stdout]: ${data.toString().trim()}`);
