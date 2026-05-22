@@ -9,6 +9,9 @@ const port = process.env.PORT || 8000;
 /**
  * Process video for pose estimation
  */
+/**
+ * Process video for pose estimation (Normal or Squat specific mode)
+ */
 exports.processPoseEstimation = async (req, res) => {
     try {
         const scriptPath = path.join(__dirname, '../python', 'landmarks_video.py');
@@ -21,12 +24,25 @@ exports.processPoseEstimation = async (req, res) => {
 
         console.log('[Processing] Python script found');
 
+        // 1. Get the mode from the request body (default to 'normal' if not provided)
+        const mode = req.body.mode || 'normal';
+
+        // Safety check to ensure valid flags are used
+        const allowedModes = ['normal', 'squat'];
+        const selectedMode = allowedModes.includes(mode.toLowerCase()) ? mode.toLowerCase() : 'normal';
+
         const inputPath = req.file.path;
-        const outputFilename = 'PoseEstimation-' + req.file.filename;
+
+        // Add mode prefix to filename to make identification easy down the road
+        const prefix = selectedMode === 'squat' ? 'SquatAnalysis-' : 'PoseEstimation-';
+        const outputFilename = prefix + req.file.filename;
         const outputPath = path.join(processedDir, outputFilename);
 
-        // Process video with Python
-        await processVideoWithPython(scriptPath, inputPath, outputPath, '--input', '--output');
+        // 2. Build the extra args array to pass down to Python
+        const extraArgs = ['--mode', selectedMode];
+
+        // Process video with Python including our new mode parameter configurations
+        await processVideoWithPython(scriptPath, inputPath, outputPath, '--input', '--output', extraArgs);
 
         // Send response with processed video URL
         const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
@@ -34,11 +50,13 @@ exports.processPoseEstimation = async (req, res) => {
 
         // Persist in database using authenticated user
         if (req.user && req.user.userId) {
-            await Video.createVideo(req.user.userId, req.file.filename, 'pose_estimation', responseUrl);
+            // Log target metadata context type safely inside the DB record
+            const dbProcessType = selectedMode === 'squat' ? 'squat_analysis' : 'pose_estimation';
+            await Video.createVideo(req.user.userId, req.file.filename, dbProcessType, responseUrl);
         }
 
         res.json({
-            message: 'Video processed successfully',
+            message: `Video processed successfully using ${selectedMode} mode`,
             processedVideoUrl: responseUrl
         });
 

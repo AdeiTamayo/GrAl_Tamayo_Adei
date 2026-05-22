@@ -1,9 +1,10 @@
 """
-Barbell Path Tracking with Roboflow YOLO + OpenCV CSRT
+Barbell Path Tracking with Roboflow YOLO + OpenCV CSRT + Velocity Estimation
 
 Tracks barbell path in video using:
 - Roboflow YOLO for first-frame detection
 - OpenCV CSRT tracker for all subsequent frames
+- Real-time physical velocity calculations (m/s)
 """
 
 import cv2
@@ -112,36 +113,49 @@ class RoboflowBarbellDetector:
 # =============================================================================
 
 class BarbellTracker:
-    """Tracks barbell using OpenCV CSRT tracker."""
+    """Tracks barbell using OpenCV CSRT tracker and estimates velocity metrics."""
     
     def __init__(self):
         self.tracker = None
         self.initialized = False
         self.bbox = None
         self.trajectory = deque(maxlen=MAX_TRAJECTORY_LENGTH)
+        
+        # Physical metric constants
+        self.fps = 0
+        self.scale_factor = None      # Meters per pixel
+        self.current_velocity = 0.0   # m/s
     
     def _create_tracker(self):
         try:
-            return cv2.legacy.TrackerCSRT_create() # TODO: Check if legacy can be removed
+            return cv2.legacy.TrackerCSRT_create() 
         except AttributeError:
             return cv2.TrackerCSRT_create()
     
-    def init(self, frame, bbox):
-        """Initialize tracker with bounding box."""
+    def init(self, frame, bbox, fps):
+        """Initialize tracker with bounding box and video speed parameters."""
         self.tracker = self._create_tracker()
         self.tracker.init(frame, bbox)
         self.initialized = True
         self.bbox = bbox
+        self.fps = fps
         
         x, y, w, h = bbox
+        
+        if h > 0:
+            self.scale_factor = 0.45 / h
+        else:
+            self.scale_factor = 0.001
+            
         self.trajectory.append((int(x + w/2), int(y + h/2)))
-        print(f"[Tracker] Initialized with bbox: {bbox}")
+        print(f"[Tracker] Initialized profile. Dynamic range step calibrated at: {self.scale_factor:.5f} meters/pixel")
     
     def update(self, frame):
-        """Update tracker, returns (success, center, bbox)."""
+        """Update tracker status, returns (success, center, bbox, current_velocity)."""
         if not self.initialized:
-            return False, None, None
-        
+            return False, None, None, 0.0
+            
+        prev_center = self.trajectory[-1] if self.trajectory else None
         success, bbox = self.tracker.update(frame)
         
         if success:
@@ -149,9 +163,24 @@ class BarbellTracker:
             center = (x + w // 2, y + h // 2)
             self.bbox = (x, y, w, h)
             self.trajectory.append(center)
-            return True, center, (x, y, w, h)
+            
+            # Distance differential calculation engine
+            if prev_center and self.fps > 0:
+                dx = center[0] - prev_center[0]
+                dy = center[1] - prev_center[1]
+                pixel_displacement = np.sqrt(dx**2 + dy**2)
+                
+                # Normalize pixel movement to targeted metric displacement space
+                real_distance_m = pixel_displacement * self.scale_factor
+                dt = 1.0 / self.fps
+                
+                self.current_velocity = real_distance_m / dt
+            else:
+                self.current_velocity = 0.0
+                
+            return True, center, (x, y, w, h), self.current_velocity
         
-        return False, None, None
+        return False, None, None, 0.0
     
     def get_trajectory(self):
         return list(self.trajectory)
@@ -211,7 +240,7 @@ class VideoProcessor:
         print("[Detection] Using Roboflow YOLO for detection...")
         
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        sample_positions = [0, 0.1] #, 0.2, 0.3, 0.4, 0.5
+        sample_positions = [0, 0.1] 
         sample_frames = [int(total_frames * pos) for pos in sample_positions]
         
         print(f"[Detection] Sampling frames: {sample_frames}")
@@ -236,7 +265,7 @@ class VideoProcessor:
         return None, None
     
     def process_video(self, input_path, output_path):
-        """Process video and output with trajectory."""
+        """Process video and output with trajectory and physics velocity readout."""
         cap = cv2.VideoCapture(input_path)
         
         fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -252,18 +281,20 @@ class VideoProcessor:
         if init_frame is None:
             print("Error: Could not detect barbell in video")
             cap.release()
+            if os.path.exists(input_path):
+                os.remove(input_path)
             return False
         
-        # Initialize tracker
-        self.tracker.init(init_frame, init_bbox)
+        # Initialize tracker with contextual timing configuration parameters
+        self.tracker.init(init_frame, init_bbox, fps)
         
-        # Create video writer
+        # Create video writer temporary file pipeline layout
         temp_output_path = output_path + ".tmp.mp4"
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
         
         frame_count = 0
-        print("Processing video...")
+        print("Processing video frames...")
         
         while True:
             ret, frame = cap.read()
@@ -272,15 +303,22 @@ class VideoProcessor:
             
             frame_count += 1
             
-            # Update tracker
-            success, center, bbox = self.tracker.update(frame)
+            # Update tracking matrices and unpack real-world metrics
+            success, center, bbox, velocity = self.tracker.update(frame)
             trajectory = self.tracker.get_trajectory()
             
-            # Draw trajectory
+            # Draw standard overlays
             output_frame = self.drawer.draw(frame, trajectory, center, bbox)
+            
+            # Stamp calculated metrics to the upper-left output video matrix
+            if success:
+                metrics_text = f"Velocity: {velocity:.2f} m/s"
+                cv2.putText(output_frame, metrics_text, (40, 60), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 255), 3, cv2.LINE_AA)
+            
             out.write(output_frame)
             
-            # Print progress
+            # Print status log milestones
             if frame_count % 50 == 0:
                 progress = (frame_count / total_frames) * 100
                 print(f"Progress: {progress:.1f}%")
@@ -288,7 +326,7 @@ class VideoProcessor:
         cap.release()
         out.release()
 
-        print("[FFmpeg] Converting video...")
+        print("[FFmpeg] Compiling clean delivery video...")
 
         ffmpeg_cmd = [
             FFMPEG_PATH,
@@ -311,11 +349,9 @@ class VideoProcessor:
             print(f"Error executing FFmpeg or saving final output: {e}")
             return False
         finally:
-            # Clean up the intermediate raw video file
             if os.path.exists(temp_output_path):
                 os.remove(temp_output_path)
             
-            # DELETE INPUT FILE: Safely removes the uploaded input video once done
             if os.path.exists(input_path):
                 print(f"[Cleanup] Deleting input file: {input_path}")
                 os.remove(input_path)
@@ -326,7 +362,7 @@ class VideoProcessor:
 # =============================================================================
 
 def main():
-    parser = argparse.ArgumentParser(description='Barbell Path Tracking')
+    parser = argparse.ArgumentParser(description='Barbell Path Tracking with Velocity')
     parser.add_argument('-i', '--input', type=str, required=True, help='Input video path')
     parser.add_argument('-o', '--output', type=str, required=True, help='Output video path')
     args = parser.parse_args()

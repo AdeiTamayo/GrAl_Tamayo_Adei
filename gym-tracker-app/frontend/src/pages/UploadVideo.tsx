@@ -13,8 +13,6 @@ export default function UploadVideo() {
     // ==========================================================================
     // BARBELL TRACKING HANDLER
     // ==========================================================================
-    // Sends video to barbell tracking endpoint and downloads the processed result
-
     const handleBarbellTracking = async () => {
         if (!file) return;
 
@@ -28,12 +26,10 @@ export default function UploadVideo() {
         try {
             setProgress('Tracking barbell path...');
 
-            // Get token from localStorage
             if (!token) {
                 throw new Error('Please login first');
             }
 
-            // Send video to barbell tracking API endpoint
             const response = await apiFetch('/api/videos/barbell-tracking', {
                 method: 'POST',
                 headers: {
@@ -47,23 +43,6 @@ export default function UploadVideo() {
             if (!response.ok) {
                 throw new Error(data.error || 'Barbell tracking failed');
             }
-
-            // setProgress('Downloading tracked video...');
-
-            // Fetch the processed video from the returned URL
-            // const videoResponse = await fetch(data.processedVideoUrl);
-            // const blob = await videoResponse.blob();
-            // const url = window.URL.createObjectURL(blob);
-
-            // Trigger download of the processed video
-            // const link = document.createElement('a');
-            // link.href = url;
-            // link.download = `barbell-tracked-${file.name}`;
-            // document.body.appendChild(link);
-            // link.click();
-            // document.body.removeChild(link);
-
-            // window.URL.revokeObjectURL(url);
 
             setProgress('Barbell tracking complete!');
             setFile(null);
@@ -110,23 +89,22 @@ export default function UploadVideo() {
     };
 
     // ==========================================================================
-    // POSE ESTIMATION HANDLER
-    //==========================================================================
-    // Sends video to pose estimation endpoint and downloads the processed result
-
-    const handleUpload = async () => {
+    // POSE ESTIMATION & BIOMECHANICAL ANALYZER HANDLER
+    // ==========================================================================
+    // Accepts an exercise mode: 'normal' (generic mapping) or 'squat' (with feedback HUD)
+    const handleUpload = async (mode: 'normal' | 'squat') => {
         if (!file) return;
-
 
         setIsProcessing(true);
         setError(null);
-        setProgress('Uploading video...');
+        setProgress(mode === 'squat' ? 'Initializing squat biomechanics engine...' : 'Uploading video...');
 
         const formData = new FormData();
         formData.append('video', file);
+        formData.append('mode', mode); // <-- Appending the layout context here!
 
         try {
-            setProgress('Processing video...');
+            setProgress(mode === 'squat' ? 'Analyzing squat depth & reps...' : 'Processing skeleton layout...');
 
             if (!token) {
                 throw new Error('Please login first');
@@ -146,22 +124,7 @@ export default function UploadVideo() {
                 throw new Error(data.error || 'Processing failed');
             }
 
-            // setProgress('Downloading processed video...');
-
-            // const videoResponse = await fetch(data.processedVideoUrl);
-            // const blob = await videoResponse.blob();
-            // const url = window.URL.createObjectURL(blob);
-
-            // const link = document.createElement('a');
-            // link.href = url;
-            // link.download = `processed-${file.name}`;
-            // document.body.appendChild(link);
-            // link.click();
-            // document.body.removeChild(link);
-
-            // window.URL.revokeObjectURL(url);
-
-            setProgress('Pose Estimation complete!');
+            setProgress(mode === 'squat' ? 'Squat analysis complete!' : 'Pose Estimation complete!');
             setFile(null);
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
@@ -183,11 +146,11 @@ export default function UploadVideo() {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => !isProcessing && fileInputRef.current?.click()}
                 className={`
                     border-2 border-dashed rounded-lg py-10 px-5 text-center mt-5
                     ${isDragging ? 'border-black bg-gray-100' : 'border-gray-300'}
-                    ${isProcessing ? 'cursor-not-allowed' : 'cursor-pointer'}
+                    ${isProcessing ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}
                 `}
             >
                 {file ? (
@@ -211,45 +174,60 @@ export default function UploadVideo() {
                 />
             </div>
 
-            {/* Process Buttons */}
+            {/* Process Buttons Layout Menu */}
             {file && (
                 <div className="flex flex-col gap-3 mt-5">
-                    {/* Pose Estimation Button*/}
+                    {/* General Pose Estimation Option */}
                     <button
                         type="button"
-                        onClick={handleUpload}
+                        onClick={() => handleUpload('normal')}
                         disabled={isProcessing}
                         className={`
-                            w-full py-2 px-5 border rounded
+                            w-full py-2 px-5 border rounded font-medium
                             ${isProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'}
                         `}
                     >
-                        {isProcessing ? 'Processing...' : ' Pose Estimation'}
+                        {isProcessing ? 'Processing...' : 'General Pose Estimation'}
                     </button>
 
-                    {/* Barbell Tracking Button*/}
+                    {/* Squat Specific Analysis Option */}
+                    <button
+                        type="button"
+                        onClick={() => handleUpload('squat')}
+                        disabled={isProcessing}
+                        className={`
+                            w-full py-2 px-5 border rounded text-white bg-blue-600 font-semibold
+                            ${isProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-blue-700'}
+                        `}
+                    >
+                        {isProcessing ? 'Processing...' : 'Squat Analysis + Feedback'}
+                    </button>
+
+                    <div className="border-t border-gray-200 my-1"></div>
+
+                    {/* Barbell Tracking Option */}
                     <button
                         type="button"
                         onClick={handleBarbellTracking}
                         disabled={isProcessing}
                         className={`
-                            w-full py-2 px-5 border rounded
+                            w-full py-2 px-5 border rounded text-gray-700 border-gray-300
                             ${isProcessing ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-100'}
                         `}
                     >
-                        {isProcessing ? 'Processing...' : ' Track Barbell'}
+                        {isProcessing ? 'Processing...' : 'Track Barbell Path'}
                     </button>
                 </div>
             )}
 
             {/* Progress Message */}
             {progress && !error && (
-                <p className="mt-4">{progress}</p>
+                <p className="mt-4 text-center text-sm text-gray-600 animate-pulse">{progress}</p>
             )}
 
             {/* Error Message */}
             {error && (
-                <p className="mt-4 text-red-500">
+                <p className="mt-4 text-center text-sm text-red-500 font-medium">
                     Error: {error}
                 </p>
             )}
