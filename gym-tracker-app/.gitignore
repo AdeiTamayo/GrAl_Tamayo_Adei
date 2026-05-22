@@ -19,9 +19,6 @@ env/
 ENV/
 *.egg-info/
 
-# Uploaded files
-backend/uploads/
-uploads/
 
 # Environment variables
 .env
@@ -61,3 +58,7 @@ tmp/
 # Ignore testing resources files
 backend/media/output
 backend/media/uploads
+
+
+
+tools/

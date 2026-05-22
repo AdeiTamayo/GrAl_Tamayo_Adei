@@ -13,6 +13,17 @@ import argparse
 import os
 from dotenv import load_dotenv
 from inference_sdk import InferenceHTTPClient
+import subprocess
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+FFMPEG_PATH = os.path.join(
+    BASE_DIR,
+    "tools",
+    "ffmpeg",
+    "bin",
+    "ffmpeg.exe"
+)
 
 load_dotenv()
 
@@ -275,6 +286,23 @@ class VideoProcessor:
         
         cap.release()
         out.release()
+
+        print("[FFmpeg] Converting video...")
+
+        ffmpeg_cmd = [
+            FFMPEG_PATH,
+            "-y",
+            "-i", output_path,
+            "-c:v", "libx264",
+            "-preset", "fast",
+            "-movflags", "+faststart",
+            "-pix_fmt", "yuv420p",
+            output_path + "_final.mp4"
+        ]
+
+        subprocess.run(ffmpeg_cmd, check=True)
+
+        os.replace(output_path + "_final.mp4", output_path)
         
         print(f"\nProcessing complete!")
         print(f"Total frames: {frame_count}")

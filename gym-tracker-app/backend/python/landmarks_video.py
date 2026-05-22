@@ -4,11 +4,22 @@ import numpy as np
 import cv2 
 import argparse
 import os
+import subprocess
 
 """
 This script processes a video file to detect human pose landmarks using MediaPipe 
 and saves the annotated video to a specified output path.
 """
+
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+FFMPEG_PATH = os.path.join(
+    BASE_DIR,
+    "tools",
+    "ffmpeg",
+    "bin",
+    "ffmpeg.exe"
+)
 
 # List of tuples representing pairs of landmark indices that should be connected by lines
 POSE_CONNECTIONS = [
@@ -124,6 +135,22 @@ def main(input_path, output_path):
     # Release the video capture and writer objects to free up system resources
     cap.release()
     out.release()
+
+    print("[FFmpeg] Converting video...")
+
+    ffmpeg_cmd = [
+        FFMPEG_PATH,
+        "-y",
+        "-i", output_path,
+        "-c:v", "libx264",
+        "-preset", "fast",
+        "-movflags", "+faststart",
+        "-pix_fmt", "yuv420p",
+        output_path + "_final.mp4"
+    ]
+
+    subprocess.run(ffmpeg_cmd, check=True)
+
 
 
 if __name__ == "__main__":

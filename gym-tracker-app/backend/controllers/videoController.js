@@ -1,6 +1,7 @@
 const path = require('path');
 const { validateUpload, processVideoWithPython } = require('../utils/videoProcessor');
 const Video = require('../models/video');
+const fs = require('fs').promises;
 
 const processedDir = path.join(__dirname, '../media/output');
 const port = process.env.PORT || 8000;
@@ -103,14 +104,41 @@ exports.processBarbellTracking = async (req, res) => {
  */
 exports.getUserVideos = async (req, res) => {
     try {
-        if (!req.user || !req.user.userId) {
-            return res.status(404).json({ success: false, error: 'Unauthorized' });
-        }
+        const directoryPath = path.join(__dirname, '../media/output');
 
-        const videos = await Video.getVideosByUserId(req.user.userId);
-        res.json({ success: true, videos });
+        const files = await fs.readdir(directoryPath);
+
+
+        const videoExtensions = ['.mp4'];
+        const videoFiles = files.filter(file => {
+            const ext = path.extname(file).toLowerCase();
+            return videoExtensions.includes(ext);
+        });
+
+        const videos = await Promise.all(videoFiles.map(async (file, index) => {
+            const filePath = path.join(directoryPath, file);
+
+            const stats = await fs.stat(filePath);
+
+            return {
+                id: file,
+                process_type: file.includes('pose') ? 'Pose Estimation' : 'Barbell Tracking',
+                processed_url: `/media/output/${file}`,
+                created_at: stats.birthtime
+            };
+        }));
+
+        // 5. Send the response
+        res.json({
+            success: true,
+            videos: videos
+        });
+
     } catch (error) {
-        console.error('[Error] Fetching user videos failed:', error.message);
-        res.status(500).json({ success: false, error: 'Failed to fetch videos' });
+        console.error("Error reading video directory:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to retrieve videos"
+        });
     }
 };

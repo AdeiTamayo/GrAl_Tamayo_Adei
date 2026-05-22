@@ -37,7 +37,11 @@ app.use(cors());
 app.use(express.json());
 
 // Serve processed videos statically
-app.use('/media/output', express.static(processedDir));
+app.use('/media/output', express.static(path.join(__dirname, 'media/output'), {
+    setHeaders: (res, path) => {
+        res.set('Accept-Ranges', 'bytes');
+    }
+}));
 
 
 // Mount routes

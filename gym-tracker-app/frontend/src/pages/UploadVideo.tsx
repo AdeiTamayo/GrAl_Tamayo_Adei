@@ -8,6 +8,7 @@ export default function UploadVideo() {
     const [progress, setProgress] = useState<string>('');
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const token = localStorage.getItem("user_login_token");
 
     // ==========================================================================
     // BARBELL TRACKING HANDLER
@@ -28,7 +29,6 @@ export default function UploadVideo() {
             setProgress('Tracking barbell path...');
 
             // Get token from localStorage
-            const token = localStorage.getItem('token');
             if (!token) {
                 throw new Error('Please login first');
             }
@@ -117,6 +117,7 @@ export default function UploadVideo() {
     const handleUpload = async () => {
         if (!file) return;
 
+
         setIsProcessing(true);
         setError(null);
         setProgress('Uploading video...');
@@ -127,8 +128,6 @@ export default function UploadVideo() {
         try {
             setProgress('Processing video...');
 
-            // Get token from localStorage
-            const token = localStorage.getItem('token');
             if (!token) {
                 throw new Error('Please login first');
             }
