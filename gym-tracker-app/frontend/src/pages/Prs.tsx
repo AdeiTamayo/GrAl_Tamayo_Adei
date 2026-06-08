@@ -168,37 +168,40 @@ export default function PersonalRecords() {
         }
     }
 
-    if (loading) return <p>Loading Personal Records...</p>;
+    if (loading) return <div className="p-8 text-zinc-400 font-medium animate-pulse">Loading Personal Records...</div>;
 
     const filteredExercises = exercises.filter(ex =>
         ex.name.toLowerCase().includes(exerciseSearch.toLowerCase())
     );
 
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-            <h1>Personal Records (PRs)</h1>
-            {error && <p style={{ fontWeight: "bold" }}>Error: {error}</p>}
+        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+            <div>
+                <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Personal Records (PRs)</h1>
+                <p className="text-zinc-400 font-medium">Keep track of your all-time best lifts.</p>
+            </div>
+            {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
 
-            <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
+            <div className="flex gap-6 items-start flex-col lg:flex-row">
 
                 {/* --- Left Column: PR Summary --- */}
-                <div style={{ flex: 1, maxWidth: "450px" }}>
+                <div className="flex-none w-full lg:w-[450px] space-y-6">
 
                     {/* Add Manual PR Form */}
-                    <div style={{ border: "1px solid", padding: "20px", marginBottom: "20px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <h3 style={{ margin: 0 }}>Manually Log a PR</h3>
+                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase">Manually Log a PR</h3>
                             <button
                                 onClick={() => setShowAddForm(!showAddForm)}
-                                style={{ padding: "5px 10px", cursor: "pointer", border: "1px solid", background: "none" }}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all focus:outline-none ${showAddForm ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-lime-400 text-black hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98]'}`}
                             >
                                 {showAddForm ? "Cancel" : "Add PR"}
                             </button>
                         </div>
 
                         {showAddForm && (
-                            <form onSubmit={createPR} style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}>
-                                <div style={{ position: "relative" }} ref={dropdownRef}>
+                            <form onSubmit={createPR} className="flex flex-col gap-4 mt-6 border-t border-zinc-800/80 pt-6">
+                                <div className="relative" ref={dropdownRef}>
                                     <input
                                         type="text"
                                         placeholder="Search and select exercise..."
@@ -210,10 +213,10 @@ export default function PersonalRecords() {
                                         }}
                                         onFocus={() => setShowDropdown(true)}
                                         required
-                                        style={{ padding: "8px", width: "100%", boxSizing: "border-box", border: "1px solid" }}
+                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                                     />
                                     {showDropdown && filteredExercises.length > 0 && (
-                                        <ul style={{ position: "absolute", zIndex: 10, width: "100%", background: "white", border: "1px solid", listStyle: "none", padding: 0, margin: 0, maxHeight: "200px", overflowY: "auto" }}>
+                                        <ul className="absolute z-10 w-full mt-2 bg-zinc-900 border border-zinc-800 rounded-lg shadow-2xl overflow-y-auto max-h-48 py-2">
                                             {filteredExercises.map(ex => (
                                                 <li
                                                     key={ex.id}
@@ -222,7 +225,7 @@ export default function PersonalRecords() {
                                                         setFormExerciseId(ex.id);
                                                         setShowDropdown(false);
                                                     }}
-                                                    style={{ padding: "10px", cursor: "pointer", borderBottom: "1px solid" }}
+                                                    className="px-4 py-2.5 text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer transition-colors"
                                                 >
                                                     {ex.name}
                                                 </li>
@@ -230,7 +233,7 @@ export default function PersonalRecords() {
                                         </ul>
                                     )}
                                 </div>
-                                <div style={{ display: "flex", gap: "10px" }}>
+                                <div className="grid grid-cols-2 gap-4">
                                     <input
                                         type="number"
                                         step="0.1"
@@ -238,7 +241,7 @@ export default function PersonalRecords() {
                                         value={newWeight}
                                         onChange={e => setNewWeight(Number(e.target.value))}
                                         required
-                                        style={{ padding: "8px", flex: 1, border: "1px solid" }}
+                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                                     />
                                     <input
                                         type="number"
@@ -246,51 +249,51 @@ export default function PersonalRecords() {
                                         value={newReps}
                                         onChange={e => setNewReps(Number(e.target.value))}
                                         required
-                                        style={{ padding: "8px", flex: 1, border: "1px solid" }}
+                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                                     />
                                 </div>
                                 <input
                                     type="date"
                                     value={newDate}
                                     onChange={e => setNewDate(e.target.value)}
-                                    style={{ padding: "8px", border: "1px solid" }}
+                                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors [color-scheme:dark]"
                                 />
                                 <input
                                     type="text"
                                     placeholder="Note (optional)"
                                     value={newNote}
                                     onChange={e => setNewNote(e.target.value)}
-                                    style={{ padding: "8px", border: "1px solid" }}
+                                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                                 />
-                                <button type="submit" disabled={isCreating || !formExerciseId} style={{ padding: "10px", border: "1px solid", background: "none", cursor: (isCreating || !formExerciseId) ? "not-allowed" : "pointer" }}>
+                                <button type="submit" disabled={isCreating || !formExerciseId} className="w-full bg-lime-400 text-black font-bold py-3 mt-2 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
                                     {isCreating ? "Adding..." : "Log PR"}
                                 </button>
                             </form>
                         )}
                     </div>
 
-                    <div style={{ border: "1px solid", padding: "20px" }}>
-                        <h2>Current Best PRs</h2>
+                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                        <h2 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">Current Best PRs</h2>
                         {prSummary.length === 0 ? (
-                            <p>No PRs recorded yet. Go lift something heavy!</p>
+                            <div className="text-center py-10 bg-zinc-900/50 rounded-lg border border-zinc-800/80">
+                                <p className="text-zinc-500 font-medium italic">No PRs recorded yet. Go lift something heavy!</p>
+                            </div>
                         ) : (
-                            <ul style={{ listStyleType: "none", padding: 0 }}>
+                            <ul className="space-y-3">
                                 {prSummary.map(pr => (
                                     <li
                                         key={pr.id}
-                                        style={{ borderBottom: "1px solid", padding: "15px 0", cursor: "pointer" }}
                                         onClick={() => fetchPrHistory(pr.exercise_id, pr.exercise_name)}
+                                        className={`bg-zinc-900/40 border border-zinc-800/80 rounded-lg p-4 cursor-pointer hover:border-lime-400/50 hover:bg-zinc-900 transition-all ${selectedExerciseName === pr.exercise_name ? 'border-lime-400/50 bg-zinc-900 shadow-md ring-1 ring-lime-400/20' : ''}`}
                                     >
-                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <div className="flex justify-between items-center">
                                             <div>
-                                                <strong style={{ fontSize: "1.1em" }}>{pr.exercise_name}</strong>
-                                                <br />
-                                                <small>{pr.date?.substring(0, 10)}</small>
+                                                <strong className="text-lg font-bold text-lime-400 capitalize">{pr.exercise_name}</strong>
+                                                <div className="text-sm text-zinc-500 font-medium mt-1">{pr.date?.substring(0, 10)}</div>
                                             </div>
-                                            <div style={{ textAlign: "right" }}>
-                                                <span style={{ fontSize: "1.2em", fontWeight: "bold" }}>{pr.weight}kg</span>
-                                                <br />
-                                                <span>{pr.repetitions} reps</span>
+                                            <div className="text-right">
+                                                <span className="text-2xl font-bold text-zinc-100">{pr.weight} kg</span>
+                                                <div className="text-sm text-zinc-400 font-medium mt-1">{pr.repetitions} reps</div>
                                             </div>
                                         </div>
                                     </li>
@@ -302,32 +305,34 @@ export default function PersonalRecords() {
 
                 {/* --- Right Column: PR History Timeline --- */}
                 {selectedExerciseName && (
-                    <div style={{ flex: 1.5, border: "1px solid", padding: "25px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                            <h2 style={{ marginTop: 0 }}>{selectedExerciseName} - History</h2>
-                            <button onClick={() => setSelectedExerciseName(null)} style={{ padding: "5px 10px", cursor: "pointer", border: "1px solid", background: "none" }}>Close Panel</button>
+                    <div className="flex-1 w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 lg:p-8 shadow-xl">
+                        <div className="flex justify-between items-start mb-6">
+                            <h2 className="font-display text-2xl font-bold text-lime-400 tracking-wide uppercase">{selectedExerciseName} Timeline</h2>
+                            <button onClick={() => setSelectedExerciseName(null)} className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg font-bold text-sm transition-colors border border-zinc-800">Close</button>
                         </div>
-                        <hr style={{ margin: "20px 0", border: "none", borderTop: "1px solid" }} />
 
-                        <ul style={{ listStyleType: "none", padding: 0 }}>
+                        <ul className="relative border-l border-zinc-800 ml-3 md:ml-6 pl-6 pb-2 space-y-8 mt-8">
                             {prHistory.map((history, index) => (
-                                <li key={history.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "10px 0", padding: "10px", borderBottom: "1px solid" }}>
-                                    <div style={{ display: "flex", flex: 1 }}>
-                                        <div style={{ width: "120px", fontWeight: "bold" }}>
-                                            {history.date?.substring(0, 10)}
+                                <li key={history.id} className="relative">
+                                    <div className="absolute w-3 h-3 bg-lime-400 rounded-full -left-[1.95rem] top-1.5 ring-4 ring-zinc-950"></div>
+                                    <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 md:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-zinc-700 transition-colors">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">{history.date?.substring(0, 10)}</span>
+                                                {index === 0 && <span className="text-[10px] font-bold uppercase tracking-widest bg-lime-400/10 text-lime-400 border border-lime-400/20 px-2 py-0.5 rounded-full">Current Record</span>}
+                                            </div>
+                                            <div className="text-xl text-zinc-100 font-medium">
+                                                <strong className="font-bold">{history.weight} kg</strong> for <strong className="font-bold">{history.repetitions} reps</strong>
+                                            </div>
+                                            {history.note && <div className="mt-3 text-sm text-zinc-500 bg-zinc-900 p-3 rounded-lg border border-zinc-800"><span className="text-zinc-600 font-medium">Note:</span> {history.note}</div>}
                                         </div>
-                                        <div>
-                                            <strong>{history.weight}kg</strong> for <strong>{history.repetitions} reps</strong>
-                                            {history.note && <p style={{ margin: "5px 0 0 0", fontStyle: "italic", fontSize: "0.9em" }}>Note: {history.note}</p>}
-                                            {index === 0 && <span style={{ marginLeft: "10px", fontSize: "0.8em", padding: "2px 6px", border: "1px solid" }}>Current PR</span>}
-                                        </div>
+                                        <button
+                                            onClick={() => deletePR(history.id)}
+                                            className="px-4 py-2 md:py-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg font-medium text-sm border border-rose-500/20 transition-colors shrink-0"
+                                        >
+                                            Delete Entry
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => deletePR(history.id)}
-                                        style={{ cursor: "pointer", fontSize: "0.8em", padding: "4px 8px", border: "1px solid", background: "none" }}
-                                    >
-                                        Delete
-                                    </button>
                                 </li>
                             ))}
                         </ul>

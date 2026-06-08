@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import Button from "../components/Button";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -54,47 +55,57 @@ export default function Login() {
     }
 
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", maxWidth: "400px", margin: "40px auto" }}>
-            <form onSubmit={handleSubmit} style={{ border: "1px solid", padding: "20px", display: "flex", flexDirection: "column", gap: "15px" }}>
-                <h2 style={{ margin: "0 0 10px 0" }}>Login</h2>
-                {message && <p style={{ fontWeight: "bold" }}>{message}</p>}
+        <div className="min-h-[80vh] flex items-center justify-center p-4">
+            <form onSubmit={handleSubmit} className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 sm:p-8 w-full max-w-md flex flex-col gap-5 shadow-2xl">
+                <div>
+                    <h2 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-1">Login</h2>
+                    <p className="text-zinc-400 text-sm">Welcome back to GymTracker.</p>
+                </div>
+                {message && <p className="text-rose-400 font-medium text-sm bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">{message}</p>}
 
                 <div>
-                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Email</label>
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Email</label>
                     <input
                         type="email"
                         value={email}
                         required
                         onChange={e => setEmail(e.target.value)}
-                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors placeholder:text-zinc-600"
+                        placeholder="your@email.com"
                     />
                 </div>
 
                 <div>
-                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Password</label>
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Password</label>
                     <input
                         type="password"
                         value={password}
                         required
                         onChange={e => setPassword(e.target.value)}
-                        style={{ width: "100%", padding: "8px", boxSizing: "border-box", border: "1px solid" }}
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors placeholder:text-zinc-600"
+                        placeholder="••••••••"
                     />
                 </div>
 
-                <button
+                <Button
                     type="submit"
                     disabled={isLoading}
-                    style={{
-                        padding: "10px",
-                        border: "1px solid",
-                        background: "none",
-                        cursor: isLoading ? "not-allowed" : "pointer",
-                        marginTop: "10px",
-                        fontWeight: "bold"
-                    }}
+                    variant="primary" fullWidth
                 >
                     {isLoading ? 'Logging in...' : 'Login'}
-                </button>
+                </Button>
+                <div className="pt-4 mt-2">
+                    <p className="text-center text-zinc-500 text-sm mt-8">
+                        You don't have an account'?{" "}
+                        <button
+                            type="button"
+                            onClick={() => navigate("/register")}
+                            className="text-lime-400 hover:text-lime-300 font-bold transition-colors"
+                        >
+                            Register
+                        </button>
+                    </p>
+                </div>
             </form>
         </div>
     );

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { apiFetch } from "../utils/api";
+import TransparentNumericInput from "../components/TransparentNumericInput";
+// 1. Import Recharts components
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface WeightEntry {
     id: number;
@@ -16,7 +19,7 @@ export default function WeightHistory() {
     // Form state
     const [editingId, setEditingId] = useState<number | null>(null);
     const [weight, setWeight] = useState<number | "">("");
-    const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
+    const [date, setDate] = useState<string>(new Date().toLocaleDateString('en-CA'));
 
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(
@@ -34,7 +37,6 @@ export default function WeightHistory() {
     async function fetchWeightHistory() {
         try {
             setError(null);
-            // Adjust this path if your route is different
             const res = await apiFetch("/api/user/weights", { headers });
             const data = await res.json();
 
@@ -50,10 +52,21 @@ export default function WeightHistory() {
         }
     }
 
+    // 2. Prepare chart data (Sorted chronologically from oldest to newest)
+    const chartData = useMemo(() => {
+        return [...entries]
+            .map(entry => ({
+                ...entry,
+                displayDate: entry.date?.slice(5, 10), // Simplifies yyyy-mm-dd to mm-dd for clean X-axis labels
+                weightNum: Number(entry.weight)
+            }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }, [entries]);
+
     function resetForm() {
         setEditingId(null);
         setWeight("");
-        setDate(new Date().toISOString().slice(0, 10));
+        setDate(new Date().toLocaleDateString('en-CA'));
         setError(null);
     }
 
@@ -72,7 +85,6 @@ export default function WeightHistory() {
             setError(null);
 
             if (editingId) {
-                // Matches controller: updateWeight expects { id, weight, date }
                 const res = await apiFetch("/api/user/weights", {
                     method: "PUT",
                     headers,
@@ -88,7 +100,6 @@ export default function WeightHistory() {
                     return;
                 }
             } else {
-                // Matches controller: addWeight expects { weight, date }
                 const res = await apiFetch("/api/user/weights", {
                     method: "POST",
                     headers,
@@ -112,10 +123,8 @@ export default function WeightHistory() {
     }
 
     async function handleDelete(id: number) {
-
         try {
             setError(null);
-            // Matches controller: deleteWeight expects req.params.id
             const res = await apiFetch(`/api/user/weights/${id}`, {
                 method: "DELETE",
                 headers,
@@ -134,44 +143,100 @@ export default function WeightHistory() {
         }
     }
 
-    if (isLoading) return <p style={{ padding: "20px" }}>Loading weight history...</p>;
+    if (isLoading) return <div className="p-8 text-zinc-400 font-medium animate-pulse">Loading weight history...</div>;
 
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", maxWidth: "900px", margin: "0 auto" }}>
-            <h1>Weight History</h1>
-            {error && <p style={{ fontWeight: "bold", color: "red" }}>Error: {error}</p>}
+        <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+            <div>
+                <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Weight History</h1>
+            </div>
 
-            <div style={{ display: "flex", gap: "30px", alignItems: "flex-start" }}>
+            {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
+
+            {/* 3. Added Weight Progress Line Chart Graphic */}
+            {entries.length > 0 && (
+                <div className="w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                    <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-4">
+                        Progress Overview
+                    </h3>
+                    <div className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                                <XAxis
+                                    dataKey="displayDate"
+                                    stroke="#71717a"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    dy={10}
+                                />
+                                <YAxis
+                                    stroke="#71717a"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    domain={['dataMin - 3', 'dataMax + 3']}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#09090b',
+                                        borderColor: '#27272a',
+                                        borderRadius: '8px',
+                                        color: '#f4f4f5'
+                                    }}
+                                    itemStyle={{ color: '#a3e635' }}
+                                    labelClassName="text-zinc-500 text-xs font-semibold"
+                                    formatter={(value) => [`${value} kg`, 'Weight']}
+                                />
+                                <Line
+                                    type="monotone"
+                                    dataKey="weightNum"
+                                    stroke="#a3e635" /* lime-400 matched */
+                                    strokeWidth={3}
+                                    dot={{ fill: '#a3e635', strokeWidth: 2, r: 4 }}
+                                    activeDot={{ r: 6, strokeWidth: 0 }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex gap-6 items-start flex-col md:flex-row">
                 {/* Form */}
-                <div style={{ flex: 1, border: "1px solid", padding: "20px" }}>
-                    <h3 style={{ marginTop: 0 }}>{editingId ? "Edit Weight Entry" : "Add Weight Entry"}</h3>
-                    <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <input
-                            type="number"
-                            step="0.1"
+                <div className="flex-none w-full md:w-[350px] bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                    <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">
+                        {editingId ? "Edit Weight Entry" : "Add Weight Entry"}
+                    </h3>
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                        <TransparentNumericInput
                             placeholder="Weight (kg)"
                             value={weight}
-                            onChange={e => setWeight(e.target.value === "" ? "" : Number(e.target.value))}
-                            required
-                            style={{ padding: "8px", border: "1px solid" }}
+                            onChange={(val) => setWeight(val === "" ? "" : Number(val))}
+                            className="w-full"
+                            inputClassName="px-4 py-3 text-zinc-100 placeholder:text-zinc-600 bg-zinc-900 border-zinc-800"
+                            step={0.1}
+                            min={0}
+                            max={500}
                         />
                         <input
                             type="date"
                             value={date}
                             onChange={e => setDate(e.target.value)}
                             required
-                            style={{ padding: "8px", border: "1px solid" }}
+                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors [color-scheme:dark]"
                         />
 
-                        <div style={{ display: "flex", gap: "10px" }}>
-                            <button type="submit" style={{ flex: 1, padding: "10px", border: "1px solid", background: "none", cursor: "pointer", fontWeight: "bold" }}>
-                                {editingId ? "Update Entry" : "Add Entry"}
+                        <div className="flex gap-3 mt-2">
+                            <button type="submit" className="flex-1 bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                                {editingId ? "Update" : "Add Entry"}
                             </button>
                             {editingId && (
                                 <button
                                     type="button"
                                     onClick={resetForm}
-                                    style={{ flex: 1, padding: "10px", border: "1px solid", background: "none", cursor: "pointer" }}
+                                    className="flex-1 bg-transparent border border-zinc-700 text-zinc-300 font-bold py-3 rounded-lg hover:bg-zinc-800 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     Cancel
                                 </button>
@@ -181,37 +246,34 @@ export default function WeightHistory() {
                 </div>
 
                 {/* List */}
-                <div style={{ flex: 1.5, border: "1px solid", padding: "20px" }}>
-                    <h2 style={{ marginTop: 0 }}>Entries</h2>
+                <div className="flex-1 w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                    <h2 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">Entries</h2>
                     {entries.length === 0 ? (
-                        <p style={{ fontStyle: "italic" }}>No weight entries yet.</p>
+                        <div className="text-center py-10 bg-zinc-900/50 rounded-lg border border-zinc-800/80">
+                            <p className="text-zinc-500 font-medium italic">No weight entries yet.</p>
+                        </div>
                     ) : (
-                        <ul style={{ listStyleType: "none", padding: 0, margin: 0 }}>
+                        <ul className="space-y-3">
                             {entries.map(entry => (
                                 <li
                                     key={entry.id}
-                                    style={{
-                                        borderBottom: "1px solid",
-                                        padding: "10px 0",
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                    }}
+                                    className="bg-zinc-900/40 border border-zinc-800/80 rounded-lg p-4 flex justify-between items-center hover:border-zinc-700 transition-colors"
+                                // ... rest of list items
                                 >
                                     <div>
-                                        <strong>{Number(entry.weight)} kg</strong>
-                                        <div style={{ marginTop: "4px" }}>{entry.date?.slice(0, 10)}</div>
+                                        <strong className="text-xl font-bold text-zinc-100">{Number(entry.weight)} kg</strong>
+                                        <div className="text-sm text-zinc-500 font-medium mt-1">{entry.date?.slice(0, 10)}</div>
                                     </div>
-                                    <div style={{ display: "flex", gap: "10px" }}>
+                                    <div className="flex gap-2">
                                         <button
                                             onClick={() => handleEdit(entry)}
-                                            style={{ padding: "5px 10px", border: "1px solid", background: "none", cursor: "pointer" }}
+                                            className="px-3 py-1.5"
                                         >
                                             Edit
                                         </button>
                                         <button
                                             onClick={() => handleDelete(entry.id)}
-                                            style={{ padding: "5px 10px", border: "1px solid", background: "none", cursor: "pointer" }}
+                                            className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-md font-medium text-sm border border-rose-500/20 transition-colors"
                                         >
                                             Delete
                                         </button>

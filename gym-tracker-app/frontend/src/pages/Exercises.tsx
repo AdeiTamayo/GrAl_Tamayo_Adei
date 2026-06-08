@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../utils/api';
+import Button from '../components/Button';
 
 type Exercise = {
     id: number;
     name: string;
-    body_part?: string;
-    target_muscle?: string;
+    bodyPart?: string;
+    target?: string;
     equipment: string;
     difficulty: string;
     category: string;
@@ -17,8 +18,8 @@ type Exercise = {
 
 type ExercisePayload = {
     exercice_name?: string;
-    body_part?: string;
-    target_muscle?: string;
+    bodyPart?: string;
+    target?: string;
     equipment?: string;
     difficulty?: string;
     category?: string;
@@ -70,7 +71,7 @@ export default function Exercises() {
 
     const headers = useMemo(() => ({
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('user_login_token')} `
+        'Authorization': `Bearer ${localStorage.getItem('user_login_token')}`
     }), []);
 
     const filteredExercises = useMemo(() => {
@@ -85,7 +86,7 @@ export default function Exercises() {
 
             const matchesMuscle =
                 !filters.muscles ||
-                ex.target_muscle === filters.muscles;
+                ex.target === filters.muscles;
 
             const matchesCategory =
                 !filters.categoryType ||
@@ -114,10 +115,7 @@ export default function Exercises() {
         }
     }, [viewMode, selectedExercise]);
 
-    async function apiRequest<T>(
-        url: string,
-        options: RequestInit
-    ): Promise<T> {
+    async function apiRequest<T>(url: string, options: RequestInit): Promise<T> {
         const response = await apiFetch(url, options);
 
         const result = await response.json();
@@ -162,37 +160,36 @@ export default function Exercises() {
         });
     }
 
-    async function getExerciseById(id: number) {
-        try {
-            setLoading(true);
-            setError("");
-            const response = await apiFetch("/api/exercises/" + id, {
-                method: "GET",
-                headers
-            });
-            if (!response.ok) throw new Error("Failed to fetch exercise");
-            const result = await response.json();
-            return result.success ? result.data : null;
-        } catch (err: any) {
-            setError(err.message || "Could not load data.");
-            return null;
-        } finally {
-            setLoading(false);
-        }
-    }
-
     async function fetchExerciseById(id: number) {
         try {
             setLoading(true);
             setError('');
-
-            const data = await getExerciseById(id);
-
-            setSelectedExercise(data);
-            setViewMode('details');
             setSuccess(null);
+
+            const response = await apiFetch("/api/exercises/" + id, {
+                method: "GET",
+                headers
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch exercise");
+            }
+
+            const result = await response.json();
+
+            console.log(result);
+
+            if (result.success && result.data) {
+                setSelectedExercise(result.data);
+                setViewMode('details');
+            } else {
+                throw new Error(result.message || "Exercise not found");
+            }
+
         } catch (err: any) {
-            setError(err.message || 'Could not load exercise.');
+            console.error("Fetch exercise failed:", err);
+            setError(err.message || "Could not load exercise.");
+            setSelectedExercise(null); // Optional: clear previous selection on failure
         } finally {
             setLoading(false);
         }
@@ -207,7 +204,6 @@ export default function Exercises() {
             setLoading(true);
             setError('');
 
-            // Use original working approach for DELETE
             const response = await apiFetch(`/api/exercises/${id}`, {
                 method: 'DELETE',
                 headers
@@ -219,7 +215,6 @@ export default function Exercises() {
                 throw new Error(result.error || 'Unknown error');
             }
 
-            // refresh list
             const refreshedExercises = await getExercises();
             setAllExercises(refreshedExercises);
 
@@ -261,7 +256,7 @@ export default function Exercises() {
             setError('');
             setSuccess(null);
 
-            const updatedExercise = await apiRequest<Exercise>(`/ api / exercises / ${id} `, {
+            const updatedExercise = await apiRequest<Exercise>(`/api/exercises/${id}`, {
                 method: 'PUT',
                 headers,
                 body: JSON.stringify(payload)
@@ -300,50 +295,27 @@ export default function Exercises() {
 
         const formData = new FormData(e.currentTarget);
 
-        const newEquipment = formData
-            .get('new_equipment')
-            ?.toString()
-            .trim();
+        const newEquipment = formData.get('new_equipment')?.toString().trim();
+        const equipment = newEquipment || formData.get('equipment')?.toString();
 
-        const equipment =
-            newEquipment || formData.get('equipment')?.toString();
+        const newCategory = formData.get('new_category')?.toString().trim();
+        const category = newCategory || formData.get('category')?.toString();
 
-        const newCategory = formData
-            .get('new_category')
-            ?.toString()
-            .trim();
+        const newTargetMuscle = formData.get('new_target_muscle')?.toString().trim();
+        const targetMuscle = newTargetMuscle || formData.get('target');
 
-        const category =
-            newCategory || formData.get('category')?.toString();
-
-        const newTargetMuscle = formData
-            .get('new_target_muscle')
-            ?.toString()
-            .trim();
-
-        const targetMuscle =
-            newTargetMuscle || formData.get('target_muscle');
-
-        const secondaryMuscles = formData.getAll(
-            'secondary_muscles'
-        ) as string[];
+        const secondaryMuscles = formData.getAll('secondary_muscles') as string[];
 
         const payload: ExercisePayload = {
             exercice_name: formData.get('name')?.toString().trim(),
-            body_part: formData.get('body_part')?.toString().trim(),
-            target_muscle: targetMuscle?.toString().trim(),
+            bodyPart: formData.get('bodyPart')?.toString().trim(),
+            target: targetMuscle?.toString().trim(),
             equipment: equipment?.trim(),
             difficulty: formData.get('difficulty')?.toString(),
             category: category?.trim(),
             secondary_muscles: secondaryMuscles.filter(Boolean),
             description: formData.get('description')?.toString().trim(),
-            instructions:
-                formData
-                    .get('instructions')
-                    ?.toString()
-                    .split('\\n')
-                    .map(s => s.trim())
-                    .filter(Boolean) || []
+            instructions: formData.get('instructions')?.toString().split('\n').map(s => s.trim()).filter(Boolean) || []
         };
 
         if (id) {
@@ -367,355 +339,145 @@ export default function Exercises() {
         ex?: Exercise;
         isEdit: boolean;
     }) => (
-        <form
-            onSubmit={(e) => handleFormSubmit(e, ex?.id)}
-            style={{
-                border: '1px solid',
-                padding: '20px',
-                marginBottom: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '15px'
-            }}
-        >
-            <h2 style={{ margin: '0 0 10px 0' }}>
+        <form onSubmit={(e) => handleFormSubmit(e, ex?.id)} className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-4">
+            <h2 className="font-display text-xl font-bold text-zinc-100 tracking-wide uppercase mb-4">
                 {isEdit ? 'Edit Exercise' : 'Create Custom Exercise'}
             </h2>
 
             <div>
-                <label
-                    style={{
-                        display: 'block',
-                        marginBottom: '5px',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    Exercise Name *
-                </label>
+                <label className="block text-sm font-semibold text-zinc-400 mb-2">Exercise Name *</label>
                 <input
                     type="text"
                     name="name"
-                    style={{
-                        width: '100%',
-                        padding: '8px',
-                        boxSizing: 'border-box',
-                        border: '1px solid'
-                    }}
-                    defaultValue={ex?.name || ''}
                     required
+                    defaultValue={ex?.name || ''}
+                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                 />
             </div>
 
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '15px'
-                }}
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label
-                        style={{
-                            display: 'block',
-                            marginBottom: '5px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Body Part
-                    </label>
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Body Part</label>
                     <input
                         type="text"
-                        name="body_part"
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid'
-                        }}
-                        defaultValue={ex?.body_part || ''}
+                        name="bodyPart"
+                        defaultValue={ex?.bodyPart || ''}
+                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label
-                        style={{
-                            display: 'block',
-                            marginBottom: '5px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Target Muscle
-                    </label>
-
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Target Muscle</label>
                     <select
                         name="target_muscle"
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid',
-                            marginBottom: '5px'
-                        }}
-                        defaultValue={ex?.target_muscle || ''}
+                        defaultValue={ex?.target || ''}
+                        className="w-full mb-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
                     >
                         <option value="">Select Target</option>
                         {filterOptions.muscles?.map(m => (
-                            <option key={m} value={m}>
-                                {m}
-                            </option>
+                            <option key={m} value={m}>{m}</option>
                         ))}
                     </select>
-
                     <input
                         type="text"
                         name="new_target_muscle"
                         placeholder="Or add new muscle..."
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid'
-                        }}
+                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label
-                        style={{
-                            display: 'block',
-                            marginBottom: '5px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Equipment
-                    </label>
-
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Equipment</label>
                     <select
                         name="equipment"
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid',
-                            marginBottom: '5px'
-                        }}
                         defaultValue={ex?.equipment || ''}
+                        className="w-full mb-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
                     >
                         <option value="">Select Equipment</option>
                         {filterOptions.equipment?.map(e => (
-                            <option key={e} value={e}>
-                                {e}
-                            </option>
+                            <option key={e} value={e}>{e}</option>
                         ))}
                     </select>
-
                     <input
                         type="text"
                         name="new_equipment"
                         placeholder="Or add new equipment..."
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid'
-                        }}
+                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label
-                        style={{
-                            display: 'block',
-                            marginBottom: '5px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Difficulty
-                    </label>
-
-                    <select
-                        name="difficulty"
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid'
-                        }}
-                        defaultValue={ex?.difficulty || 'beginner'}
-                    >
-                        <option value="beginner">beginner</option>
-                        <option value="intermediate">intermediate</option>
-                        <option value="advanced">advanced</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label
-                        style={{
-                            display: 'block',
-                            marginBottom: '5px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Category
-                    </label>
-
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Category</label>
                     <select
                         name="category"
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid',
-                            marginBottom: '5px'
-                        }}
                         defaultValue={ex?.category || ''}
+                        className="w-full mb-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
                     >
                         <option value="">Select Category</option>
                         {filterOptions.categoryType?.map(c => (
-                            <option key={c} value={c}>
-                                {c}
-                            </option>
+                            <option key={c} value={c}>{c}</option>
                         ))}
                     </select>
-
                     <input
                         type="text"
                         name="new_category"
                         placeholder="Or add new category..."
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid'
-                        }}
+                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label
-                        style={{
-                            display: 'block',
-                            marginBottom: '5px',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        Secondary Muscles
-                    </label>
-
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Difficulty</label>
                     <select
+                        name="difficulty"
+                        defaultValue={ex?.difficulty || 'beginner'}
+                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
+                    >
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Secondary Muscles</label>
+                    <select
+                        className="w-full mb-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
+                        defaultValue=""
                         onChange={(e) => {
                             const value = e.target.value;
-
-                            if (
-                                value &&
-                                !selectedSecondaryMuscles.includes(value)
-                            ) {
-                                setSelectedSecondaryMuscles(prev => [
-                                    ...prev,
-                                    value
-                                ]);
+                            if (value && !selectedSecondaryMuscles.includes(value)) {
+                                setSelectedSecondaryMuscles(prev => [...prev, value]);
                             }
-
                             e.target.value = '';
                         }}
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid',
-                            marginBottom: '5px'
-                        }}
-                        defaultValue=""
                     >
                         <option value="">Select Secondary Muscle</option>
-
                         {filterOptions.muscles?.map(m => (
-                            <option
-                                key={`sec - ${m} `}
-                                value={m}
-                                disabled={selectedSecondaryMuscles.includes(m)}
-                            >
-                                {m}
-                            </option>
+                            <option key={`sec-${m}`} value={m} disabled={selectedSecondaryMuscles.includes(m)}>{m}</option>
                         ))}
                     </select>
-
                     <input
                         type="text"
                         placeholder="Or add new secondary muscle..."
+                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
-
                                 const value = e.currentTarget.value.trim();
-
-                                if (
-                                    value &&
-                                    !selectedSecondaryMuscles.includes(value)
-                                ) {
-                                    setSelectedSecondaryMuscles(prev => [
-                                        ...prev,
-                                        value
-                                    ]);
+                                if (value && !selectedSecondaryMuscles.includes(value)) {
+                                    setSelectedSecondaryMuscles(prev => [...prev, value]);
                                 }
-
                                 e.currentTarget.value = '';
                             }
                         }}
-                        style={{
-                            width: '100%',
-                            padding: '8px',
-                            boxSizing: 'border-box',
-                            border: '1px solid',
-                            marginBottom: '10px'
-                        }}
                     />
-
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '8px'
-                        }}
-                    >
+                    <div className="flex flex-wrap gap-2 mt-3">
                         {selectedSecondaryMuscles.map(muscle => (
-                            <div
-                                key={muscle}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    border: '1px solid',
-                                    padding: '5px 10px',
-                                    fontSize: '0.9em'
-                                }}
-                            >
+                            <div key={muscle} className="flex items-center gap-2 bg-zinc-800 px-3 py-1 rounded-full text-zinc-200 text-sm">
                                 <span>{muscle}</span>
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setSelectedSecondaryMuscles(prev =>
-                                            prev.filter(m => m !== muscle)
-                                        )
-                                    }
-                                    style={{
-                                        border: 'none',
-                                        background: 'none',
-                                        cursor: 'pointer',
-                                        fontWeight: 'bold',
-                                        padding: 0
-                                    }}
-                                >
-                                    ×
-                                </button>
-
-                                <input
-                                    type="hidden"
-                                    name="secondary_muscles"
-                                    value={muscle}
-                                />
+                                <input type="hidden" name="secondary_muscles" value={muscle} />
+                                <button type="button" className="text-zinc-400 hover:text-rose-500 font-bold" onClick={() => setSelectedSecondaryMuscles(prev => prev.filter(m => m !== muscle))}>✕</button>
                             </div>
                         ))}
                     </div>
@@ -723,225 +485,81 @@ export default function Exercises() {
             </div>
 
             <div>
-                <label
-                    style={{
-                        display: 'block',
-                        marginBottom: '5px',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    Description
-                </label>
-
+                <label className="block text-sm font-semibold text-zinc-400 mb-2">Description</label>
                 <textarea
                     name="description"
-                    style={{
-                        width: '100%',
-                        padding: '8px',
-                        boxSizing: 'border-box',
-                        border: '1px solid'
-                    }}
-                    rows={3}
                     defaultValue={ex?.description || ''}
-                ></textarea>
+                    rows={3}
+                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                />
             </div>
 
             <div>
-                <label
-                    style={{
-                        display: 'block',
-                        marginBottom: '5px',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    Instructions (one step per line)
-                </label>
-
+                <label className="block text-sm font-semibold text-zinc-400 mb-2">Instructions (one per line)</label>
                 <textarea
                     name="instructions"
-                    style={{
-                        width: '100%',
-                        padding: '8px',
-                        boxSizing: 'border-box',
-                        border: '1px solid'
-                    }}
-                    rows={5}
                     defaultValue={ex?.instructions?.join('\n') || ''}
-                ></textarea>
+                    rows={4}
+                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                />
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                    type="submit"
-                    disabled={saving}
-                    style={{
-                        padding: '10px',
-                        border: '1px solid',
-                        background: 'none',
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                        fontWeight: 'bold'
-                    }}
-                >
-                    {saving ? 'Saving...' : 'Save Exercise'}
-                </button>
-
-                <button
-                    type="button"
-                    style={{
-                        padding: '10px',
-                        border: '1px solid',
-                        background: 'none',
-                        cursor: 'pointer'
-                    }}
-                    onClick={() =>
-                        isEdit
-                            ? setViewMode('details')
-                            : backToList()
-                    }
-                >
+            <div className="pt-2">
+                <Button type="submit" variant="primary" fullWidth disabled={saving}>
+                    {saving ? 'Saving...' : isEdit ? 'Update Exercise' : 'Save Custom Exercise'}
+                </Button>
+            </div>
+            <div className="pt-2 pb-2">
+                <Button type="button" variant="secondary" fullWidth onClick={backToList}>
                     Cancel
-                </button>
+                </Button>
             </div>
         </form>
     );
 
     return (
-        <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '20px'
-                }}
-            >
-                <h1 style={{ margin: 0 }}>Exercises</h1>
-
+        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Exercises</h1>
                 {viewMode === 'list' && (
-                    <button
-                        onClick={() => setViewMode('create')}
-                        style={{
-                            padding: '10px',
-                            border: '1px solid',
-                            background: 'none',
-                            cursor: 'pointer',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        + Create Custom Exercise
-                    </button>
+                    <Button onClick={() => setViewMode('create')} variant="primary">+ Create Exercise</Button>
                 )}
             </div>
 
-            {loading && (
-                <p style={{ fontWeight: 'bold' }}>
-                    Loading...
-                </p>
-            )}
-
-            {error && (
-                <p style={{ fontWeight: 'bold' }}>
-                    {error}
-                </p>
-            )}
-
-            {success && (
-                <p style={{ fontWeight: 'bold' }}>
-                    {success}
-                </p>
-            )}
+            {loading && <p className="text-zinc-400">Loading...</p>}
+            {error && <p className="text-rose-500">{error}</p>}
+            {success && <p className="text-lime-400">{success}</p>}
 
             {viewMode !== 'create' && (
-                <div style={{ marginBottom: '20px' }}>
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
                     {viewMode === 'details' || viewMode === 'edit' ? (
-                        <button
-                            type="button"
-                            style={{
-                                padding: '8px 12px',
-                                border: '1px solid',
-                                background: 'none',
-                                cursor: 'pointer'
-                            }}
-                            onClick={backToList}
-                        >
-                            &larr; Back to List
-                        </button>
+                        <Button type="button" variant="secondary" onClick={backToList}>&larr; Back to List</Button>
                     ) : (
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: '15px',
-                                padding: '15px',
-                                border: '1px solid'
-                            }}
-                        >
+                        <div className="flex gap-4 w-full flex-col sm:flex-row">
                             <input
-                                type="text"
-                                name="search"
-                                placeholder="Search exercises..."
-                                value={filters.search}
-                                onChange={handleFilterChange}
-                                style={{
-                                    padding: '8px',
-                                    border: '1px solid',
-                                    flex: 1,
-                                    minWidth: '200px'
-                                }}
+                                type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
+                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                             />
-
                             <select
-                                name="muscles"
-                                value={filters.muscles}
-                                onChange={handleFilterChange}
-                                style={{
-                                    padding: '8px',
-                                    border: '1px solid'
-                                }}
+                                name="muscles" value={filters.muscles} onChange={handleFilterChange}
+                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
                             >
                                 <option value="">All Muscles</option>
-
-                                {filterOptions.muscles?.map(m => (
-                                    <option key={m} value={m}>
-                                        {m}
-                                    </option>
-                                ))}
+                                {filterOptions.muscles?.map(m => (<option key={m} value={m}>{m}</option>))}
                             </select>
-
                             <select
-                                name="equipment"
-                                value={filters.equipment}
-                                onChange={handleFilterChange}
-                                style={{
-                                    padding: '8px',
-                                    border: '1px solid'
-                                }}
+                                name="equipment" value={filters.equipment} onChange={handleFilterChange}
+                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
                             >
                                 <option value="">All Equipment</option>
-
-                                {filterOptions.equipment?.map(e => (
-                                    <option key={e} value={e}>
-                                        {e}
-                                    </option>
-                                ))}
+                                {filterOptions.equipment?.map(e => (<option key={e} value={e}>{e}</option>))}
                             </select>
-
                             <select
-                                name="categoryType"
-                                value={filters.categoryType}
-                                onChange={handleFilterChange}
-                                style={{
-                                    padding: '8px',
-                                    border: '1px solid'
-                                }}
+                                name="categoryType" value={filters.categoryType} onChange={handleFilterChange}
+                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
                             >
                                 <option value="">All Categories</option>
-
-                                {filterOptions.categoryType?.map(c => (
-                                    <option key={c} value={c}>
-                                        {c}
-                                    </option>
-                                ))}
+                                {filterOptions.categoryType?.map(c => (<option key={c} value={c}>{c}</option>))}
                             </select>
                         </div>
                     )}
@@ -952,216 +570,56 @@ export default function Exercises() {
                 {viewMode === 'create' ? (
                     <ExerciseForm isEdit={false} />
                 ) : viewMode === 'details' && selectedExercise ? (
-                    <div
-                        style={{
-                            border: '1px solid',
-                            padding: '20px',
-                            marginBottom: '15px'
-                        }}
-                    >
-                        <h2
-                            style={{
-                                margin: '0 0 20px 0',
-                                textTransform: 'capitalize'
-                            }}
-                        >
-                            {selectedExercise.name}
-                        </h2>
-
-                        <div
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: '10px',
-                                border: '1px solid',
-                                padding: '15px',
-                                marginBottom: '20px'
-                            }}
-                        >
-                            <span>
-                                <strong>Body Part:</strong>{' '}
-                                {selectedExercise.body_part}
-                            </span>
-
-                            <span>
-                                <strong>Target:</strong>{' '}
-                                {selectedExercise.target_muscle}
-                            </span>
-
-                            <span>
-                                <strong>Equipment:</strong>{' '}
-                                {selectedExercise.equipment}
-                            </span>
-
-                            <span>
-                                <strong>Difficulty:</strong>{' '}
-                                {selectedExercise.difficulty}
-                            </span>
-
-                            <span>
-                                <strong>Category:</strong>{' '}
-                                {selectedExercise.category}
-                            </span>
-
-                            <span>
-                                <strong>Custom:</strong>{' '}
-                                {selectedExercise.is_custom ? 'Yes' : 'No'}
-                            </span>
-
-                            <span style={{ gridColumn: 'span 2' }}>
-                                <strong>Secondary Muscles:</strong>{' '}
-                                {selectedExercise.secondary_muscles?.join(', ') || 'None'}
-                            </span>
+                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-4">
+                        <h2 className="font-display text-2xl font-bold text-zinc-100 tracking-wide uppercase">{selectedExercise.name}</h2>
+                        <div className="flex flex-wrap gap-4 text-zinc-300 mb-6 bg-zinc-900/50 p-4 rounded-lg">
+                            <span><strong>Body Part:</strong> {selectedExercise.bodyPart}</span>
+                            <span><strong>Target:</strong> {selectedExercise.target}</span>
+                            <span><strong>Equipment:</strong> {selectedExercise.equipment}</span>
+                            <span><strong>Difficulty:</strong> {selectedExercise.difficulty}</span>
+                            <span><strong>Category:</strong> {selectedExercise.category}</span>
+                            <span><strong>Secondary Muscles:</strong> {selectedExercise.secondary_muscles?.join(', ') || 'None'}</span>
                         </div>
 
-                        <h3
-                            style={{
-                                borderBottom: '1px solid',
-                                paddingBottom: '5px',
-                                marginBottom: '10px'
-                            }}
-                        >
-                            Description
-                        </h3>
+                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase">Description</h3>
+                        <p className="text-zinc-400 whitespace-pre-wrap">{selectedExercise.description || 'No description available.'}</p>
 
-                        <p style={{ marginBottom: '20px' }}>
-                            {selectedExercise.description ||
-                                'No description available.'}
-                        </p>
-
-                        <h3
-                            style={{
-                                borderBottom: '1px solid',
-                                paddingBottom: '5px',
-                                marginBottom: '10px'
-                            }}
-                        >
-                            Instructions
-                        </h3>
-
-                        {selectedExercise.instructions &&
-                            selectedExercise.instructions.length > 0 ? (
-                            <ol
-                                style={{
-                                    paddingLeft: '20px',
-                                    marginBottom: '20px'
-                                }}
-                            >
-                                {selectedExercise.instructions.map(
-                                    (step, index) => (
-                                        <li
-                                            key={index}
-                                            style={{ marginBottom: '5px' }}
-                                        >
-                                            {step}
-                                        </li>
-                                    )
-                                )}
+                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mt-6">Instructions</h3>
+                        {selectedExercise.instructions && selectedExercise.instructions.length > 0 ? (
+                            <ol className="list-decimal list-inside space-y-2 text-zinc-400">
+                                {selectedExercise.instructions.map((step, idx) => (<li key={idx}>{step}</li>))}
                             </ol>
                         ) : (
-                            <p
-                                style={{
-                                    marginBottom: '20px',
-                                    fontStyle: 'italic'
-                                }}
-                            >
-                                No instructions available.
-                            </p>
+                            <p className="text-zinc-400">No instructions available.</p>
                         )}
 
-                        <div
-                            style={{
-                                display: 'flex',
-                                gap: '10px',
-                                borderTop: '1px solid',
-                                paddingTop: '15px'
-                            }}
-                        >
-                            <button
-                                type="button"
-                                style={{
-                                    padding: '8px 15px',
-                                    border: '1px solid',
-                                    background: 'none',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold'
-                                }}
-                                onClick={() => setViewMode('edit')}
-                            >
-                                Edit
-                            </button>
-
-                            <button
-                                type="button"
-                                style={{
-                                    padding: '8px 15px',
-                                    border: '1px solid',
-                                    background: 'none',
-                                    cursor: 'pointer',
-                                    fontWeight: 'bold'
-                                }}
-                                onClick={() =>
-                                    deleteExerciseById(selectedExercise.id)
-                                }
-                            >
-                                Delete
-                            </button>
+                        <div className="flex gap-4 mt-8 pt-4 border-t border-zinc-800">
+                            <Button type="button" variant="secondary" onClick={() => setViewMode('edit')}>Edit Exercise</Button>
+                            <Button type="button" variant="danger" onClick={() => deleteExerciseById(selectedExercise.id)}>Delete Exercise</Button>
                         </div>
                     </div>
                 ) : viewMode === 'edit' && selectedExercise ? (
-                    <ExerciseForm
-                        ex={selectedExercise}
-                        isEdit={true}
-                    />
+                    <ExerciseForm ex={selectedExercise} isEdit={true} />
                 ) : (
-                    <ul
-                        style={{
-                            listStyleType: 'none',
-                            padding: 0,
-                            margin: 0
-                        }}
-                    >
+                    <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {filteredExercises.length > 0 ? (
                             filteredExercises.map(ex => (
                                 <li
                                     key={ex.id}
-                                    style={{
-                                        border: '1px solid',
-                                        padding: '20px',
-                                        marginBottom: '15px'
-                                    }}
+                                    onClick={() => fetchExerciseById(ex.id)}
+                                    className="bg-zinc-900/40 border cursor-pointer border-zinc-800/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-lime-400/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-lime-400/5"
                                 >
                                     <div>
-                                        <h2
-                                            style={{
-                                                margin: '0 0 10px 0',
-                                                cursor: 'pointer',
-                                                textDecoration: 'underline'
-                                            }}
-                                            onClick={() =>
-                                                fetchExerciseById(ex.id)
-                                            }
-                                        >
-                                            {ex.name}
-                                        </h2>
-
-                                        <div style={{ fontSize: '0.9em' }}>
-                                            <strong>Target:</strong>{' '}
-                                            {ex.target_muscle} &bull;
-                                            <strong> Equipment:</strong>{' '}
-                                            {ex.equipment} &bull;
-                                            <strong> Category:</strong>{' '}
-                                            {ex.category}
+                                        <h2 className="font-display text-xl font-bold text-zinc-100 mb-2 truncate">{ex.name}</h2>
+                                        <div className="text-sm text-zinc-400 space-x-2">
+                                            <span className="inline-block bg-zinc-800 px-2 py-1 rounded text-zinc-300">{ex.target}</span>
+                                            <span className="inline-block bg-zinc-800 px-2 py-1 rounded text-zinc-300">{ex.equipment}</span>
                                         </div>
                                     </div>
                                 </li>
                             ))
                         ) : (
-                            !loading && (
-                                <p style={{ padding: '20px 0' }}>
-                                    No exercises found.
-                                </p>
-                            )
+                            !loading && <p className="text-zinc-400 col-span-2">No exercises found.</p>
                         )}
                     </ul>
                 )}

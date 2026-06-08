@@ -26,8 +26,8 @@
 
 - [X] 3.1. Oinarrizko interfazearen garapena React erabiliz: saio hasiera eta bideoak kargatzeko gunea.
 - [X] 3.2. Proba egiteko gutxieneko funtzionaltasunen inplementazioa.
-- [ ] 3.3. Demoaren argitalpena Interneten.
-- [ ] 3.4. Erabiltzaileen feedbackaren bilketa.
+- [X] 3.3. Demoaren argitalpena Interneten.
+- [X] 3.4. Erabiltzaileen feedbackaren bilketa.
 
 ---
 

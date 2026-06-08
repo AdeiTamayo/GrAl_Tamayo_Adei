@@ -1,6 +1,10 @@
-import { useState, useEffect, useCallback, useMemo, useRef, FormEvent } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef, FormEvent } from "react";
 import { apiFetch } from "../utils/api";
+import Button from "../components/Button";
+import EditableExerciseCard from '../components/EditableExerciseCard';
+import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 
+// ---- TYPES & INTERFACES ----
 interface SetEntry {
     id: number;
     set_number: number;
@@ -35,37 +39,35 @@ interface Exercise {
 
 type EditableSetField = "weight" | "repetitions" | "time" | "note";
 
-export default function Workouts() {
+export default function WorkoutsManagement() {
+    // ---- STATE MANAGEMENT ----
     const [workouts, setWorkouts] = useState<Workout[]>([]);
     const [exercises, setExercises] = useState<Exercise[]>([]);
     const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
     const [isLoadingInit, setIsLoadingInit] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Toggle Dropdowns UI States
+    const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+    const [showDetailsDropdown, setShowDetailsDropdown] = useState(false);
+
     // Create new workout form
     const [newWorkoutName, setNewWorkoutName] = useState("");
-    const [newWorkoutDate, setNewWorkoutDate] = useState(new Date().toISOString().slice(0, 10));
+    const [newWorkoutDate, setNewWorkoutDate] = useState(new Date().toLocaleDateString('en-CA'));
     const [newWorkoutNote, setNewWorkoutNote] = useState("");
 
     // Edit workout form
-    const [isEditingWorkout, setIsEditingWorkout] = useState(false);
     const [editName, setEditName] = useState("");
     const [editDate, setEditDate] = useState("");
     const [editNote, setEditNote] = useState("");
 
     // Add exercise search
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
-    const [showDropdown, setShowDropdown] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [showPicker, setShowPicker] = useState(false);
 
-    // Add set form state
-    const [addingSetToBlockId, setAddingSetToBlockId] = useState<number | null>(null);
-    const [newSetWeight, setNewSetWeight] = useState<number | "">("");
-    const [newSetReps, setNewSetReps] = useState<number | "">("");
-    const [newSetTime, setNewSetTime] = useState<number | "">("");
-    const [newSetNote, setNewSetNote] = useState("");
+    const createWorkoutRef = useRef<HTMLDivElement>(null);
+    const detailsDropdownRef = useRef<HTMLDivElement>(null);
 
+    // ---- API HEADERS MEMO ----
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(
         () => ({
@@ -75,6 +77,7 @@ export default function Workouts() {
         [token]
     );
 
+    // ---- DATA FETCHING HANDLERS ----
     const fetchWorkouts = useCallback(async () => {
         try {
             const res = await apiFetch("/api/workouts", { headers });
@@ -99,14 +102,20 @@ export default function Workouts() {
         }
     }, [headers]);
 
+    // Initial load
     useEffect(() => {
         Promise.all([fetchWorkouts(), fetchExercises()]).finally(() => setIsLoadingInit(false));
     }, [fetchWorkouts, fetchExercises]);
 
+    // Close dropdowns on click outside
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setShowDropdown(false);
+            const target = event.target as Node;
+            if (createWorkoutRef.current && !createWorkoutRef.current.contains(target)) {
+                setShowCreateDropdown(false);
+            }
+            if (detailsDropdownRef.current && !detailsDropdownRef.current.contains(target)) {
+                setShowDetailsDropdown(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -127,9 +136,7 @@ export default function Workouts() {
                     }));
                 }
                 setSelectedWorkout(workoutData);
-                setSearchQuery("");
-                setSelectedExercise(null);
-                setAddingSetToBlockId(null);
+                setShowDetailsDropdown(false);
             } else {
                 setError(data.error || "Failed to load workout details");
             }
@@ -138,6 +145,7 @@ export default function Workouts() {
         }
     }
 
+    // ---- WORKOUT OPERATIONS ----
     async function createWorkout(e: FormEvent) {
         e.preventDefault();
         setError(null);
@@ -154,6 +162,7 @@ export default function Workouts() {
         setWorkouts((prev) => [tempWorkout, ...prev]);
         setNewWorkoutName("");
         setNewWorkoutNote("");
+        setShowCreateDropdown(false);
 
         try {
             const res = await apiFetch("/api/workouts", {
@@ -185,11 +194,7 @@ export default function Workouts() {
         setEditName(selectedWorkout.name);
         setEditDate(selectedWorkout.date?.substring(0, 10));
         setEditNote(selectedWorkout.note || "");
-        setIsEditingWorkout(true);
-    }
-
-    function cancelEditWorkout() {
-        setIsEditingWorkout(false);
+        setShowDetailsDropdown(true);
     }
 
     async function saveWorkoutEdit() {
@@ -213,7 +218,7 @@ export default function Workouts() {
                 setWorkouts((prev) =>
                     prev.map((w) => (w.id === selectedWorkout.id ? data.data : w))
                 );
-                setIsEditingWorkout(false);
+                setShowDetailsDropdown(false);
             } else {
                 setError(data.error || "Update failed");
             }
@@ -239,15 +244,14 @@ export default function Workouts() {
         }
     }
 
-    async function handleAddExercise(e: FormEvent) {
-        e.preventDefault();
-        if (!selectedWorkout || !selectedExercise) return;
-
+    // ---- EXERCISE MANAGEMENT ----
+    async function handleAddExercise(exerciseToHub: ExerciseMeta | Exercise) {
+        if (!selectedWorkout) return;
         setError(null);
 
         const tempId = -Date.now();
-        const selectedExName = selectedExercise.name;
-        const selectedExId = selectedExercise.id;
+        const selectedExName = exerciseToHub.name;
+        const selectedExId = exerciseToHub.id;
 
         setSelectedWorkout((prev) => {
             if (!prev) return prev;
@@ -266,8 +270,7 @@ export default function Workouts() {
             };
         });
 
-        setSearchQuery("");
-        setSelectedExercise(null);
+        setShowPicker(false);
 
         try {
             const res = await apiFetch("/api/workouts/" + selectedWorkout.id + "/exercises", {
@@ -325,27 +328,8 @@ export default function Workouts() {
         }
     }
 
-    // ---- SET MANAGEMENT (ROUTINES-LIKE LOGIC + UI) ----
-
-    function handleOpenAddSetForm(exercise: WorkoutExercise) {
-        setAddingSetToBlockId(exercise.id);
-
-        const sets = exercise.sets || [];
-        if (sets.length > 0) {
-            const lastSet = sets[sets.length - 1];
-            setNewSetWeight(lastSet.weight ?? "");
-            setNewSetReps(lastSet.repetitions ?? "");
-            setNewSetTime(lastSet.time ?? "");
-            setNewSetNote(lastSet.note ?? "");
-        } else {
-            setNewSetWeight("");
-            setNewSetReps("");
-            setNewSetTime("");
-            setNewSetNote("");
-        }
-    }
-
-    async function submitNewSet(exercise: WorkoutExercise) {
+    // ---- SET MANAGEMENT ----
+    async function submitNewSet(exercise: WorkoutExercise, weight: any, reps: any, time: any, note?: any) {
         if (!selectedWorkout) return;
 
         const sets = exercise.sets || [];
@@ -357,10 +341,10 @@ export default function Workouts() {
                 headers,
                 body: JSON.stringify({
                     set_number: nextSetNum,
-                    weight: newSetWeight === "" ? null : Number(newSetWeight),
-                    reps: newSetReps === "" ? null : Number(newSetReps),
-                    time: newSetTime === "" ? null : Number(newSetTime),
-                    note: newSetNote.trim() === "" ? null : newSetNote.trim(),
+                    weight: weight === "" || weight === null ? null : Number(weight),
+                    reps: reps === "" || reps === null ? null : Number(reps),
+                    time: time === "" || time === null ? null : Number(time),
+                    note: !note || note.trim() === "" ? null : note.trim(),
                 }),
             });
 
@@ -368,7 +352,6 @@ export default function Workouts() {
 
             if (data.success) {
                 await fetchWorkoutById(selectedWorkout.id);
-                setAddingSetToBlockId(null);
             } else {
                 setError(data.error || "Failed to add set");
             }
@@ -450,469 +433,220 @@ export default function Workouts() {
         }
     }
 
-    const filteredExercises = exercises.filter((ex) =>
-        ex.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    if (isLoadingInit) return <p>Loading...</p>;
+    if (isLoadingInit) return <p className="text-zinc-400 p-8">Loading...</p>;
 
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-            <h1>Workouts Management</h1>
-            {error && <p style={{ fontWeight: "bold", color: "red" }}>Error: {error}</p>}
-
-            <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
-                <div style={{ flex: 1, maxWidth: "450px" }}>
-                    <div style={{ border: "1px solid", padding: "20px", marginBottom: "20px" }}>
-                        <h3 style={{ marginTop: 0 }}>Create New Workout</h3>
-                        <form
-                            onSubmit={createWorkout}
-                            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-                        >
-                            <input
-                                type="text"
-                                placeholder="Workout Name"
-                                value={newWorkoutName}
-                                onChange={(e) => setNewWorkoutName(e.target.value)}
-                                required
-                                style={{ padding: "8px", border: "1px solid" }}
-                            />
-                            <input
-                                type="date"
-                                value={newWorkoutDate}
-                                onChange={(e) => setNewWorkoutDate(e.target.value)}
-                                style={{ padding: "8px", border: "1px solid" }}
-                            />
-                            <input
-                                type="text"
-                                placeholder="Notes (optional)"
-                                value={newWorkoutNote}
-                                onChange={(e) => setNewWorkoutNote(e.target.value)}
-                                style={{ padding: "8px", border: "1px solid" }}
-                            />
-                            <button
-                                type="submit"
-                                style={{
-                                    padding: "10px",
-                                    border: "1px solid",
-                                    background: "none",
-                                    cursor: "pointer",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                Create Workout
-                            </button>
-                        </form>
-                    </div>
-
-                    <div style={{ border: "1px solid", padding: "20px" }}>
-                        <h2 style={{ marginTop: 0 }}>All Workouts</h2>
-                        <ul style={{ listStyleType: "none", padding: 0 }}>
-                            {workouts.map((w) => (
-                                <li
-                                    key={w.id}
-                                    style={{
-                                        borderBottom: "1px solid",
-                                        padding: "15px 0",
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <div>
-                                        <strong style={{ fontSize: "1.1em" }}>{w.name}</strong>
-                                        <br />
-                                        <small>{w.date?.substring(0, 10)}</small>
-                                    </div>
-                                    <div style={{ display: "flex", gap: "10px" }}>
-                                        <button
-                                            onClick={() => fetchWorkoutById(w.id)}
-                                            style={{
-                                                cursor: "pointer",
-                                                padding: "5px 10px",
-                                                border: "1px solid",
-                                                background: "none",
-                                            }}
-                                        >
-                                            View
-                                        </button>
-                                        <button
-                                            onClick={() => deleteWorkout(w.id)}
-                                            style={{
-                                                cursor: "pointer",
-                                                padding: "5px 10px",
-                                                border: "1px solid",
-                                                background: "none",
-                                                color: "red",
-                                            }}
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
+        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+            {/* Top Toolbar Level */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+                <div>
+                    <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Workouts Management</h1>
+                    <p className="text-zinc-400 font-medium text-sm">Log and manage your training sessions.</p>
                 </div>
 
-                {selectedWorkout && (
-                    <div style={{ flex: 1.5, border: "1px solid", padding: "25px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                            <div>
-                                {!isEditingWorkout ? (
-                                    <>
-                                        <p>
-                                            <strong>Workout:</strong> {selectedWorkout.name}
-                                        </p>
-                                        <p>
-                                            <strong>Date:</strong> {selectedWorkout.date?.substring(0, 10)}
-                                        </p>
-                                        <p>
-                                            <strong>Note:</strong> {selectedWorkout.note || "No notes"}
-                                        </p>
-                                    </>
-                                ) : (
-                                    <div
-                                        style={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: "10px",
-                                            marginTop: "10px",
-                                        }}
-                                    >
-                                        <input
-                                            value={editName}
-                                            onChange={(e) => setEditName(e.target.value)}
-                                            placeholder="Workout name"
-                                        />
+                {/* Create Workout Dropdown Wrapper */}
+                <div className="relative" ref={createWorkoutRef}>
+                    <Button
+                        type="button"
+                        variant="primary"
+                        onClick={() => setShowCreateDropdown(!showCreateDropdown)}
+                        className="font-display rounded-xl py-3 px-5 flex items-center gap-2"
+                    >
+                        <span>Create New Workout</span>
+                        <svg className={`w-4 h-4 transition-transform ${showCreateDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+                    </Button>
 
-                                        <input
-                                            type="date"
-                                            value={editDate}
-                                            onChange={(e) => setEditDate(e.target.value)}
-                                        />
-
-                                        <input
-                                            value={editNote}
-                                            onChange={(e) => setEditNote(e.target.value)}
-                                            placeholder="Note"
-                                        />
-
-                                        <div style={{ display: "flex", gap: "10px" }}>
-                                            <button onClick={saveWorkoutEdit}>Save</button>
-                                            <button onClick={cancelEditWorkout}>Cancel</button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div style={{ display: "flex", gap: "10px" }}>
-                                {!isEditingWorkout && <button onClick={openEditWorkout}>Edit</button>}
-                                <button
-                                    onClick={() => setSelectedWorkout(null)}
-                                    style={{
-                                        padding: "5px 10px",
-                                        cursor: "pointer",
-                                        border: "1px solid",
-                                        background: "none",
-                                    }}
-                                >
-                                    Close Workout
-                                </button>
-                            </div>
+                    {showCreateDropdown && (
+                        <div className="absolute right-0 mt-2 w-80 md:w-96 bg-zinc-950 border border-zinc-800 rounded-xl p-5 shadow-2xl z-30 animate-in fade-in slide-in-from-top-2 duration-150">
+                            <form onSubmit={createWorkout} className="flex flex-col gap-4">
+                                <div>
+                                    <label className="block text-xs uppercase tracking-wider text-zinc-400 font-bold mb-1.5">Workout Name</label>
+                                    <input
+                                        type="text"
+                                        value={newWorkoutName}
+                                        onChange={(e) => setNewWorkoutName(e.target.value)}
+                                        required
+                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-lime-400 focus:outline-none transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs uppercase tracking-wider text-zinc-400 font-bold mb-1.5">Session Date</label>
+                                    <input
+                                        type="date"
+                                        value={newWorkoutDate}
+                                        onChange={(e) => setNewWorkoutDate(e.target.value)}
+                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-lime-400 focus:outline-none transition-all [color-scheme:dark]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs uppercase tracking-wider text-zinc-400 font-bold mb-1.5">Notes (Optional)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Focusing on controlled negatives"
+                                        value={newWorkoutNote}
+                                        onChange={(e) => setNewWorkoutNote(e.target.value)}
+                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-all"
+                                    />
+                                </div>
+                                <Button type="submit" variant="primary" fullWidth className="font-display rounded-xl py-2.5 text-sm mt-1">
+                                    Confirm & Save
+                                </Button>
+                            </form>
                         </div>
+                    )}
+                </div>
+            </div>
 
-                        <hr style={{ margin: "20px 0", border: "none", borderTop: "1px solid" }} />
+            {error && (
+                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm">
+                    Error: {error}
+                </div>
+            )}
 
-                        <h3>Recorded Exercises and Sets</h3>
-                        {!selectedWorkout.exercises || selectedWorkout.exercises.length === 0 ? (
-                            <p style={{ fontStyle: "italic" }}>No exercises logged for this workout yet.</p>
+            <div className="flex gap-6 items-start flex-col xl:flex-row">
+                {/* Left Listing Sidebar */}
+                <div className="flex-none w-full xl:w-[400px]">
+                    <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-5 shadow-md">
+                        <h2 className="font-display text-sm font-bold text-zinc-400 tracking-wider uppercase mb-4">Saved Logs List</h2>
+                        {workouts.length === 0 ? (
+                            <div className="text-center py-10 bg-zinc-950/40 rounded-xl border border-zinc-800/60">
+                                <p className="text-zinc-500 text-sm font-medium italic px-4">No sessions logged yet.</p>
+                            </div>
                         ) : (
-                            <ul style={{ listStyleType: "none", padding: 0 }}>
-                                {selectedWorkout.exercises.map((ex) => (
-                                    <li key={ex.id} style={{ border: "1px solid", padding: "15px", marginBottom: "15px" }}>
-                                        <div
-                                            style={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                                marginBottom: "10px",
-                                            }}
-                                        >
-                                            <h4 style={{ margin: 0 }}>
-                                                {ex.name || "Unknown Exercise " + ex.exercise_id}{" "}
-                                                <small style={{ fontWeight: "normal" }}>
-                                                    (Exercise: {ex.exercise_order})
-                                                </small>
-                                            </h4>
-                                            <button
-                                                onClick={() => deleteWorkoutExercise(ex.id)}
-                                                style={{
-                                                    cursor: "pointer",
-                                                    border: "1px solid",
-                                                    background: "none",
-                                                    padding: "4px 8px",
-                                                    color: "red",
-                                                }}
-                                            >
-                                                Remove Exercise
-                                            </button>
+                            <ul className="space-y-2.5 list-none p-0 m-0">
+                                {workouts.map((w) => (
+                                    <li key={w.id} className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group ${selectedWorkout?.id === w.id ? 'bg-zinc-900 border-lime-400/50' : 'bg-zinc-950/40 border-zinc-800/80 hover:border-zinc-700'}`}>
+                                        <div>
+                                            <span className="text-sm stroke-zinc-100 font-semibold text-zinc-200 block">{w.name}</span>
+                                            <span className="font-mono text-xs text-zinc-500 mt-0.5 block">{w.date?.substring(0, 10)}</span>
                                         </div>
-
-                                        {ex.sets && ex.sets.length > 0 ? (
-                                            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px" }}>
-                                                <thead>
-                                                    <tr>
-                                                        <th
-                                                            style={{
-                                                                textAlign: "left",
-                                                                padding: "5px",
-                                                                borderBottom: "1px solid #ccc",
-                                                                width: "40px",
-                                                            }}
-                                                        >
-                                                            Set
-                                                        </th>
-                                                        <th style={{ textAlign: "left", padding: "5px", borderBottom: "1px solid #ccc" }}>
-                                                            Weight (kg)
-                                                        </th>
-                                                        <th style={{ textAlign: "left", padding: "5px", borderBottom: "1px solid #ccc" }}>
-                                                            Reps
-                                                        </th>
-                                                        <th style={{ textAlign: "left", padding: "5px", borderBottom: "1px solid #ccc" }}>
-                                                            Time
-                                                        </th>
-                                                        <th style={{ textAlign: "left", padding: "5px", borderBottom: "1px solid #ccc" }}>
-                                                            Note
-                                                        </th>
-                                                        <th></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {ex.sets.map((set) => (
-                                                        <tr key={set.id}>
-                                                            <td
-                                                                style={{
-                                                                    padding: "5px",
-                                                                    borderBottom: "1px solid #eee",
-                                                                    fontWeight: "bold",
-                                                                }}
-                                                            >
-                                                                {set.set_number}
-                                                            </td>
-                                                            <td style={{ padding: "5px", borderBottom: "1px solid #eee" }}>
-                                                                <input
-                                                                    type="number"
-                                                                    value={set.weight ?? ""}
-                                                                    onChange={(e) =>
-                                                                        handleSetChange(ex.id, set.id, "weight", e.target.value)
-                                                                    }
-                                                                    onBlur={() => handleSetBlur(ex.id, set.id)}
-                                                                    style={{ width: "80px", padding: "4px" }}
-                                                                    placeholder="kg"
-                                                                />
-                                                            </td>
-                                                            <td style={{ padding: "5px", borderBottom: "1px solid #eee" }}>
-                                                                <input
-                                                                    type="number"
-                                                                    value={set.repetitions ?? ""}
-                                                                    onChange={(e) =>
-                                                                        handleSetChange(ex.id, set.id, "repetitions", e.target.value)
-                                                                    }
-                                                                    onBlur={() => handleSetBlur(ex.id, set.id)}
-                                                                    style={{ width: "80px", padding: "4px" }}
-                                                                    placeholder="reps"
-                                                                />
-                                                            </td>
-                                                            <td style={{ padding: "5px", borderBottom: "1px solid #eee" }}>
-                                                                <input
-                                                                    type="number"
-                                                                    value={set.time ?? ""}
-                                                                    onChange={(e) =>
-                                                                        handleSetChange(ex.id, set.id, "time", e.target.value)
-                                                                    }
-                                                                    onBlur={() => handleSetBlur(ex.id, set.id)}
-                                                                    style={{ width: "80px", padding: "4px" }}
-                                                                    placeholder="time"
-                                                                />
-                                                            </td>
-                                                            <td style={{ padding: "5px", borderBottom: "1px solid #eee" }}>
-                                                                <input
-                                                                    type="text"
-                                                                    value={set.note ?? ""}
-                                                                    onChange={(e) =>
-                                                                        handleSetChange(ex.id, set.id, "note", e.target.value)
-                                                                    }
-                                                                    onBlur={() => handleSetBlur(ex.id, set.id)}
-                                                                    style={{ width: "100%", minWidth: "120px", padding: "4px" }}
-                                                                    placeholder="note"
-                                                                />
-                                                            </td>
-                                                            <td
-                                                                style={{
-                                                                    padding: "5px",
-                                                                    borderBottom: "1px solid #eee",
-                                                                    textAlign: "right",
-                                                                }}
-                                                            >
-                                                                <button
-                                                                    onClick={() => handleRemoveSet(set.id)}
-                                                                    style={{
-                                                                        background: "none",
-                                                                        border: "none",
-                                                                        color: "red",
-                                                                        cursor: "pointer",
-                                                                        fontSize: "1.2em",
-                                                                        fontWeight: "bold",
-                                                                    }}
-                                                                >
-                                                                    x
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        ) : (
-                                            <p style={{ fontStyle: "italic", fontSize: "0.9em", margin: "5px 0" }}>
-                                                No sets logged.
-                                            </p>
-                                        )}
-
-                                        {addingSetToBlockId === ex.id ? (
-                                            <div style={{ display: "flex", gap: "10px", marginTop: "10px", alignItems: "center", flexWrap: "wrap" }}>
-                                                <input
-                                                    type="number"
-                                                    placeholder="kg"
-                                                    value={newSetWeight}
-                                                    onChange={(e) =>
-                                                        setNewSetWeight(e.target.value === "" ? "" : Number(e.target.value))
-                                                    }
-                                                    style={{ width: "70px", padding: "5px", border: "1px solid" }}
-                                                />
-                                                <input
-                                                    type="number"
-                                                    placeholder="reps"
-                                                    value={newSetReps}
-                                                    onChange={(e) =>
-                                                        setNewSetReps(e.target.value === "" ? "" : Number(e.target.value))
-                                                    }
-                                                    style={{ width: "70px", padding: "5px", border: "1px solid" }}
-                                                />
-                                                <input
-                                                    type="number"
-                                                    placeholder="time"
-                                                    value={newSetTime}
-                                                    onChange={(e) =>
-                                                        setNewSetTime(e.target.value === "" ? "" : Number(e.target.value))
-                                                    }
-                                                    style={{ width: "70px", padding: "5px", border: "1px solid" }}
-                                                />
-                                                <input
-                                                    type="text"
-                                                    placeholder="note"
-                                                    value={newSetNote}
-                                                    onChange={(e) => setNewSetNote(e.target.value)}
-                                                    style={{ minWidth: "140px", padding: "5px", border: "1px solid" }}
-                                                />
-                                                <button
-                                                    onClick={() => submitNewSet(ex)}
-                                                    style={{ background: "none", border: "1px solid", padding: "5px 10px", cursor: "pointer" }}
-                                                >
-                                                    Save Set
-                                                </button>
-                                                <button
-                                                    onClick={() => setAddingSetToBlockId(null)}
-                                                    style={{ background: "none", border: "1px solid", padding: "5px 10px", cursor: "pointer" }}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <button
-                                                onClick={() => handleOpenAddSetForm(ex)}
-                                                style={{ background: "none", border: "1px solid", padding: "5px 10px", cursor: "pointer", marginTop: "10px" }}
-                                            >
-                                                + Add Set
-                                            </button>
-                                        )}
+                                        <div className="flex gap-2">
+                                            <Button type="button" onClick={() => fetchWorkoutById(w.id)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
+                                                Open
+                                            </Button>
+                                            <Button type="button" onClick={() => deleteWorkout(w.id)} variant="danger" className="px-2.5 py-1.5 text-xs rounded-lg">
+                                                Delete
+                                            </Button>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
                         )}
+                    </div>
+                </div>
 
-                        <hr style={{ margin: "20px 0", border: "none", borderTop: "1px solid" }} />
+                {/* Right Interactive Workspace Panel */}
+                {selectedWorkout && (
+                    <div className="flex-1 w-full bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-md space-y-6 relative">
 
-                        <h3>Add New Exercise to Workout</h3>
-                        <form
-                            onSubmit={handleAddExercise}
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: "10px",
-                                border: "1px solid",
-                                padding: "15px",
-                            }}
-                        >
-                            <div style={{ position: "relative" }} ref={dropdownRef}>
-                                <input
-                                    type="text"
-                                    placeholder="Search and select exercise..."
-                                    value={searchQuery}
-                                    onChange={(e) => {
-                                        setSearchQuery(e.target.value);
-                                        setSelectedExercise(null);
-                                        setShowDropdown(true);
-                                    }}
-                                    onFocus={() => setShowDropdown(true)}
-                                    style={{ padding: "8px", width: "100%", boxSizing: "border-box", border: "1px solid" }}
-                                />
-                                {showDropdown && filteredExercises.length > 0 && (
-                                    <ul
-                                        style={{
-                                            position: "absolute",
-                                            zIndex: 10,
-                                            width: "100%",
-                                            background: "white",
-                                            border: "1px solid",
-                                            listStyle: "none",
-                                            padding: 0,
-                                            margin: 0,
-                                            maxHeight: "200px",
-                                            overflowY: "auto",
-                                        }}
-                                    >
-                                        {filteredExercises.map((ex) => (
-                                            <li
-                                                key={ex.id}
-                                                onClick={() => {
-                                                    setSearchQuery(ex.name);
-                                                    setSelectedExercise(ex);
-                                                    setShowDropdown(false);
-                                                }}
-                                                style={{ padding: "10px", cursor: "pointer", borderBottom: "1px solid" }}
-                                            >
-                                                {ex.name}
-                                            </li>
-                                        ))}
-                                    </ul>
+                        {/* Header Details Wrapper with Dropdown Flow Control */}
+                        <div className="flex justify-between items-start mb-6" ref={detailsDropdownRef}>
+                            <div className="flex-1 mr-4">
+                                <h2 className="font-display text-2xl font-bold text-lime-400 uppercase tracking-wide flex items-center gap-3">
+                                    {selectedWorkout.name}
+                                </h2>
+                                <p className="font-mono text-xs text-zinc-500 mt-1">{selectedWorkout.date?.substring(0, 10)}</p>
+                                {selectedWorkout.note && (
+                                    <p className="font-sans text-sm text-zinc-300 mt-2 bg-zinc-950/30 p-3 rounded-xl border border-zinc-800/40">{selectedWorkout.note}</p>
                                 )}
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={!selectedExercise}
-                                style={{
-                                    padding: "8px",
-                                    border: "1px solid",
-                                    background: "none",
-                                    cursor: !selectedExercise ? "not-allowed" : "pointer",
-                                    fontWeight: "bold",
-                                }}
-                            >
-                                + Add Exercise block to Workout
-                            </button>
-                        </form>
+                            {/* Dropdown Control Button for Editing Details */}
+                            <div className="flex gap-2 shrink-0 relative">
+                                <Button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!showDetailsDropdown) openEditWorkout();
+                                        setShowDetailsDropdown(!showDetailsDropdown);
+                                    }}
+                                    variant="secondary"
+                                    className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 font-medium"
+                                >
+                                    <span>Modify Details</span>
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                </Button>
+
+                                <Button type="button" onClick={() => setSelectedWorkout(null)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
+                                    Close
+                                </Button>
+
+                                {showDetailsDropdown && (
+                                    <div className="absolute right-0 top-full mt-2 w-80 bg-zinc-950 border border-zinc-800 rounded-xl p-4 shadow-xl z-20 flex flex-col gap-3 animate-in fade-in duration-100">
+                                        <h4 className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Edit Core Metadata</h4>
+                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:border-lime-400 focus:outline-none" />
+                                        <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:border-lime-400 focus:outline-none [color-scheme:dark]" />
+                                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:border-lime-400 focus:outline-none" />
+                                        <div className="flex gap-2 justify-end mt-1">
+                                            <button type="button" onClick={() => setShowDetailsDropdown(false)} className="text-zinc-400 text-xs font-semibold px-2.5 py-1.5 hover:text-zinc-200">Cancel</button>
+                                            <Button type="button" onClick={saveWorkoutEdit} variant="primary" className="px-3 py-1 text-xs rounded-md">Save Changes</Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <hr className="border-none border-t border-zinc-800/60" />
+
+                        {/* Exercises List Display Block */}
+                        <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase">Recorded Exercises and Sets</h3>
+                        {!selectedWorkout.exercises || selectedWorkout.exercises.length === 0 ? (
+                            <p className="text-xs text-zinc-500 font-sans py-6 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-950/20">
+                                No exercises logged for this workout yet. Search and select from the menu below to start.
+                            </p>
+                        ) : (
+                            <ul className="list-none p-0 m-0 space-y-4">
+                                {selectedWorkout.exercises.map((ex: WorkoutExercise) => (
+                                    <EditableExerciseCard
+                                        key={ex.id}
+                                        exerciseName={ex.name || "Unknown Exercise " + ex.exercise_id}
+                                        exerciseOrder={ex.exercise_order}
+                                        showNotesField={true}
+                                        sets={ex.sets.map((s: SetEntry) => ({
+                                            id: s.id,
+                                            set_number: s.set_number,
+                                            weight: s.weight,
+                                            reps: s.repetitions,
+                                            time: s.time,
+                                            note: s.note
+                                        }))}
+                                        onRemoveExercise={() => deleteWorkoutExercise(ex.id)}
+                                        onAddSet={(weight, reps, time, note) => submitNewSet(ex, weight, reps, time, note)}
+                                        onRemoveSet={(setId) => handleRemoveSet(setId)}
+                                        onUpdateSet={(setId, field, value) => {
+                                            const mapField = field === 'reps' ? 'repetitions' : (field as EditableSetField);
+                                            handleSetChange(ex.id, setId, mapField, value);
+                                        }}
+                                        onBlurSet={(setId) => handleSetBlur(ex.id, setId)}
+                                    />
+                                ))}
+                            </ul>
+                        )}
+
+                        {/* Search Exercises Dropdown Selection Panel */}
+                        <div className="pt-6 border-t border-zinc-800/60">
+                            <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase mb-3">Add New Exercise to Workout</h3>
+
+                            <div className="flex flex-col gap-4">
+                                {!showPicker ? (
+                                    <Button
+                                        variant="secondary"
+                                        fullWidth
+                                        className="py-4 border-dashed border-zinc-800 hover:border-lime-500/50 hover:bg-lime-500/5 transition-all text-sm font-semibold"
+                                        onClick={() => setShowPicker(true)}
+                                    >
+                                        + Add New Exercise Entry
+                                    </Button>
+                                ) : (
+                                    <div className="animate-in fade-in zoom-in-95 duration-200">
+                                        <ExercisePicker
+                                            title="Add Exercise to Workout"
+                                            onSelect={handleAddExercise}
+                                            onClose={() => setShowPicker(false)}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

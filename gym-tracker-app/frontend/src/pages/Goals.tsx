@@ -134,33 +134,38 @@ export default function Goals() {
         }
     }
 
-    if (isLoading) return <p style={{ padding: "20px" }}>Loading goals...</p>;
+    if (isLoading) return <div className="p-8 text-zinc-400 font-medium animate-pulse">Loading goals...</div>;
 
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", maxWidth: "800px", margin: "0 auto" }}>
-            <h1>My Goals</h1>
-            {error && <p style={{ fontWeight: "bold", color: "red" }}>Error: {error}</p>}
+        <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+            <div>
+                <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">My Goals</h1>
+                <p className="text-zinc-400 font-medium">Set, track, and crush your lifting milestones.</p>
+            </div>
+            {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
 
-            <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
+            <div className="flex gap-6 flex-col md:flex-row items-start">
 
                 {/* Form to add/edit goal */}
-                <div style={{ flex: 1, border: "1px solid", padding: "20px" }}>
-                    <h3 style={{ marginTop: 0 }}>{editingGoalId ? "Edit Goal" : "Add New Goal"}</h3>
-                    <form onSubmit={handleAddGoal} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div className="flex-none w-full md:w-[380px] bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                    <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">
+                        {editingGoalId ? "Edit Goal" : "Add New Goal"}
+                    </h3>
+                    <form onSubmit={handleAddGoal} className="flex flex-col gap-4">
                         <input
                             type="text"
                             placeholder="Search exercise..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            style={{ padding: "8px", border: "1px solid" }}
                             disabled={!!editingGoalId}
+                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors disabled:opacity-50"
                         />
                         <select
                             value={selectedExerciseId}
                             onChange={e => setSelectedExerciseId(Number(e.target.value))}
                             required
-                            style={{ padding: "8px", border: "1px solid" }}
                             disabled={!!editingGoalId}
+                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors disabled:opacity-50 appearance-none"
                         >
                             <option value="" disabled>Select Exercise</option>
                             {exercises?.map(ex => (
@@ -174,7 +179,7 @@ export default function Goals() {
                             value={targetWeight}
                             onChange={e => setTargetWeight(Number(e.target.value))}
                             required
-                            style={{ padding: "8px", border: "1px solid" }}
+                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                         />
                         <input
                             type="number"
@@ -182,15 +187,15 @@ export default function Goals() {
                             value={targetReps}
                             onChange={e => setTargetReps(Number(e.target.value))}
                             required
-                            style={{ padding: "8px", border: "1px solid" }}
+                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                         />
 
-                        <div style={{ display: "flex", gap: "10px" }}>
-                            <button type="submit" style={{ flex: 1, padding: "10px", border: "1px solid", background: "none", cursor: "pointer", fontWeight: "bold" }}>
+                        <div className="flex gap-3 mt-2">
+                            <button type="submit" className="flex-1 bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98]">
                                 {editingGoalId ? "Update Goal" : "Create Goal"}
                             </button>
                             {editingGoalId && (
-                                <button type="button" onClick={resetForm} style={{ flex: 1, padding: "10px", border: "1px solid", background: "none", cursor: "pointer" }}>
+                                <button type="button" onClick={resetForm} className="flex-1 bg-transparent border border-zinc-700 text-zinc-300 font-bold py-3 rounded-lg hover:bg-zinc-800 transition-all hover:scale-[1.02] active:scale-[0.98]">
                                     Cancel
                                 </button>
                             )}
@@ -199,30 +204,32 @@ export default function Goals() {
                 </div>
 
                 {/* List of goals */}
-                <div style={{ flex: 1.5, border: "1px solid", padding: "20px" }}>
-                    <h2 style={{ marginTop: 0 }}>Current Goals</h2>
+                <div className="flex-1 w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                    <h2 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">Current Goals</h2>
                     {!goals || goals.length === 0 ? (
-                        <p style={{ fontStyle: "italic" }}>No goals set yet.</p>
+                        <div className="text-center py-10 bg-zinc-900/50 rounded-lg border border-zinc-800/80">
+                            <p className="text-zinc-500 font-medium italic">No goals set yet. Time to aim high.</p>
+                        </div>
                     ) : (
-                        <ul style={{ listStyleType: "none", padding: 0, margin: 5 }}>
+                        <ul className="space-y-3">
                             {goals?.map(g => (
-                                <li key={g.id} style={{ borderBottom: "1px solid", padding: "10px 0", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: editingGoalId === g.id ? "#f9f9f9" : "transparent" }}>
+                                <li key={g.id} className={`bg-zinc-900/40 border ${editingGoalId === g.id ? "border-lime-400/50" : "border-zinc-800/80"} rounded-lg p-5 flex flex-col sm:flex-row justify-between sm:items-center hover:border-zinc-700 transition-colors gap-4`}>
                                     <div>
-                                        <strong style={{ fontSize: "1.1em", textTransform: "capitalize" }}>{g.exercise_name}</strong>
-                                        <div style={{ marginTop: "5px" }}>
-                                            {g.target_weight}kg × {g.target_reps} reps
+                                        <strong className="text-xl font-bold text-lime-400 capitalize">{g.exercise_name}</strong>
+                                        <div className="text-zinc-100 font-medium text-lg mt-1">
+                                            {g.target_weight} kg × {g.target_reps} reps
                                         </div>
                                     </div>
-                                    <div style={{ display: "flex", gap: "10px" }}>
+                                    <div className="flex gap-2">
                                         <button
                                             onClick={() => handleEditGoal(g)}
-                                            style={{ padding: "5px 10px", border: "1px solid", background: "none", cursor: "pointer" }}
+                                            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-md font-medium text-sm transition-colors"
                                         >
                                             Edit
                                         </button>
                                         <button
                                             onClick={() => deleteGoal(g.id)}
-                                            style={{ padding: "5px 10px", border: "1px solid", background: "none", cursor: "pointer" }}
+                                            className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-md font-medium text-sm border border-rose-500/20 transition-colors"
                                         >
                                             Delete
                                         </button>

@@ -13,7 +13,7 @@ class User {
             const hashedPassword = await bcrypt.hash(password, 10);
             const query = `
                 INSERT INTO users (name, surname, email, password, gender, weight, height, birth_date) 
-                VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+                VALUES($1, $2, $3, $4, $5, $6, $7, $8) 
                 RETURNING id
             `;
             const result = await pool.query(query, [

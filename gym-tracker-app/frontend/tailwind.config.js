@@ -5,7 +5,13 @@ module.exports = {
         "./public/index.html"
     ],
     theme: {
-        extend: {},
+        extend: {
+            fontFamily: {
+                display: ['"Archivo Black"', 'sans-serif'],
+                sans: ['"Inter Tight"', 'sans-serif'],
+                mono: ['"JetBrains Mono"', 'monospace'],
+            }
+        },
     },
     plugins: [],
 }

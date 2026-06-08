@@ -7,8 +7,8 @@ class Exercise {
                 SELECT
                     id,
                     name,
-                    body_part,
-                    target_muscle,
+                    body_part AS "bodyPart",
+                    target_muscle AS "target",
                     secondary_muscles,
                     equipment,
                     difficulty,
