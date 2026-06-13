@@ -160,6 +160,32 @@ class Exercise {
         }
     }
 
+    static async getExerciseHistory(userId, exerciseId) {
+        try {
+            console.log(`[Exercise Model] Fetching history for User: ${userId}, Exercise: ${exerciseId}`);
+            const query = `
+                SELECT 
+                    w.date, 
+                    w.name as workout_name,
+                    MAX(CAST(s.weight AS FLOAT)) as max_weight, 
+                    COALESCE(SUM(CAST(s.weight AS FLOAT) * s.repetitions), 0) as total_volume,
+                    MAX(s.repetitions) as max_reps
+                FROM workouts w
+                JOIN workout_exercises we ON w.id = we.workout_id
+                JOIN sets s ON we.id = s.workout_exercise_id
+                WHERE w.user_id = $1 AND we.exercise_id = $2
+                GROUP BY w.id, w.date, w.name
+                ORDER BY w.date ASC;
+            `;
+            const result = await pool.query(query, [userId, exerciseId]);
+            console.log(`[Exercise Model] Found ${result.rowCount} history entries`);
+            return result.rows;
+        } catch (error) {
+            console.error('[Exercise Model] Error fetching exercise history:', error.message);
+            throw error;
+        }
+    }
+
 }
 
 module.exports = Exercise;

@@ -148,7 +148,7 @@ export default function WeightHistory() {
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Weight History</h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Weight History</h1>
             </div>
 
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}

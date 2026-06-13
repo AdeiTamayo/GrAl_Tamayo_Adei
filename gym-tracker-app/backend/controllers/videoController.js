@@ -120,12 +120,15 @@ exports.processBarbellTracking = async (req, res) => {
 /**
  * Get authenticated user's videos
  */
+/**
+ * Get authenticated user's videos (With Server-Side Filters)
+ */
 exports.getUserVideos = async (req, res) => {
     try {
+        const { date, type } = req.query; // Capture filters from request query strings
         const directoryPath = path.join(__dirname, '../media/output');
 
         const files = await fs.readdir(directoryPath);
-
 
         const videoExtensions = ['.mp4'];
         const videoFiles = files.filter(file => {
@@ -133,20 +136,45 @@ exports.getUserVideos = async (req, res) => {
             return videoExtensions.includes(ext);
         });
 
-        const videos = await Promise.all(videoFiles.map(async (file, index) => {
+        let videos = await Promise.all(videoFiles.map(async (file) => {
             const filePath = path.join(directoryPath, file);
-
             const stats = await fs.stat(filePath);
+
+            // Dynamically assign tags based on database & file prefixes
+            let processType = 'Pose Estimation';
+            let filterType = 'pose_estimation';
+
+            if (file.toLowerCase().includes('squat')) {
+                processType = 'Squat Analysis';
+                filterType = 'squat_analysis';
+            } else if (file.toLowerCase().includes('barbell')) {
+                processType = 'Barbell Tracking';
+                filterType = 'barbell_tracking';
+            }
 
             return {
                 id: file,
-                process_type: file.includes('pose') ? 'Pose Estimation' : 'Barbell Tracking',
+                process_type: processType,
+                filter_type: filterType,
                 processed_url: `/media/output/${file}`,
-                created_at: stats.birthtime
+                created_at: stats.birthtime // Date Object
             };
         }));
 
-        // 5. Send the response
+        if (type && type !== 'all') {
+            videos = videos.filter(v => v.filter_type === type);
+        }
+
+        if (date) {
+            videos = videos.filter(v => {
+                const videoDateStr = new Date(v.created_at).toISOString().split('T')[0];
+                return videoDateStr === date;
+            });
+        }
+
+        // Sort by newest first
+        videos.sort((a, b) => b.created_at - a.created_at);
+
         res.json({
             success: true,
             videos: videos

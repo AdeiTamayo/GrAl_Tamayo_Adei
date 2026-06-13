@@ -31,12 +31,46 @@ export default function Register() {
         return value.trim() === "" ? null : value.trim();
     }
 
+    // --- Validation Helper Rules ---
+    const isEmailValid = (emailStr: string): boolean => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(emailStr.trim());
+    };
+
+    const getPasswordStrength = (passStr: string) => {
+        if (!passStr) return { score: 0, label: "", color: "text-zinc-600" };
+
+        let score = 0;
+        if (passStr.length >= 8) score++;
+        if (/[a-zA-Z]/.test(passStr)) score++;
+        if (/\d/.test(passStr)) score++;
+        if (/[^A-Za-z0-9]/.test(passStr)) score++;
+
+        if (score <= 2) return { score, label: "Weak", color: "text-rose-400" };
+        if (score === 3) return { score, label: "Medium", color: "text-amber-400" };
+        return { score, label: "Strong", color: "text-lime-400" };
+    };
+
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setMessage("");
 
+        // 1. Structural Email validation Check
+        if (!isEmailValid(email)) {
+            setMessage("Please enter a valid email address structure (e.g., name@domain.com).");
+            return;
+        }
+
+        // 2. Structural Password Strength Check
+        const strength = getPasswordStrength(password);
+        if (strength.score < 3) {
+            setMessage("Password is too weak. It must be at least 8 characters long and contain a mix of letters and numbers.");
+            return;
+        }
+
+        // 3. Confirm Password Match Check
         if (password !== confirmPassword) {
-            setMessage("Passwords do not match");
+            setMessage("Passwords do not match.");
             return;
         }
 
@@ -51,8 +85,7 @@ export default function Register() {
                 gender_id: toNullableString(genderId),
                 weight: toNullableNumber(weight),
                 height: toNullableNumber(height),
-                birth_date: toNullableString(birthDate),
-                profile_picture: toNullableString(profilePicture)
+                birth_date: toNullableString(birthDate)
             };
 
             const response = await apiFetch("/api/user/register", {
@@ -93,7 +126,7 @@ export default function Register() {
                 }
 
             } else {
-                setMessage(data.error || "Registration failed");
+                setMessage(data.error || "Registration failed.");
             }
         } catch (error) {
             console.error("Registration failed:", error);
@@ -103,6 +136,8 @@ export default function Register() {
         }
     }
 
+    const pwdStrength = getPasswordStrength(password);
+
     return (
         <div className="min-h-screen flex items-center justify-center p-4 py-12">
             <form onSubmit={handleSubmit} className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 sm:p-10 w-full max-w-2xl flex flex-col gap-6 shadow-2xl">
@@ -111,10 +146,11 @@ export default function Register() {
                     <p className="text-zinc-400 font-medium">Create your account to start tracking your journey.</p>
                 </div>
 
+                {/* Main Error Form Message (Now just clean red text) */}
                 {message && (
-                    <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm animate-in fade-in duration-300">
+                    <p className="text-sm font-semibold text-rose-500 tracking-wide -mb-2 animate-in fade-in duration-300">
                         {message}
-                    </div>
+                    </p>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -142,13 +178,19 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-zinc-400 mb-2">Email</label>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-semibold text-zinc-400">Email</label>
+                                {email && !isEmailValid(email) && (
+                                    <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Invalid Format</span>
+                                )}
+                            </div>
                             <input
                                 type="email"
                                 value={email}
                                 required
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors"
+                                className={`w-full bg-zinc-900 border rounded-lg p-3 text-zinc-100 focus:outline-none transition-colors ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-zinc-800 focus:border-lime-400"
+                                    }`}
                             />
                         </div>
                     </div>
@@ -157,7 +199,14 @@ export default function Register() {
                     <div className="space-y-4">
                         <h3 className="text-xs uppercase tracking-wider text-zinc-500 font-bold mb-2">Security</h3>
                         <div>
-                            <label className="block text-sm font-semibold text-zinc-400 mb-2">Password</label>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-semibold text-zinc-400">Password</label>
+                                {password && (
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${pwdStrength.color}`}>
+                                        Strength: {pwdStrength.label}
+                                    </span>
+                                )}
+                            </div>
                             <input
                                 type="password"
                                 value={password}
@@ -168,13 +217,19 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-zinc-400 mb-2">Confirm Password</label>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-sm font-semibold text-zinc-400">Confirm Password</label>
+                                {confirmPassword && password !== confirmPassword && (
+                                    <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Mismatch</span>
+                                )}
+                            </div>
                             <input
                                 type="password"
                                 value={confirmPassword}
                                 required
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors"
+                                className={`w-full bg-zinc-900 border rounded-lg p-3 text-zinc-100 focus:outline-none transition-colors ${confirmPassword && password !== confirmPassword ? "border-rose-500/50 focus:border-rose-500" : "border-zinc-800 focus:border-lime-400"
+                                    }`}
                             />
                         </div>
                     </div>

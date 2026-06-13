@@ -1,6 +1,7 @@
-import { useState, useRef, DragEvent } from 'react';
+import { useState, useRef, DragEvent, useCallback } from 'react';
 import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
+import Notification from '../components/Notification';
 
 export default function UploadVideo() {
     const [file, setFile] = useState<File | null>(null);
@@ -8,8 +9,11 @@ export default function UploadVideo() {
     const [error, setError] = useState<string | null>(null);
     const [progress, setProgress] = useState<string>('');
     const [isDragging, setIsDragging] = useState(false);
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const token = localStorage.getItem("user_login_token");
+
+    const clearNotification = useCallback(() => setNotification(null), []);
 
     // ==========================================================================
     // BARBELL TRACKING HANDLER
@@ -46,6 +50,7 @@ export default function UploadVideo() {
             }
 
             setProgress('Barbell tracking complete!');
+            setNotification({ message: 'Barbell tracking complete!', type: 'success' });
             setFile(null);
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
@@ -124,7 +129,9 @@ export default function UploadVideo() {
                 throw new Error(data.error || 'Processing failed');
             }
 
-            setProgress(mode === 'squat' ? 'Squat analysis complete!' : 'Pose Estimation complete!');
+            const successMsg = mode === 'squat' ? 'Squat analysis complete!' : 'Pose Estimation complete!';
+            setProgress(successMsg);
+            setNotification({ message: successMsg, type: 'success' });
             setFile(null);
             if (fileInputRef.current) {
                 fileInputRef.current.value = '';
@@ -133,6 +140,7 @@ export default function UploadVideo() {
         } catch (error) {
             console.error('Upload failed:', error);
             setError(error instanceof Error ? error.message : 'Upload failed');
+            setNotification({ message: 'Video processing failed', type: 'error' });
             setProgress('');
         } finally {
             setIsProcessing(false);
@@ -140,10 +148,17 @@ export default function UploadVideo() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+        <>
+            {notification && (
+                <Notification
+                    message={notification.message}
+                    type={notification.type}
+                    onClose={clearNotification}
+                />
+            )}
+            <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Video Analysis</h1>
-                <p className="text-zinc-400 font-medium">Upload videos for analysis and barbell tracking.</p>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Video Analysis</h1>
             </div>
 
             <div className="max-w-xl mx-auto bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-6">
@@ -251,5 +266,6 @@ export default function UploadVideo() {
                 )}
             </div>
         </div>
+        </>
     );
 }

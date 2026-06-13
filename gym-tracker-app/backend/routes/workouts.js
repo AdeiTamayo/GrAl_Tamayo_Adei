@@ -11,9 +11,9 @@ router.get('/:id', authMiddleware, workoutController.getWorkoutById);
 router.put('/:id', authMiddleware, workoutController.updateWorkout);
 router.delete('/:id', authMiddleware, workoutController.deleteWorkout);
 
-router.post('/:id/exercises', workoutController.addWorkoutExercise);
-router.delete('/exercises/:workoutExerciseId', workoutController.deleteWorkoutExercise);
-router.post('/exercises/:workoutExerciseId/sets', workoutController.addSet);
+router.post('/:id/exercises', authMiddleware, workoutController.addWorkoutExercise);
+router.delete('/exercises/:workoutExerciseId', authMiddleware, workoutController.deleteWorkoutExercise);
+router.post('/exercises/:workoutExerciseId/sets', authMiddleware, workoutController.addSet);
 router.put('/sets/:setId', authMiddleware, workoutController.updateSet);
 router.delete('/sets/:setId', authMiddleware, workoutController.deleteSet);
 

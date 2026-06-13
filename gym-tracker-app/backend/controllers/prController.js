@@ -12,7 +12,7 @@ exports.getPrSummary = async (req, res) => {
 
 exports.getPrHistory = async (req, res) => {
     try {
-        const { exerciseId } = req.params;
+        const exerciseId = req.params.id;
         const history = await PR.getPrHistory(req.userId, exerciseId);
         res.json({ success: true, data: history });
     } catch (error) {

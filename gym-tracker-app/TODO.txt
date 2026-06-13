@@ -1,36 +1,17 @@
-2. UI consistency
-
-Normalize the up/down button style and behavior across the whole system.
-
-3. Workout page changes
-
-Replace the current add details edit flow with a modifiable button plus a dropdown.
-Change Add New Exercise to Workout so it only shows a dropdown search flow.
-Reuse the search exercise page for selecting exercises.
-In Workouts Management, show the workout list and add a create new workout dropdown button.
-
 4. Missing features
 
-Implement routines.
-Add history and charts for weight across different exercises.
-Add a weight chart in the user weight module.
-Improve the video display module:
-Add filters by date and analysis type.
-Reduce the preview size of the video cards.
-Suggested follow-up plan
+Implement routines. [DONE]
+Add history and charts for weight across different exercises. [DONE]
+Implement Workout Comparison. [DONE]
 
 
-Fixes: 
 
-Phase 2: Workout flow
 
-Update the workout details UI.
-Add the exercise search dropdown flow.
-Refactor Workouts Management to support the list plus create-new dropdown.
+
 Phase 3: Core app features
 
-Implement routines.
-Add history and chart views for exercise weight and user weight.
+Implement routines. [DONE]
+Add history and chart views for exercise weight and user weight. [DONE]
 
 Phase 4: Video module
 

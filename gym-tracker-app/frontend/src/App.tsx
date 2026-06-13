@@ -13,10 +13,16 @@ import Video from './pages/Videos';
 import Pr from './pages/Prs'
 import Routine from './pages/Routines';
 import WeightHistory from './pages/Weight_history';
+import CurrentWorkout from './pages/CurrentWorkout';
+import CompareWorkouts from './pages/CompareWorkouts';
+import ExerciseHistory from './pages/ExerciseHistory';
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Hero />} />
+      <Route path="/active-workout" element={<CurrentWorkout />} />
+      <Route path="/compare-workouts" element={<CompareWorkouts />} />
+      <Route path="/exercise-history" element={<ExerciseHistory />} />
       <Route path="/upload" element={<UploadVideo />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/workouts" element={<Workouts />} />

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { apiFetch } from "../utils/api";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 interface PRSummary {
     id: number;
@@ -47,14 +48,15 @@ export default function PersonalRecords() {
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const headers = useMemo(() => ({
+    // Removed useMemo to guarantee fresh authorization tokens on every network dispatch
+    const getHeaders = () => ({
         "Content-Type": "application/json",
         "Authorization": `Bearer ${localStorage.getItem("user_login_token")}`
-    }), []);
+    });
 
     useEffect(() => {
         Promise.all([fetchPrSummary(), fetchExercises()]).finally(() => setLoading(false));
-    }, [headers]);
+    }, []);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -68,41 +70,45 @@ export default function PersonalRecords() {
 
     async function fetchExercises() {
         try {
-            const res = await apiFetch("/api/exercises", { headers });
+            const res = await apiFetch("/api/exercises", { headers: getHeaders() });
             const data = await res.json();
             if (data.success) setExercises(data.data);
-        } catch (err: any) {
+        } catch (err) {
             console.error("Failed to fetch exercises", err);
         }
     }
 
     async function fetchPrSummary() {
         try {
-            const res = await apiFetch("/api/prs", { headers });
+            const res = await apiFetch("/api/prs", { headers: getHeaders() });
             const data = await res.json();
             if (data.success) {
                 setPrSummary(data.data);
             } else {
                 setError(data.error);
             }
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to load PR summary");
         }
     }
 
     async function fetchPrHistory(exerciseId: number, exerciseName: string) {
         try {
-            const res = await apiFetch(`/api/prs/${exerciseId}/history`, { headers });
+            const res = await apiFetch(`/api/prs/${exerciseId}/history`, { headers: getHeaders() });
             const data = await res.json();
             if (data.success) {
-                setPrHistory(data.data);
+                // Ensure predictable ordering from latest to oldest for the timeline feed
+                const sortedHistory = (data.data as PRHistory[]).sort(
+                    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+                );
+                setPrHistory(sortedHistory);
                 setSelectedExerciseName(exerciseName);
                 setSelectedExerciseId(exerciseId);
             } else {
                 setError(data.error);
             }
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to load history data");
         }
     }
 
@@ -113,7 +119,7 @@ export default function PersonalRecords() {
         try {
             const res = await apiFetch("/api/prs", {
                 method: "POST",
-                headers,
+                headers: getHeaders(),
                 body: JSON.stringify({
                     exercise_id: formExerciseId,
                     weight: newWeight,
@@ -133,15 +139,14 @@ export default function PersonalRecords() {
                 setNewNote("");
                 setShowAddForm(false);
 
-                // Refresh history if the created PR is for the currently open panel
                 if (formExerciseId === selectedExerciseId && selectedExerciseName) {
                     fetchPrHistory(selectedExerciseId, selectedExerciseName);
                 }
             } else {
                 setError(data.error);
             }
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "An error occurred while creating entry");
         } finally {
             setIsCreating(false);
         }
@@ -152,7 +157,7 @@ export default function PersonalRecords() {
         try {
             const res = await apiFetch(`/api/prs/${prId}`, {
                 method: "DELETE",
-                headers
+                headers: getHeaders()
             });
             const data = await res.json();
             if (data.success) {
@@ -163,22 +168,38 @@ export default function PersonalRecords() {
             } else {
                 setError(data.error);
             }
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "An error occurred while deleting entry");
         }
     }
-
-    if (loading) return <div className="p-8 text-zinc-400 font-medium animate-pulse">Loading Personal Records...</div>;
 
     const filteredExercises = exercises.filter(ex =>
         ex.name.toLowerCase().includes(exerciseSearch.toLowerCase())
     );
 
+    // Chart explicitly needs chronological sorting (Oldest -> Newest)
+    const chartData = useMemo(() => {
+        return [...prHistory]
+            .map(h => ({
+                date: h.date?.substring(0, 10),
+                weight: parseFloat(h.weight),
+                reps: h.repetitions
+            }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }, [prHistory]);
+
+    // Derived State: Find the absolute heaviest lift record to accurately assign labels
+    const currentMaxRecordId = useMemo(() => {
+        if (prHistory.length === 0) return null;
+        return [...prHistory].sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight))[0]?.id;
+    }, [prHistory]);
+
+    if (loading) return <div className="p-8 text-zinc-400 font-medium animate-pulse">Loading Personal Records...</div>;
+
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Personal Records (PRs)</h1>
-                <p className="text-zinc-400 font-medium">Keep track of your all-time best lifts.</p>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Personal Records </h1>
             </div>
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
 
@@ -188,9 +209,9 @@ export default function PersonalRecords() {
                 <div className="flex-none w-full lg:w-[450px] space-y-6">
 
                     {/* Add Manual PR Form */}
-                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-7 shadow-xl">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase">Manually Log a PR</h3>
+                            <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase">Log a PR</h3>
                             <button
                                 onClick={() => setShowAddForm(!showAddForm)}
                                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all focus:outline-none ${showAddForm ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-lime-400 text-black hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98]'}`}
@@ -239,7 +260,7 @@ export default function PersonalRecords() {
                                         step="0.1"
                                         placeholder="Weight (kg)"
                                         value={newWeight}
-                                        onChange={e => setNewWeight(Number(e.target.value))}
+                                        onChange={e => setNewWeight(e.target.value === "" ? "" : Number(e.target.value))}
                                         required
                                         className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                                     />
@@ -247,7 +268,7 @@ export default function PersonalRecords() {
                                         type="number"
                                         placeholder="Reps"
                                         value={newReps}
-                                        onChange={e => setNewReps(Number(e.target.value))}
+                                        onChange={e => setNewReps(e.target.value === "" ? "" : Number(e.target.value))}
                                         required
                                         className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                                     />
@@ -284,7 +305,7 @@ export default function PersonalRecords() {
                                     <li
                                         key={pr.id}
                                         onClick={() => fetchPrHistory(pr.exercise_id, pr.exercise_name)}
-                                        className={`bg-zinc-900/40 border border-zinc-800/80 rounded-lg p-4 cursor-pointer hover:border-lime-400/50 hover:bg-zinc-900 transition-all ${selectedExerciseName === pr.exercise_name ? 'border-lime-400/50 bg-zinc-900 shadow-md ring-1 ring-lime-400/20' : ''}`}
+                                        className={`bg-zinc-900/40 border border-zinc-800/80 rounded-lg p-4 cursor-pointer hover:border-lime-400/50 hover:bg-zinc-900 transition-all ${selectedExerciseId === pr.exercise_id ? 'border-lime-400/50 bg-zinc-900 shadow-md ring-1 ring-lime-400/20' : ''}`}
                                     >
                                         <div className="flex justify-between items-center">
                                             <div>
@@ -307,19 +328,68 @@ export default function PersonalRecords() {
                 {selectedExerciseName && (
                     <div className="flex-1 w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 lg:p-8 shadow-xl">
                         <div className="flex justify-between items-start mb-6">
-                            <h2 className="font-display text-2xl font-bold text-lime-400 tracking-wide uppercase">{selectedExerciseName} Timeline</h2>
-                            <button onClick={() => setSelectedExerciseName(null)} className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg font-bold text-sm transition-colors border border-zinc-800">Close</button>
+                            <h2 className="font-display text-2xl font-bold text-lime-400 tracking-wide uppercase">{selectedExerciseName} Progress</h2>
+                            <button onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg font-bold text-sm transition-colors border border-zinc-800">Close</button>
                         </div>
 
-                        <ul className="relative border-l border-zinc-800 ml-3 md:ml-6 pl-6 pb-2 space-y-8 mt-8">
-                            {prHistory.map((history, index) => (
+                        {/* Progress Chart */}
+                        <div className="h-64 md:h-80 w-full mb-10 bg-zinc-900/30 rounded-2xl p-4 border border-zinc-800/50">
+                            {chartData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={chartData}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                                        <XAxis
+                                            dataKey="date"
+                                            stroke="#71717a"
+                                            fontSize={12}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            tickMargin={10}
+                                        />
+                                        <YAxis
+                                            stroke="#71717a"
+                                            fontSize={12}
+                                            tickLine={false}
+                                            axisLine={false}
+                                            unit="kg"
+                                        />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px', fontSize: '14px' }}
+                                            itemStyle={{ color: '#a3e635' }}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="weight"
+                                            stroke="#a3e635"
+                                            strokeWidth={3}
+                                            dot={{ fill: '#a3e635', r: 4, strokeWidth: 2, stroke: '#000' }}
+                                            activeDot={{ r: 6, strokeWidth: 0 }}
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-full flex items-center justify-center text-zinc-500 italic text-sm">No chart layout data found</div>
+                            )}
+                        </div>
+
+                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-6 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full"></span>
+                            History Timeline
+                        </h3>
+
+                        <ul className="relative border-l border-zinc-800 ml-3 md:ml-6 pl-6 pb-2 space-y-8 mt-4">
+                            {prHistory.map((history) => (
                                 <li key={history.id} className="relative">
                                     <div className="absolute w-3 h-3 bg-lime-400 rounded-full -left-[1.95rem] top-1.5 ring-4 ring-zinc-950"></div>
                                     <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 md:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-zinc-700 transition-colors">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">{history.date?.substring(0, 10)}</span>
-                                                {index === 0 && <span className="text-[10px] font-bold uppercase tracking-widest bg-lime-400/10 text-lime-400 border border-lime-400/20 px-2 py-0.5 rounded-full">Current Record</span>}
+                                                {history.id === currentMaxRecordId && (
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest bg-lime-400/10 text-lime-400 border border-lime-400/20 px-2 py-0.5 rounded-full">
+                                                        All-Time Best
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="text-xl text-zinc-100 font-medium">
                                                 <strong className="font-bold">{history.weight} kg</strong> for <strong className="font-bold">{history.repetitions} reps</strong>

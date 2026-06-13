@@ -440,7 +440,7 @@ export default function WorkoutsManagement() {
             {/* Top Toolbar Level */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
                 <div>
-                    <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Workouts Management</h1>
+                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Workouts Management</h1>
                     <p className="text-zinc-400 font-medium text-sm">Log and manage your training sessions.</p>
                 </div>
 

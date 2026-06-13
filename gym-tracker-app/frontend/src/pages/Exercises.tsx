@@ -117,7 +117,6 @@ export default function Exercises() {
 
     async function apiRequest<T>(url: string, options: RequestInit): Promise<T> {
         const response = await apiFetch(url, options);
-
         const result = await response.json();
 
         if (!response.ok || !result.success) {
@@ -177,8 +176,6 @@ export default function Exercises() {
 
             const result = await response.json();
 
-            console.log(result);
-
             if (result.success && result.data) {
                 setSelectedExercise(result.data);
                 setViewMode('details');
@@ -189,7 +186,7 @@ export default function Exercises() {
         } catch (err: any) {
             console.error("Fetch exercise failed:", err);
             setError(err.message || "Could not load exercise.");
-            setSelectedExercise(null); // Optional: clear previous selection on failure
+            setSelectedExercise(null);
         } finally {
             setLoading(false);
         }
@@ -197,7 +194,6 @@ export default function Exercises() {
 
     async function deleteExerciseById(id: number) {
         const confirmed = window.confirm('Delete exercise?');
-
         if (!confirmed) return;
 
         try {
@@ -240,7 +236,6 @@ export default function Exercises() {
             });
 
             setAllExercises(prev => [...prev, createdExercise]);
-
             setViewMode('list');
             setSuccess('Exercise created successfully.');
         } catch (err: any) {
@@ -263,9 +258,7 @@ export default function Exercises() {
             });
 
             setAllExercises(prev =>
-                prev.map(ex =>
-                    ex.id === id ? updatedExercise : ex
-                )
+                prev.map(ex => ex.id === id ? updatedExercise : ex)
             );
 
             setSelectedExercise(updatedExercise);
@@ -288,34 +281,77 @@ export default function Exercises() {
     };
 
     const handleFormSubmit = (
-        e: React.FormEvent<HTMLFormElement>,
+        ReactEvent: React.FormEvent<HTMLFormElement>,
         id?: number
     ) => {
-        e.preventDefault();
+        ReactEvent.preventDefault();
+        setError('');
+        setSuccess(null);
 
-        const formData = new FormData(e.currentTarget);
+        const formData = new FormData(ReactEvent.currentTarget);
+
+        const name = formData.get('name')?.toString().trim() || '';
+        const bodyPart = formData.get('bodyPart')?.toString().trim() || '';
 
         const newEquipment = formData.get('new_equipment')?.toString().trim();
-        const equipment = newEquipment || formData.get('equipment')?.toString();
+        const equipment = (newEquipment || formData.get('equipment')?.toString() || '').trim();
 
         const newCategory = formData.get('new_category')?.toString().trim();
-        const category = newCategory || formData.get('category')?.toString();
+        const category = (newCategory || formData.get('category')?.toString() || '').trim();
 
         const newTargetMuscle = formData.get('new_target_muscle')?.toString().trim();
-        const targetMuscle = newTargetMuscle || formData.get('target');
+        const targetMuscle = (newTargetMuscle || formData.get('target_muscle')?.toString() || '').trim();
 
         const secondaryMuscles = formData.getAll('secondary_muscles') as string[];
+        const description = formData.get('description')?.toString().trim() || '';
+        const instructions = formData.get('instructions')?.toString().split('\n').map(s => s.trim()).filter(Boolean) || [];
+
+        // --- Client side Limitations & Rule Checkers ---
+        if (!name || name.length < 3 || name.length > 50) {
+            setError("Exercise name is required and must be between 3 and 50 characters.");
+            return;
+        }
+
+        if (!targetMuscle) {
+            setError("Please select an existing target muscle or provide a custom one.");
+            return;
+        }
+
+        if (!equipment) {
+            setError("Equipment specification cannot be empty.");
+            return;
+        }
+
+        if (!category) {
+            setError("Please specify a core training category.");
+            return;
+        }
+
+        if (description.length > 500) {
+            setError("Description can be up to 500 characters long.");
+            return;
+        }
+
+        if (instructions.length === 0) {
+            setError("Please provide at least one clear instruction step for this exercise.");
+            return;
+        }
+
+        if (instructions.length > 15) {
+            setError("Instructions cannot exceed 15 sequence steps.");
+            return;
+        }
 
         const payload: ExercisePayload = {
-            exercice_name: formData.get('name')?.toString().trim(),
-            bodyPart: formData.get('bodyPart')?.toString().trim(),
-            target: targetMuscle?.toString().trim(),
-            equipment: equipment?.trim(),
+            exercice_name: name,
+            bodyPart: bodyPart || undefined,
+            target: targetMuscle || undefined,
+            equipment,
             difficulty: formData.get('difficulty')?.toString(),
-            category: category?.trim(),
+            category,
             secondary_muscles: secondaryMuscles.filter(Boolean),
-            description: formData.get('description')?.toString().trim(),
-            instructions: formData.get('instructions')?.toString().split('\n').map(s => s.trim()).filter(Boolean) || []
+            description: description || undefined,
+            instructions
         };
 
         if (id) {
@@ -343,6 +379,13 @@ export default function Exercises() {
             <h2 className="font-display text-xl font-bold text-zinc-100 tracking-wide uppercase mb-4">
                 {isEdit ? 'Edit Exercise' : 'Create Custom Exercise'}
             </h2>
+
+            {/* Form Context Error Line inside the Form Component */}
+            {error && (
+                <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">
+                    {error}
+                </p>
+            )}
 
             <div>
                 <label className="block text-sm font-semibold text-zinc-400 mb-2">Exercise Name *</label>
@@ -518,20 +561,25 @@ export default function Exercises() {
     );
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Exercises</h1>
+        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Exercises</h1>
                 {viewMode === 'list' && (
                     <Button onClick={() => setViewMode('create')} variant="primary">+ Create Exercise</Button>
                 )}
             </div>
 
-            {loading && <p className="text-zinc-400">Loading...</p>}
-            {error && <p className="text-rose-500">{error}</p>}
-            {success && <p className="text-lime-400">{success}</p>}
+            {/* Clean Status Messages without Box Borders */}
+            <div className="flex flex-col gap-1.5">
+                {loading && <p className="text-sm text-zinc-400 font-medium">Loading...</p>}
+                {error && viewMode !== 'create' && viewMode !== 'edit' && (
+                    <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">{error}</p>
+                )}
+                {success && <p className="text-sm font-semibold text-lime-400 tracking-wide animate-in fade-in duration-300">{success}</p>}
+            </div>
 
             {viewMode !== 'create' && (
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row gap-4">
                     {viewMode === 'details' || viewMode === 'edit' ? (
                         <Button type="button" variant="secondary" onClick={backToList}>&larr; Back to List</Button>
                     ) : (

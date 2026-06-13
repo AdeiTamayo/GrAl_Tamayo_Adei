@@ -10,41 +10,50 @@ export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
+    // E-mail formatua balioztatzeko laguntzailea
+    const isEmailValid = (emailStr: string): boolean => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(emailStr.trim());
+    };
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setIsLoading(true);
         setMessage("");
-        console.log("token:", localStorage.getItem("user_login_token"));
-        console.log("email:", localStorage.getItem("email"))
+
+        // Sare-deia egin aurretik e-maila egiaztatu alferrikako eskaerak saihesteko
+        if (!isEmailValid(email)) {
+            setMessage("Mesedez, sartu baliozko e-mail helbide bat.");
+            setIsLoading(false);
+            return;
+        }
+
         try {
             const response = await apiFetch('/api/user/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email: email.trim(), password })
             });
 
             const data = await response.json();
 
             if (data.success) {
-                // Store token in localStorage
                 if (data.token) {
                     localStorage.setItem('user_login_token', data.token);
                     localStorage.setItem('email', data.user.email);
                 }
-                console.log(data.email);
                 navigate("/", {
-                    replace: true, // Avoid users being able to go back
+                    replace: true,
                     state: {
                         user: data.user,
                         email: data.email,
-                        message: "Login succesful"
+                        message: "Login successful"
                     }
                 });
-
             } else {
-                setMessage(data.error || 'Login failed');
+                setMessage(data.error || 'Login failed.');
             }
         } catch (error) {
             console.error('Login failed:', error);
@@ -61,16 +70,28 @@ export default function Login() {
                     <h2 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-1">Login</h2>
                     <p className="text-zinc-400 text-sm">Welcome back to GymTracker.</p>
                 </div>
-                {message && <p className="text-rose-400 font-medium text-sm bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">{message}</p>}
+
+                {/* Errore-mezu nagusia: Testu gorri garbia eta soildua */}
+                {message && (
+                    <p className="text-sm font-semibold text-rose-500 tracking-wide -mb-1 animate-in fade-in duration-300">
+                        {message}
+                    </p>
+                )}
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Email</label>
+                    <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-semibold text-zinc-400">Email</label>
+                        {email && !isEmailValid(email) && (
+                            <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Format okerra</span>
+                        )}
+                    </div>
                     <input
                         type="email"
                         value={email}
                         required
                         onChange={e => setEmail(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors placeholder:text-zinc-600"
+                        className={`w-full bg-zinc-900 border rounded-lg p-3 text-zinc-100 focus:outline-none transition-colors placeholder:text-zinc-600 ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-zinc-800 focus:border-lime-400"
+                            }`}
                         placeholder="your@email.com"
                     />
                 </div>
@@ -90,13 +111,15 @@ export default function Login() {
                 <Button
                     type="submit"
                     disabled={isLoading}
-                    variant="primary" fullWidth
+                    variant="primary"
+                    fullWidth
                 >
                     {isLoading ? 'Logging in...' : 'Login'}
                 </Button>
-                <div className="pt-4 mt-2">
-                    <p className="text-center text-zinc-500 text-sm mt-8">
-                        You don't have an account'?{" "}
+
+                <div className="pt-2">
+                    <p className="text-center text-zinc-500 text-sm">
+                        You don't have an account?{" "}
                         <button
                             type="button"
                             onClick={() => navigate("/register")}

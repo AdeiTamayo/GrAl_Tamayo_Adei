@@ -7,6 +7,10 @@ export default function UserVideos() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Filter states
+    const [filterType, setFilterType] = useState<string>("all");
+    const [filterDate, setFilterDate] = useState<string>("");
+
     const token = localStorage.getItem("user_login_token");
 
     useEffect(() => {
@@ -16,78 +20,138 @@ export default function UserVideos() {
             return;
         }
 
-        apiFetch("/api/videos", {
+        setLoading(true);
+
+        const params = new URLSearchParams();
+        if (filterType !== "all") params.append("type", filterType);
+        if (filterDate) params.append("date", filterDate);
+
+        apiFetch(`/api/videos?${params.toString()}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
         })
             .then(res => res.json())
             .then(data => {
-                if (data.success) setVideos(data.videos);
+                if (data.success) {
+                    setVideos(data.videos);
+                } else {
+                    setError(data.message || "Failed to load filtered videos");
+                }
                 setLoading(false);
             })
             .catch(err => {
                 setError(err.message || "Failed to fetch videos");
                 setLoading(false);
             });
-    }, [token]);
+    }, [token, filterType, filterDate]);
 
-    if (loading) return <div className="p-8 text-zinc-400 font-medium animate-pulse">Loading videos...</div>;
-
-    if (error)
+    if (error) {
         return (
-            <div className="p-8 text-rose-400 font-medium">
+            <div className="max-w-5xl mx-auto p-8 text-rose-400 font-medium">
                 Error: {error}
             </div>
         );
+    }
 
     return (
-        <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-6">
-            <div>
-                <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Your Videos</h1>
-                <p className="text-zinc-400 font-medium">Review your processed lifting videos.</p>
+        <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 space-y-6">
+            {/* TITLE SECTION */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-zinc-800 pb-5">
+                <div>
+                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Your Videos</h1>
+                </div>
+
+                {/* FILTER CONTROLS BAR */}
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <div className="flex flex-col min-w-[140px] flex-1 md:flex-initial">
+                        <label className="text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">Analysis Type</label>
+                        <select
+                            value={filterType}
+                            onChange={(e) => setFilterType(e.target.value)}
+                            className="bg-zinc-900 border border-zinc-800 rounded-lg py-1.5 px-3 text-xs text-zinc-200 focus:border-lime-400 focus:ring-0 cursor-pointer"
+                        >
+                            <option value="all">All Movements</option>
+                            <option value="pose_estimation">Pose Estimation</option>
+                            <option value="squat_analysis">Squat Analysis</option>
+                            <option value="barbell_tracking">Barbell Tracking</option>
+                        </select>
+                    </div>
+
+                    <div className="flex flex-col min-w-[140px] flex-1 md:flex-initial">
+                        <label className="text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">Date Recorded</label>
+                        <div className="relative">
+                            <input
+                                type="date"
+                                value={filterDate}
+                                onChange={(e) => setFilterDate(e.target.value)}
+                                className="bg-zinc-900 border border-zinc-800 rounded-lg py-1.5 px-3 text-xs text-zinc-200 focus:border-lime-400 focus:ring-0 w-full cursor-pointer"
+                            />
+                            {filterDate && (
+                                <button
+                                    onClick={() => setFilterDate("")}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-xs font-bold"
+                                >
+                                    ✕
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 md:p-8 shadow-xl">
-                {videos.length === 0 ? (
-                    <div className="text-center py-10 bg-zinc-900/50 rounded-lg border border-zinc-800/80">
-                        <p className="text-zinc-500 font-medium italic">No videos found. Upload a video to start tracking.</p>
-                    </div>
-                ) : (
-                    <ul className="space-y-6">
-                        {videos.map(video => (
-                            <li
-                                key={video.id}
-                                className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-5 md:p-6 flex flex-col gap-4 shadow-lg"
-                            >
-                                {/* HEADER ROW */}
-                                <div className="flex justify-between items-center pb-4 border-b border-zinc-800/80">
-                                    <strong className="text-lg font-bold text-lime-400 uppercase tracking-wider">
+            {/* VIDEO SHELF GRID */}
+            {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                    {[1, 2, 3].map(n => (
+                        <div key={n} className="bg-zinc-900/40 border border-zinc-800 rounded-xl h-80" />
+                    ))}
+                </div>
+            ) : videos.length === 0 ? (
+                <div className="text-center py-16 bg-zinc-950 rounded-xl border border-zinc-900">
+                    <p className="text-zinc-500 font-medium italic text-sm">
+                        No videos match your selected filter criteria.
+                    </p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {videos.map(video => (
+                        <div
+                            key={video.id}
+                            className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-zinc-700/80 transition-all duration-200"
+                        >
+                            <div className="bg-black border border-zinc-900 rounded-lg overflow-hidden relative aspect-[3/4] shadow-inner mb-3 flex items-center justify-center">
+                                <video
+                                    className="w-full h-full object-contain"
+                                    controls
+                                    preload="metadata"
+                                >
+                                    <source
+                                        src={`http://localhost:8000${video.processed_url}`}
+                                        type="video/mp4"
+                                    />
+                                </video>
+                            </div>
+
+                            {/* CARD DETAILS FOOTER */}
+                            <div className="pt-2 border-t border-zinc-900 flex items-center justify-between gap-2">
+                                <div className="truncate">
+                                    <strong className="text-xs font-bold text-lime-400 uppercase tracking-wider block truncate">
                                         {video.process_type}
                                     </strong>
-
-                                    <span className="text-xs uppercase tracking-wider text-zinc-500 font-medium">
-                                        {new Date(video.created_at).toLocaleString()}
+                                    <span className="text-[10px] tracking-tight text-zinc-500 font-mono mt-0.5 block">
+                                        {new Date(video.created_at).toLocaleDateString(undefined, {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric'
+                                        })}
                                     </span>
                                 </div>
-
-                                {/* VIDEO */}
-                                <div className="bg-black border border-zinc-800 rounded-xl overflow-hidden mt-2 relative shadow-inner">
-                                    <video
-                                        className="w-full h-auto max-h-[500px]"
-                                        controls
-                                    >
-                                        <source
-                                            src={`http://localhost:8000${video.processed_url}`}
-                                            type="video/mp4"
-                                        />
-                                    </video>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

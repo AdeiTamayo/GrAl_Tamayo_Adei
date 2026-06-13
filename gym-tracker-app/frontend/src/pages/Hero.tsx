@@ -25,7 +25,10 @@ export default function Hero() {
 
     const WORKSPACE_LINKS = isLoggedIn
         ? [
+            { to: "/active-workout", label: "Active Workout" },
             { to: "/workouts", label: "Workouts" },
+            { to: "/compare-workouts", label: "Compare" },
+            { to: "/exercise-history", label: "Progress History" },
             { to: "/exercises", label: "Exercises" },
             { to: "/videos", label: "Videos" },
             { to: "/upload", label: "Upload" },
