@@ -53,6 +53,10 @@ app.use('/api/workouts', workoutRoutes);
 app.use('/api/prs', prRoutes);
 app.use('/api/goals', goalRoutes);
 
+// 404 fallback handler
+app.use((req, res) => {
+    res.status(404).json({ success: false, error: `Route ${req.method} ${req.originalUrl} not found` });
+});
 
 app.listen(port, () => {
     console.log(`\n=== Server Ready ===`);

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, FormEvent } from "react";
+import { useLocation } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import EditableExerciseCard from '../components/EditableExerciseCard';
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import Calendar from '../components/Calendar';
+import ConfirmModal from '../components/ConfirmModal';
 
 // ---- TYPES & INTERFACES ----
 interface SetEntry {
@@ -41,6 +43,9 @@ interface Exercise {
 type EditableSetField = "weight" | "repetitions" | "time" | "note";
 
 export default function WorkoutsManagement() {
+    const location = useLocation();
+    const preselectedId = (location.state as { preselectedWorkoutId?: number })?.preselectedWorkoutId;
+
     // ---- STATE MANAGEMENT ----
     const [workouts, setWorkouts] = useState<Workout[]>([]);
     const [exercises, setExercises] = useState<Exercise[]>([]);
@@ -66,6 +71,9 @@ export default function WorkoutsManagement() {
 
     // Add exercise search
     const [showPicker, setShowPicker] = useState(false);
+
+    const [deleteWorkoutConfirmId, setDeleteWorkoutConfirmId] = useState<number | null>(null);
+    const [deleteExerciseConfirmId, setDeleteExerciseConfirmId] = useState<number | null>(null);
 
     const createWorkoutRef = useRef<HTMLDivElement>(null);
     const detailsDropdownRef = useRef<HTMLDivElement>(null);
@@ -105,27 +113,7 @@ export default function WorkoutsManagement() {
         }
     }, [headers]);
 
-    // Initial load
-    useEffect(() => {
-        Promise.all([fetchWorkouts(), fetchExercises()]).finally(() => setIsLoadingInit(false));
-    }, [fetchWorkouts, fetchExercises]);
-
-    // Close dropdowns on click outside
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            const target = event.target as Node;
-            if (createWorkoutRef.current && !createWorkoutRef.current.contains(target)) {
-                setShowCreateDropdown(false);
-            }
-            if (detailsDropdownRef.current && !detailsDropdownRef.current.contains(target)) {
-                setShowDetailsDropdown(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    async function fetchWorkoutById(id: number) {
+    const fetchWorkoutById = useCallback(async (id: number) => {
         try {
             setError(null);
             const res = await apiFetch("/api/workouts/" + id, { headers });
@@ -146,7 +134,31 @@ export default function WorkoutsManagement() {
         } catch (err: any) {
             setError("Failed to load workout details");
         }
-    }
+    }, [headers]);
+
+    // Initial load
+    useEffect(() => {
+        Promise.all([fetchWorkouts(), fetchExercises()])
+            .then(() => {
+                if (preselectedId) fetchWorkoutById(preselectedId);
+            })
+            .finally(() => setIsLoadingInit(false));
+    }, [fetchWorkouts, fetchExercises, fetchWorkoutById, preselectedId]);
+
+    // Close dropdowns on click outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            const target = event.target as Node;
+            if (createWorkoutRef.current && !createWorkoutRef.current.contains(target)) {
+                setShowCreateDropdown(false);
+            }
+            if (detailsDropdownRef.current && !detailsDropdownRef.current.contains(target)) {
+                setShowDetailsDropdown(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // ---- WORKOUT OPERATIONS ----
     async function createWorkout(e: FormEvent) {
@@ -232,8 +244,6 @@ export default function WorkoutsManagement() {
     }
 
     async function deleteWorkout(id: number) {
-        if (!window.confirm("Are you sure you want to delete this workout?")) return;
-
         setWorkouts((prev) => prev.filter((w) => w.id !== id));
         if (selectedWorkout && selectedWorkout.id === id) {
             setSelectedWorkout(null);
@@ -312,7 +322,6 @@ export default function WorkoutsManagement() {
 
     async function deleteWorkoutExercise(workoutExerciseId: number) {
         if (!selectedWorkout) return;
-        if (!window.confirm("Remove this exercise from the workout? All sets will be lost.")) return;
 
         try {
             const res = await apiFetch("/api/workouts/exercises/" + workoutExerciseId, {
@@ -536,7 +545,7 @@ export default function WorkoutsManagement() {
                                             <Button type="button" onClick={() => fetchWorkoutById(w.id)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
                                                 Open
                                             </Button>
-                                            <Button type="button" onClick={() => deleteWorkout(w.id)} variant="danger" className="px-2.5 py-1.5 text-xs rounded-lg">
+                                            <Button type="button" onClick={() => setDeleteWorkoutConfirmId(w.id)} variant="danger" className="px-2.5 py-1.5 text-xs rounded-lg">
                                                 Delete
                                             </Button>
                                         </div>
@@ -637,7 +646,7 @@ export default function WorkoutsManagement() {
                                             time: s.time,
                                             note: s.note
                                         }))}
-                                        onRemoveExercise={() => deleteWorkoutExercise(ex.id)}
+                                        onRemoveExercise={() => setDeleteExerciseConfirmId(ex.id)}
                                         onAddSet={(weight, reps, time, note) => submitNewSet(ex, weight, reps, time, note)}
                                         onRemoveSet={(setId) => handleRemoveSet(setId)}
                                         onUpdateSet={(setId, field, value) => {
@@ -678,6 +687,27 @@ export default function WorkoutsManagement() {
                     </div>
                 )}
             </div>
+
+            {deleteWorkoutConfirmId !== null && (
+                <ConfirmModal
+                    message="Are you sure you want to delete this workout?"
+                    onConfirm={() => deleteWorkout(deleteWorkoutConfirmId)}
+                    onCancel={() => setDeleteWorkoutConfirmId(null)}
+                    confirmLabel="Delete"
+                />
+            )}
+
+            {deleteExerciseConfirmId !== null && (
+                <ConfirmModal
+                    message="Remove this exercise from the workout? All sets will be lost."
+                    onConfirm={() => {
+                        deleteWorkoutExercise(deleteExerciseConfirmId);
+                        setDeleteExerciseConfirmId(null);
+                    }}
+                    onCancel={() => setDeleteExerciseConfirmId(null)}
+                    confirmLabel="Remove"
+                />
+            )}
         </div>
     );
 }

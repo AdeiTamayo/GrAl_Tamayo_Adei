@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
 import Calendar from "../components/Calendar";
+import ConfirmModal from "../components/ConfirmModal";
 
 interface PRSummary {
     id: number;
@@ -44,6 +45,9 @@ export default function PersonalRecords() {
     const [showAddForm, setShowAddForm] = useState(false);
     const [showPicker, setShowPicker] = useState(false);
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showEditDatePicker, setShowEditDatePicker] = useState(false);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+    const [editRecord, setEditRecord] = useState<{ id: number; weight: number | ""; repetitions: number | ""; date: string; note: string } | null>(null);
 
     // Removed useMemo to guarantee fresh authorization tokens on every network dispatch
     const getHeaders = () => ({
@@ -130,7 +134,6 @@ export default function PersonalRecords() {
     }
 
     async function deletePR(prId: number) {
-        if (!window.confirm("Are you sure you want to delete this PR?")) return;
         try {
             const res = await apiFetch(`/api/prs/${prId}`, {
                 method: "DELETE",
@@ -147,6 +150,34 @@ export default function PersonalRecords() {
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred while deleting entry");
+        }
+    }
+
+    async function updatePR() {
+        if (!editRecord) return;
+        try {
+            const res = await apiFetch(`/api/prs/${editRecord.id}`, {
+                method: "PUT",
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    weight: editRecord.weight,
+                    repetitions: editRecord.repetitions,
+                    date: editRecord.date,
+                    note: editRecord.note || undefined
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setEditRecord(null);
+                fetchPrSummary();
+                if (selectedExerciseId && selectedExerciseName) {
+                    fetchPrHistory(selectedExerciseId, selectedExerciseName);
+                }
+            } else {
+                setError(data.error);
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "An error occurred while updating entry");
         }
     }
 
@@ -377,12 +408,26 @@ export default function PersonalRecords() {
                                             </div>
                                             {history.note && <div className="mt-3 text-sm text-zinc-500 bg-zinc-900 p-3 rounded-lg border border-zinc-800"><span className="text-zinc-600 font-medium">Note:</span> {history.note}</div>}
                                         </div>
-                                        <button
-                                            onClick={() => deletePR(history.id)}
-                                            className="px-4 py-2 md:py-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg font-medium text-sm border border-rose-500/20 transition-colors shrink-0"
-                                        >
-                                            Delete Entry
-                                        </button>
+                                        <div className="flex gap-2 shrink-0">
+                                            <button
+                                                onClick={() => setEditRecord({
+                                                    id: history.id,
+                                                    weight: parseFloat(history.weight) || "",
+                                                    repetitions: history.repetitions || "",
+                                                    date: history.date?.substring(0, 10) || "",
+                                                    note: history.note || ""
+                                                })}
+                                                className="px-4 py-2 md:py-3 bg-lime-500/10 hover:bg-lime-500 text-lime-500 hover:text-black rounded-lg font-medium text-sm border border-lime-500/20 transition-colors shrink-0"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => setDeleteConfirmId(history.id)}
+                                                className="px-4 py-2 md:py-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg font-medium text-sm border border-rose-500/20 transition-colors shrink-0"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
                                     </div>
                                 </li>
                             ))}
@@ -390,6 +435,79 @@ export default function PersonalRecords() {
                     </div>
                 )}
             </div>
+
+            {deleteConfirmId !== null && (
+                <ConfirmModal
+                    message="Are you sure you want to delete this PR?"
+                    onConfirm={() => deletePR(deleteConfirmId)}
+                    onCancel={() => setDeleteConfirmId(null)}
+                    confirmLabel="Delete"
+                />
+            )}
+
+            {editRecord && (
+                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <h2 className="font-display text-lg font-bold text-zinc-100 uppercase tracking-wide mb-4">Edit PR</h2>
+                        <div className="space-y-4">
+                            <TransparentNumericInput
+                                placeholder="Weight (kg)"
+                                value={editRecord.weight}
+                                onChange={(val) => setEditRecord({ ...editRecord, weight: val === "" ? "" : Number(val) })}
+                                className="w-full"
+                                inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                step={0.1} min={0} max={999}
+                            />
+                            <TransparentNumericInput
+                                placeholder="Reps"
+                                value={editRecord.repetitions}
+                                onChange={(val) => setEditRecord({ ...editRecord, repetitions: val === "" ? "" : Number(val) })}
+                                className="w-full"
+                                inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                step={1} min={0} max={999}
+                            />
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditDatePicker(!showEditDatePicker)}
+                                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-all text-left"
+                                >
+                                    {editRecord.date || <span className="text-zinc-500">Select date</span>}
+                                </button>
+                                {showEditDatePicker && (
+                                    <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                                        <Calendar
+                                            selectedDate={editRecord.date || undefined}
+                                            onSelect={(date) => { setEditRecord({ ...editRecord, date }); setShowEditDatePicker(false); }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Note (optional)"
+                                value={editRecord.note}
+                                onChange={e => setEditRecord({ ...editRecord, note: e.target.value })}
+                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                            />
+                            <div className="space-y-3 pt-2">
+                                <button
+                                    onClick={updatePR}
+                                    className="w-full bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all"
+                                >
+                                    Save Changes
+                                </button>
+                                <button
+                                    onClick={() => setEditRecord(null)}
+                                    className="w-full bg-zinc-800 text-zinc-300 font-bold py-3 rounded-lg hover:bg-zinc-700 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

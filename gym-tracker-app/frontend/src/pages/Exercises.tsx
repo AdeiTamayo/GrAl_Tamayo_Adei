@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
 import Select from '../components/Select';
+import ConfirmModal from '../components/ConfirmModal';
 
 type Exercise = {
     id: number;
@@ -19,8 +20,8 @@ type Exercise = {
 
 type ExercisePayload = {
     exercice_name?: string;
-    bodyPart?: string;
-    target?: string;
+    body_part?: string;
+    target_muscle?: string;
     equipment?: string;
     difficulty?: string;
     category?: string;
@@ -63,6 +64,8 @@ export default function Exercises() {
 
     const [selectedSecondaryMuscles, setSelectedSecondaryMuscles] = useState<string[]>([]);
     const [formSecondaryPick, setFormSecondaryPick] = useState('');
+    const [formName, setFormName] = useState('');
+    const [formBodyPart, setFormBodyPart] = useState('');
     const [formTarget, setFormTarget] = useState('');
     const [formEquipment, setFormEquipment] = useState('');
     const [formCategory, setFormCategory] = useState('');
@@ -75,13 +78,17 @@ export default function Exercises() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState<string | null>(null);
 
+    const [page, setPage] = useState(1);
+    const [totalExercises, setTotalExercises] = useState(0);
+    const pageSize = 20;
+
     const headers = useMemo(() => ({
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${localStorage.getItem('user_login_token')}`
     }), []);
 
     const filteredExercises = useMemo(() => {
-        return allExercises.filter(ex => {
+        const filtered = allExercises.filter(ex => {
             const matchesSearch =
                 !filters.search ||
                 ex.name.toLowerCase().includes(filters.search.toLowerCase());
@@ -105,7 +112,40 @@ export default function Exercises() {
                 matchesCategory
             );
         });
+        return filtered;
     }, [allExercises, filters]);
+
+    const paginatedExercises = useMemo(() => {
+        const start = (page - 1) * pageSize;
+        return filteredExercises.slice(start, start + pageSize);
+    }, [filteredExercises, page, pageSize]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredExercises.length / pageSize));
+
+    const paginationButtons = useMemo(() => {
+        if (filteredExercises.length <= pageSize) return null;
+        const startPage = Math.max(1, Math.min(page - 2, totalPages - 4));
+        const endPage = Math.min(startPage + 4, totalPages);
+        const items: React.ReactNode[] = [];
+        for (let p = startPage; p <= endPage; p++) {
+            const isActive = p === page;
+            items.push(
+                <button
+                    key={p}
+                    onClick={function() { setPage(p); }}
+                    className={'px-3 py-1.5 rounded-lg text-xs font-bold transition-colors' + (isActive ? ' bg-lime-400 text-black' : ' bg-zinc-800 text-zinc-300 hover:bg-zinc-700')}
+                >
+                    {p}
+                </button>
+            );
+        }
+        return items;
+    }, [page, totalPages, filteredExercises.length, pageSize]);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setPage(1);
+    }, [filters]);
 
     useEffect(() => {
         loadInitialData();
@@ -114,6 +154,8 @@ export default function Exercises() {
     useEffect(() => {
         if (viewMode === 'edit' && selectedExercise) {
             setSelectedSecondaryMuscles(selectedExercise.secondary_muscles || []);
+            setFormName(selectedExercise.name || '');
+            setFormBodyPart(selectedExercise.bodyPart || '');
             setFormTarget(selectedExercise.target || '');
             setFormEquipment(selectedExercise.equipment || '');
             setFormCategory(selectedExercise.category || '');
@@ -122,6 +164,8 @@ export default function Exercises() {
 
         if (viewMode === 'create') {
             setSelectedSecondaryMuscles([]);
+            setFormName('');
+            setFormBodyPart('');
             setFormTarget('');
             setFormEquipment('');
             setFormCategory('');
@@ -206,10 +250,9 @@ export default function Exercises() {
         }
     }
 
-    async function deleteExerciseById(id: number) {
-        const confirmed = window.confirm('Delete exercise?');
-        if (!confirmed) return;
+    const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
+    async function deleteExerciseById(id: number) {
         try {
             setLoading(true);
             setError('');
@@ -358,8 +401,8 @@ export default function Exercises() {
 
         const payload: ExercisePayload = {
             exercice_name: name,
-            bodyPart: bodyPart || undefined,
-            target: targetMuscle || undefined,
+            body_part: bodyPart || undefined,
+            target_muscle: targetMuscle || undefined,
             equipment,
             difficulty: formData.get('difficulty')?.toString(),
             category,
@@ -382,19 +425,270 @@ export default function Exercises() {
         setSuccess(null);
     };
 
-    const ExerciseForm = ({
-        ex,
-        isEdit
-    }: {
-        ex?: Exercise;
-        isEdit: boolean;
-    }) => (
-        <form onSubmit={(e) => handleFormSubmit(e, ex?.id)} className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-4">
+
+
+    return (
+        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-6">
+            <div className="flex justify-between items-center">
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Exercises</h1>
+                {viewMode === 'list' && (
+                    <Button onClick={() => setViewMode('create')} variant="primary">+ Create Exercise</Button>
+                )}
+            </div>
+
+            {/* Clean Status Messages without Box Borders */}
+            <div className="flex flex-col gap-1.5">
+                {loading && <p className="text-sm text-zinc-400 font-medium">Loading...</p>}
+                {error && viewMode !== 'create' && viewMode !== 'edit' && (
+                    <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">{error}</p>
+                )}
+                {success && <p className="text-sm font-semibold text-lime-400 tracking-wide animate-in fade-in duration-300">{success}</p>}
+            </div>
+
+            {viewMode !== 'create' && (
+                <div className="flex flex-col sm:flex-row gap-4">
+                    {viewMode === 'details' || viewMode === 'edit' ? (
+                        <Button type="button" variant="secondary" onClick={backToList}>&larr; Back to List</Button>
+                    ) : (
+                        <div className="flex gap-4 w-full flex-col sm:flex-row">
+                            <input
+                                type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
+                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                            />
+                            <Select
+                                value={filters.muscles}
+                                onChange={(val) => setFilters({ ...filters, muscles: val })}
+                                placeholder="All Muscles"
+                                options={[
+                                    { value: "", label: "All Muscles" },
+                                    ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
+                                ]}
+                            />
+                            <Select
+                                value={filters.equipment}
+                                onChange={(val) => setFilters({ ...filters, equipment: val })}
+                                placeholder="All Equipment"
+                                options={[
+                                    { value: "", label: "All Equipment" },
+                                    ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
+                                ]}
+                            />
+                            <Select
+                                value={filters.categoryType}
+                                onChange={(val) => setFilters({ ...filters, categoryType: val })}
+                                placeholder="All Categories"
+                                options={[
+                                    { value: "", label: "All Categories" },
+                                    ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
+                                ]}
+                            />
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div>
+                {viewMode === 'create' ? (
+                    <ExerciseForm
+                        isEdit={false}
+                        formName={formName}
+                        setFormName={setFormName}
+                        formBodyPart={formBodyPart}
+                        setFormBodyPart={setFormBodyPart}
+                        formTarget={formTarget}
+                        setFormTarget={setFormTarget}
+                        formEquipment={formEquipment}
+                        setFormEquipment={setFormEquipment}
+                        formCategory={formCategory}
+                        setFormCategory={setFormCategory}
+                        formDifficulty={formDifficulty}
+                        setFormDifficulty={setFormDifficulty}
+                        formSecondaryPick={formSecondaryPick}
+                        setFormSecondaryPick={setFormSecondaryPick}
+                        selectedSecondaryMuscles={selectedSecondaryMuscles}
+                        setSelectedSecondaryMuscles={setSelectedSecondaryMuscles}
+                        filterOptions={filterOptions}
+                        error={error}
+                        saving={saving}
+                        onSubmit={handleFormSubmit}
+                        onCancel={backToList}
+                    />
+                ) : viewMode === 'details' && selectedExercise ? (
+                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-4">
+                        <h2 className="font-display text-2xl font-bold text-zinc-100 tracking-wide uppercase">{selectedExercise.name}</h2>
+                        <div className="flex flex-wrap gap-4 text-zinc-300 mb-6 bg-zinc-900/50 p-4 rounded-lg">
+                            <span><strong>Body Part:</strong> {selectedExercise.bodyPart}</span>
+                            <span><strong>Target:</strong> {selectedExercise.target}</span>
+                            <span><strong>Equipment:</strong> {selectedExercise.equipment}</span>
+                            <span><strong>Difficulty:</strong> {selectedExercise.difficulty}</span>
+                            <span><strong>Category:</strong> {selectedExercise.category}</span>
+                            <span><strong>Secondary Muscles:</strong> {selectedExercise.secondary_muscles?.join(', ') || 'None'}</span>
+                        </div>
+
+                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase">Description</h3>
+                        <p className="text-zinc-400 whitespace-pre-wrap">{selectedExercise.description || 'No description available.'}</p>
+
+                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mt-6">Instructions</h3>
+                        {selectedExercise.instructions && selectedExercise.instructions.length > 0 ? (
+                            <ol className="list-decimal list-inside space-y-2 text-zinc-400">
+                                {selectedExercise.instructions.map((step, idx) => (<li key={idx}>{step}</li>))}
+                            </ol>
+                        ) : (
+                            <p className="text-zinc-400">No instructions available.</p>
+                        )}
+
+                        <div className="flex gap-4 mt-8 pt-4 border-t border-zinc-800">
+                            <Button type="button" variant="secondary" onClick={() => setViewMode('edit')}>Edit Exercise</Button>
+                            <Button type="button" variant="danger" onClick={() => setDeleteConfirmId(selectedExercise.id)}>Delete Exercise</Button>
+                        </div>
+                    </div>
+                ) : viewMode === 'edit' && selectedExercise ? (
+                    <ExerciseForm
+                        ex={selectedExercise}
+                        isEdit={true}
+                        formName={formName}
+                        setFormName={setFormName}
+                        formBodyPart={formBodyPart}
+                        setFormBodyPart={setFormBodyPart}
+                        formTarget={formTarget}
+                        setFormTarget={setFormTarget}
+                        formEquipment={formEquipment}
+                        setFormEquipment={setFormEquipment}
+                        formCategory={formCategory}
+                        setFormCategory={setFormCategory}
+                        formDifficulty={formDifficulty}
+                        setFormDifficulty={setFormDifficulty}
+                        formSecondaryPick={formSecondaryPick}
+                        setFormSecondaryPick={setFormSecondaryPick}
+                        selectedSecondaryMuscles={selectedSecondaryMuscles}
+                        setSelectedSecondaryMuscles={setSelectedSecondaryMuscles}
+                        filterOptions={filterOptions}
+                        error={error}
+                        saving={saving}
+                        onSubmit={handleFormSubmit}
+                        onCancel={backToList}
+                    />
+                ) : (
+                    <>
+                    <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {paginatedExercises.length > 0 ? (
+                            paginatedExercises.map(ex => (
+                                <li
+                                    key={ex.id}
+                                    onClick={() => fetchExerciseById(ex.id)}
+                                    className="bg-zinc-900/40 border cursor-pointer border-zinc-800/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-lime-400/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-lime-400/5"
+                                >
+                                    <div>
+                                        <h2 className="font-display text-xl font-bold text-zinc-100 mb-2 truncate">{ex.name}</h2>
+                                        <div className="text-sm text-zinc-400 space-x-2">
+                                            <span className="inline-block bg-zinc-800 px-2 py-1 rounded text-zinc-300">{ex.target}</span>
+                                            <span className="inline-block bg-zinc-800 px-2 py-1 rounded text-zinc-300">{ex.equipment}</span>
+                                        </div>
+                                    </div>
+                                </li>
+                            ))
+                        ) : (
+                            !loading && <p className="text-zinc-400 col-span-2">No exercises found.</p>
+                        )}
+                    </ul>
+
+                    {filteredExercises.length > pageSize && (
+                        <div className="flex items-center justify-between pt-4 border-t border-zinc-800/60">
+                            <p className="text-xs text-zinc-500 font-mono">
+                                Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filteredExercises.length)} of {filteredExercises.length}
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Previous
+                                </button>
+                                {paginationButtons}
+                                <button
+                                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={page === totalPages}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
+            </div>
+
+            {deleteConfirmId !== null && (
+                <ConfirmModal
+                    message="Delete this exercise?"
+                    onConfirm={() => deleteExerciseById(deleteConfirmId)}
+                    onCancel={() => setDeleteConfirmId(null)}
+                    confirmLabel="Delete"
+                />
+            )}
+        </div>
+    );
+}
+
+type ExerciseFormProps = {
+    ex?: Exercise;
+    isEdit: boolean;
+    formName: string;
+    setFormName: React.Dispatch<React.SetStateAction<string>>;
+    formBodyPart: string;
+    setFormBodyPart: React.Dispatch<React.SetStateAction<string>>;
+    formTarget: string;
+    setFormTarget: React.Dispatch<React.SetStateAction<string>>;
+    formEquipment: string;
+    setFormEquipment: React.Dispatch<React.SetStateAction<string>>;
+    formCategory: string;
+    setFormCategory: React.Dispatch<React.SetStateAction<string>>;
+    formDifficulty: string;
+    setFormDifficulty: React.Dispatch<React.SetStateAction<string>>;
+    formSecondaryPick: string;
+    setFormSecondaryPick: React.Dispatch<React.SetStateAction<string>>;
+    selectedSecondaryMuscles: string[];
+    setSelectedSecondaryMuscles: React.Dispatch<React.SetStateAction<string[]>>;
+    filterOptions: FilterOptions;
+    error: string;
+    saving: boolean;
+    onSubmit: (e: React.FormEvent<HTMLFormElement>, id?: number) => void;
+    onCancel: () => void;
+};
+
+function ExerciseForm({
+    ex,
+    isEdit,
+    formName,
+    setFormName,
+    formBodyPart,
+    setFormBodyPart,
+    formTarget,
+    setFormTarget,
+    formEquipment,
+    setFormEquipment,
+    formCategory,
+    setFormCategory,
+    formDifficulty,
+    setFormDifficulty,
+    formSecondaryPick,
+    setFormSecondaryPick,
+    selectedSecondaryMuscles,
+    setSelectedSecondaryMuscles,
+    filterOptions,
+    error,
+    saving,
+    onSubmit,
+    onCancel
+}: ExerciseFormProps) {
+    return (
+        <form onSubmit={(e) => onSubmit(e, ex?.id)} className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-4">
             <h2 className="font-display text-xl font-bold text-zinc-100 tracking-wide uppercase mb-4">
                 {isEdit ? 'Edit Exercise' : 'Create Custom Exercise'}
             </h2>
 
-            {/* Form Context Error Line inside the Form Component */}
             {error && (
                 <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">
                     {error}
@@ -407,7 +701,8 @@ export default function Exercises() {
                     type="text"
                     name="name"
                     required
-                    defaultValue={ex?.name || ''}
+                    value={formName}
+                    onChange={e => setFormName(e.target.value)}
                     className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                 />
             </div>
@@ -418,13 +713,14 @@ export default function Exercises() {
                     <input
                         type="text"
                         name="bodyPart"
-                        defaultValue={ex?.bodyPart || ''}
+                        value={formBodyPart}
+                        onChange={e => setFormBodyPart(e.target.value)}
                         className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Target Muscle</label>
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Target Muscle *</label>
                     <Select
                         value={formTarget}
                         onChange={(val) => setFormTarget(val)}
@@ -444,7 +740,7 @@ export default function Exercises() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Equipment</label>
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Equipment *</label>
                     <Select
                         value={formEquipment}
                         onChange={(val) => setFormEquipment(val)}
@@ -464,7 +760,7 @@ export default function Exercises() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Category</label>
+                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Category *</label>
                     <Select
                         value={formCategory}
                         onChange={(val) => setFormCategory(val)}
@@ -567,131 +863,10 @@ export default function Exercises() {
                 </Button>
             </div>
             <div className="pt-2 pb-2">
-                <Button type="button" variant="secondary" fullWidth onClick={backToList}>
+                <Button type="button" variant="secondary" fullWidth onClick={onCancel}>
                     Cancel
                 </Button>
             </div>
         </form>
-    );
-
-    return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Exercises</h1>
-                {viewMode === 'list' && (
-                    <Button onClick={() => setViewMode('create')} variant="primary">+ Create Exercise</Button>
-                )}
-            </div>
-
-            {/* Clean Status Messages without Box Borders */}
-            <div className="flex flex-col gap-1.5">
-                {loading && <p className="text-sm text-zinc-400 font-medium">Loading...</p>}
-                {error && viewMode !== 'create' && viewMode !== 'edit' && (
-                    <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">{error}</p>
-                )}
-                {success && <p className="text-sm font-semibold text-lime-400 tracking-wide animate-in fade-in duration-300">{success}</p>}
-            </div>
-
-            {viewMode !== 'create' && (
-                <div className="flex flex-col sm:flex-row gap-4">
-                    {viewMode === 'details' || viewMode === 'edit' ? (
-                        <Button type="button" variant="secondary" onClick={backToList}>&larr; Back to List</Button>
-                    ) : (
-                        <div className="flex gap-4 w-full flex-col sm:flex-row">
-                            <input
-                                type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
-                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
-                            />
-                            <Select
-                                value={filters.muscles}
-                                onChange={(val) => setFilters({ ...filters, muscles: val })}
-                                placeholder="All Muscles"
-                                options={[
-                                    { value: "", label: "All Muscles" },
-                                    ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
-                                ]}
-                            />
-                            <Select
-                                value={filters.equipment}
-                                onChange={(val) => setFilters({ ...filters, equipment: val })}
-                                placeholder="All Equipment"
-                                options={[
-                                    { value: "", label: "All Equipment" },
-                                    ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
-                                ]}
-                            />
-                            <Select
-                                value={filters.categoryType}
-                                onChange={(val) => setFilters({ ...filters, categoryType: val })}
-                                placeholder="All Categories"
-                                options={[
-                                    { value: "", label: "All Categories" },
-                                    ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
-                                ]}
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
-
-            <div>
-                {viewMode === 'create' ? (
-                    <ExerciseForm isEdit={false} />
-                ) : viewMode === 'details' && selectedExercise ? (
-                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-4">
-                        <h2 className="font-display text-2xl font-bold text-zinc-100 tracking-wide uppercase">{selectedExercise.name}</h2>
-                        <div className="flex flex-wrap gap-4 text-zinc-300 mb-6 bg-zinc-900/50 p-4 rounded-lg">
-                            <span><strong>Body Part:</strong> {selectedExercise.bodyPart}</span>
-                            <span><strong>Target:</strong> {selectedExercise.target}</span>
-                            <span><strong>Equipment:</strong> {selectedExercise.equipment}</span>
-                            <span><strong>Difficulty:</strong> {selectedExercise.difficulty}</span>
-                            <span><strong>Category:</strong> {selectedExercise.category}</span>
-                            <span><strong>Secondary Muscles:</strong> {selectedExercise.secondary_muscles?.join(', ') || 'None'}</span>
-                        </div>
-
-                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase">Description</h3>
-                        <p className="text-zinc-400 whitespace-pre-wrap">{selectedExercise.description || 'No description available.'}</p>
-
-                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mt-6">Instructions</h3>
-                        {selectedExercise.instructions && selectedExercise.instructions.length > 0 ? (
-                            <ol className="list-decimal list-inside space-y-2 text-zinc-400">
-                                {selectedExercise.instructions.map((step, idx) => (<li key={idx}>{step}</li>))}
-                            </ol>
-                        ) : (
-                            <p className="text-zinc-400">No instructions available.</p>
-                        )}
-
-                        <div className="flex gap-4 mt-8 pt-4 border-t border-zinc-800">
-                            <Button type="button" variant="secondary" onClick={() => setViewMode('edit')}>Edit Exercise</Button>
-                            <Button type="button" variant="danger" onClick={() => deleteExerciseById(selectedExercise.id)}>Delete Exercise</Button>
-                        </div>
-                    </div>
-                ) : viewMode === 'edit' && selectedExercise ? (
-                    <ExerciseForm ex={selectedExercise} isEdit={true} />
-                ) : (
-                    <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {filteredExercises.length > 0 ? (
-                            filteredExercises.map(ex => (
-                                <li
-                                    key={ex.id}
-                                    onClick={() => fetchExerciseById(ex.id)}
-                                    className="bg-zinc-900/40 border cursor-pointer border-zinc-800/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-lime-400/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-lime-400/5"
-                                >
-                                    <div>
-                                        <h2 className="font-display text-xl font-bold text-zinc-100 mb-2 truncate">{ex.name}</h2>
-                                        <div className="text-sm text-zinc-400 space-x-2">
-                                            <span className="inline-block bg-zinc-800 px-2 py-1 rounded text-zinc-300">{ex.target}</span>
-                                            <span className="inline-block bg-zinc-800 px-2 py-1 rounded text-zinc-300">{ex.equipment}</span>
-                                        </div>
-                                    </div>
-                                </li>
-                            ))
-                        ) : (
-                            !loading && <p className="text-zinc-400 col-span-2">No exercises found.</p>
-                        )}
-                    </ul>
-                )}
-            </div>
-        </div>
     );
 }

@@ -1,3 +1,4 @@
+import sys
 import mediapipe as mp 
 from mediapipe.tasks.python import vision 
 import numpy as np 
@@ -6,6 +7,9 @@ import argparse
 import os
 import subprocess
 
+print("[DEBUG] landmarks_video.py started", flush=True)
+print("[DEBUG] Importing modules...", flush=True)
+sys.stdout.flush()
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -189,24 +193,34 @@ def main(input_path, output_path, mode="normal"):
     """Handles parsing video parameters, tracking frames, and pipeline cleanup."""
     model_path = os.path.join(os.path.dirname(__file__), 'pose_landmarker_heavy.task')
 
+    print(f"[DEBUG] Input: {input_path}", flush=True)
+    print(f"[DEBUG] Output: {output_path}", flush=True)
+    print(f"[DEBUG] Mode: {mode}", flush=True)
+    print(f"[DEBUG] Model path: {model_path}", flush=True)
+
+    print("[DEBUG] Creating PoseLandmarker...", flush=True)
     try:
         options = vision.PoseLandmarkerOptions(
             base_options=mp.tasks.BaseOptions(model_asset_path=model_path),
             running_mode=vision.RunningMode.VIDEO 
         )
         landmarker = vision.PoseLandmarker.create_from_options(options)
+        print("[DEBUG] PoseLandmarker created successfully", flush=True)
     except Exception as e:
-        print(f"Error while creating the PoseLandmarker: {e}")
+        print(f"Error while creating the PoseLandmarker: {e}", flush=True)
         return
 
+    print("[DEBUG] Opening video...", flush=True)
     cap = cv2.VideoCapture(input_path)
     if not cap.isOpened():
-        print(f"Error: Cannot open input video {input_path}")
+        print(f"Error: Cannot open input video {input_path}", flush=True)
         return
 
     fps = cap.get(cv2.CAP_PROP_FPS)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    print(f"[DEBUG] Video: {width}x{height}, {fps:.2f} fps, {total_frames} frames", flush=True)
 
     temp_output_path = output_path + ".tmp.mp4"
     fourcc = cv2.VideoWriter_fourcc(*'mp4v') 
@@ -214,9 +228,10 @@ def main(input_path, output_path, mode="normal"):
 
     # Contextual instantiation of optimization profiles
     squat_analyzer = SquatAnalyzer() if mode == "squat" else None
-    print(f"[Engine] Starting operations. Operational processing target: {mode.upper()}")
+    print(f"[Engine] Starting operations. Operational processing target: {mode.upper()}", flush=True)
 
     frame_idx = 0
+    log_interval = max(1, total_frames // 20) if total_frames > 0 else 50
 
     while cap.isOpened():
         success, frame = cap.read()
@@ -236,10 +251,15 @@ def main(input_path, output_path, mode="normal"):
         out.write(annotated_bgr)
         frame_idx += 1
 
+        if frame_idx % log_interval == 0:
+            pct = (frame_idx / total_frames) * 100 if total_frames > 0 else 0
+            print(f"[Progress] Frame {frame_idx}/{total_frames} ({pct:.1f}%)", flush=True)
+
     cap.release()
     out.release()
+    print(f"[DEBUG] Frame processing complete: {frame_idx} frames written", flush=True)
 
-    print("[FFmpeg] Commencing video compression transcode processing...")
+    print("[FFmpeg] Commencing video compression transcode processing...", flush=True)
 
     ffmpeg_cmd = [
         FFMPEG_PATH,
@@ -254,14 +274,16 @@ def main(input_path, output_path, mode="normal"):
 
     try:
         subprocess.run(ffmpeg_cmd, check=True)
-        print(f"Success! Final presentation file delivered: {output_path}")
+        print(f"[Success] Final presentation file delivered: {output_path}", flush=True)
     except Exception as e:
-        print(f"Transcoding processing failure: {e}")
+        print(f"[Error] Transcoding processing failure: {e}", flush=True)
     finally:
         if os.path.exists(temp_output_path):
             os.remove(temp_output_path)
+            print(f"[Cleanup] Deleted temp file: {temp_output_path}", flush=True)
         if os.path.exists(input_path):
             os.remove(input_path)
+            print(f"[Cleanup] Deleted input file: {input_path}", flush=True)
 
 
 if __name__ == "__main__":

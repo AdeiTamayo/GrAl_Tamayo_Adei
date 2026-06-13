@@ -8,28 +8,37 @@ exports.getExercises = async (req, res) => {
   console.log("Get all exercises request received");
 
   try {
-    if (exercisesCache && Date.now() - exercisesCacheTime < CACHE_TTL) {
+    const page = req.query.page ? parseInt(req.query.page, 10) : null;
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
+
+    const useCache = !page && !limit;
+
+    if (useCache && exercisesCache && Date.now() - exercisesCacheTime < CACHE_TTL) {
       return res.status(200).json({
         success: true,
-        data: exercisesCache
+        data: exercisesCache.exercises,
+        total: exercisesCache.total
       });
     }
 
-    const exercices = await Exercise.getExercises();
+    const result = await Exercise.getExercises(page, limit);
 
-    if (!exercices) {
+    if (!result) {
       return res.status(404).json({
         success: false,
         error: 'Exercises not found'
       });
     }
 
-    exercisesCache = exercices;
-    exercisesCacheTime = Date.now();
+    if (useCache) {
+      exercisesCache = result;
+      exercisesCacheTime = Date.now();
+    }
 
     res.status(200).json({
       success: true,
-      data: exercices
+      data: result.exercises,
+      total: result.total
     });
   } catch (error) {
     console.log(error);

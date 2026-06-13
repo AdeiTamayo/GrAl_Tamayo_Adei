@@ -7,6 +7,7 @@ Tracks barbell path in video using:
 - Real-time physical velocity calculations (m/s)
 """
 
+import sys
 import cv2
 import numpy as np
 from collections import deque
@@ -15,6 +16,10 @@ import os
 from dotenv import load_dotenv
 from inference_sdk import InferenceHTTPClient
 import subprocess
+
+print("[DEBUG] barbell_tracking.py started", flush=True)
+print("[DEBUG] Importing modules...", flush=True)
+sys.stdout.flush()
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -67,7 +72,7 @@ class RoboflowBarbellDetector:
         scale = min_dimension / min(h, w)
         new_w, new_h = int(w * scale), int(h * scale)
         resized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
-        print(f"[Roboflow] Upscaled frame from {w}x{h} to {new_w}x{new_h}")
+        print(f"[Roboflow] Upscaled frame from {w}x{h} to {new_w}x{new_h}", flush=True)
         
         return resized, scale
     

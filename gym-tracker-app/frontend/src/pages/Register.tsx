@@ -16,7 +16,6 @@ export default function Register() {
     const [weight, setWeight] = useState("");
     const [height, setHeight] = useState("");
     const [birthDate, setBirthDate] = useState("");
-    const [profilePicture, setProfilePicture] = useState("");
 
     const [message, setMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);

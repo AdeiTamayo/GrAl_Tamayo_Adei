@@ -1,117 +1,275 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { apiFetch } from '../utils/api';
 
 type LocationState = {
     user?: { email?: string };
     email?: string;
 };
 
+interface Workout {
+    id: number;
+    name: string;
+    date: string;
+    exercises?: { id: number }[];
+}
+
+const navItems = [
+    {
+        category: 'Training',
+        links: [
+            { to: '/active-workout', label: 'Active Workout', desc: 'Start or continue a training session' },
+            { to: '/workouts', label: 'Workouts', desc: 'View and manage your workout logs' },
+            { to: '/compare-workouts', label: 'Compare', desc: 'Side-by-side workout comparison' },
+            { to: '/routines', label: 'Routines', desc: 'Create and manage training routines' },
+        ]
+    },
+    {
+        category: 'Tracking',
+        links: [
+            { to: '/exercise-history', label: 'Progress History', desc: 'Track your exercise progress over time' },
+            { to: '/prs', label: 'PRs', desc: 'Personal records and achievements' },
+            { to: '/Weight_history', label: 'Weight History', desc: 'Track your body weight over time' },
+            { to: '/goals', label: 'Goals', desc: 'Set and track your fitness goals' },
+        ]
+    },
+    {
+        category: 'Library',
+        links: [
+            { to: '/exercises', label: 'Exercises', desc: 'Browse the exercise library' },
+            { to: '/videos', label: 'Videos', desc: 'View your recorded video sessions' },
+            { to: '/upload', label: 'Upload', desc: 'Upload a new video for analysis' },
+        ]
+    },
+
+];
+
 export default function Hero() {
     const location = useLocation();
     const { user, email: stateEmail } = (location.state as LocationState) || {};
-
     const displayEmail = localStorage.getItem('email') || user?.email || stateEmail || 'N/A';
     const isLoggedIn = displayEmail !== 'N/A';
 
-    // Shared Link Style String
-    const linkStyle = "block bg-lime-400 text-zinc-950 font-display font-bold tracking-wide rounded-xl px-5 py-4 text-center hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-[0_0_15px_rgba(163,230,53,0.2)]";
+    const [workoutCount, setWorkoutCount] = useState<number | null>(null);
+    const [prCount, setPrCount] = useState<number | null>(null);
+    const [exerciseCount, setExerciseCount] = useState<number | null>(null);
+    const [recentWorkouts, setRecentWorkouts] = useState<Workout[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Dynamically build the account navigation links based on login state
-    const accountLinks = isLoggedIn
-        ? [{ to: "/profile", label: "Profile" }]
-        : [
-            { to: "/login", label: "Login" },
-            { to: "/register", label: "Register" }
-        ];
+    const token = localStorage.getItem('user_login_token');
 
-    const WORKSPACE_LINKS = isLoggedIn
-        ? [
-            { to: "/active-workout", label: "Active Workout" },
-            { to: "/workouts", label: "Workouts" },
-            { to: "/compare-workouts", label: "Compare" },
-            { to: "/exercise-history", label: "Progress History" },
-            { to: "/exercises", label: "Exercises" },
-            { to: "/videos", label: "Videos" },
-            { to: "/upload", label: "Upload" },
-            { to: "/goals", label: "Goals" },
-            { to: "/prs", label: "PRs" },
-            { to: "/routines", label: "Routines" },
-            { to: "/Weight_history", label: "Weight History" }
-        ]
-        : [];
+    useEffect(() => {
+        if (!isLoggedIn || !token) {
+            setLoading(false);
+            return;
+        }
 
-    return (
-        isLoggedIn ? (
-            // --- LOGGED IN VIEW ---
-            <div className="p-6 font-sans bg-black text-zinc-100 min-h-screen selection:bg-lime-400 selection:text-zinc-950">
-                <div className="max-w-6xl mx-auto mt-6">
-                    {/* Top Navbar Area */}
-                    <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-4 border-b border-zinc-800 gap-4">
-                        <div>
-                            <h1 className="font-display text-2xl font-bold tracking-tight text-zinc-100 uppercase italic">
-                                Dashboard
-                            </h1>
-                            <p className="font-sans text-xs font-normal text-zinc-400 mt-1">
-                                Logged in as: <span className="font-mono text-sm font-bold text-lime-400 tracking-tight ml-1">{displayEmail}</span>
-                            </p>
-                        </div>
+        const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-                        {/* Inline Account Navbar */}
-                        <nav className="flex items-center gap-3 w-full sm:w-auto">
-                            {accountLinks.map((link) => (
-                                <Link key={link.to} to={link.to} className={`${linkStyle} py-2 sm:py-3 text-sm min-w-[100px]`}>
-                                    {link.label}
-                                </Link>
-                            ))}
-                        </nav>
-                    </header>
+        Promise.all([
+            apiFetch('/api/workouts', { headers }).then(r => r.json()),
+            apiFetch('/api/prs', { headers }).then(r => r.json()),
+            apiFetch('/api/exercises', { headers }).then(r => r.json()),
+        ])
+            .then(([workoutData, prData, exerciseData]) => {
+                if (workoutData.success) {
+                    const w = workoutData.data || [];
+                    setWorkoutCount(w.length);
+                    setRecentWorkouts(w.slice(0, 5));
+                }
+                if (prData.success) {
+                    const p = prData.data || [];
+                    setPrCount(p.length);
+                }
+                if (exerciseData.success) {
+                    const e = exerciseData.data || exerciseData.exercises || [];
+                    setExerciseCount(e.length);
+                }
+            })
+            .catch(() => {})
+            .finally(() => setLoading(false));
+    }, [isLoggedIn, token]);
 
-                    {/* Main Content Area */}
-                    {WORKSPACE_LINKS && WORKSPACE_LINKS.length > 0 && (
-                        <main>
-                            <nav className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {WORKSPACE_LINKS.map((link) => (
-                                    <Link key={link.to} to={link.to} className={linkStyle}>
-                                        {link.label}
-                                    </Link>
-                                ))}
-                            </nav>
-                        </main>
-                    )}
-                </div>
-            </div>
-        ) : (
-            <div className="flex items-center justify-center min-h-screen bg-black text-zinc-100 p-4 font-sans selection:bg-lime-400 selection:text-zinc-950">
-                <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-xl text-center space-y-5">
-
-                    {/* Header */}
-                    <div className="space-y-1">
-                        <h2 className="text-xl font-display font-bold uppercase tracking-tight text-zinc-200">
-                            Please log in to continue
-                        </h2>
-                        <p className="text-xs text-zinc-500 font-medium">
-                            You need to be signed in to view your dashboard.
+    if (!isLoggedIn) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-black text-zinc-100 p-4">
+                <div className="w-full max-w-md text-center space-y-8">
+                    <div className="space-y-3">
+                        <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight text-lime-400 uppercase">
+                            Gym Tracker
+                        </h1>
+                        <p className="text-zinc-400 text-lg font-medium max-w-sm mx-auto">
+                            Track your workouts, analyze your form, and crush your goals.
                         </p>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col gap-2.5 pt-2">
-                        <Link
-                            to="/login"
-                            className="w-full bg-lime-400 text-black font-display font-bold tracking-wide py-3 px-6 rounded-xl hover:bg-lime-300 hover:scale-[1.01] active:scale-[0.99] transition-all"
-                        >
-                            Log In
-                        </Link>
-
-                        <Link
-                            to="/register"
-                            className="w-full bg-transparent text-zinc-400 border border-zinc-900 font-display font-bold tracking-wide py-3 px-6 rounded-xl hover:bg-zinc-900 hover:text-zinc-200 hover:scale-[1.01] active:scale-[0.99] transition-all"
-                        >
-                            Create an account
-                        </Link>
+                    <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-xl space-y-4">
+                        <div className="space-y-1">
+                            <h2 className="font-display text-lg font-bold uppercase tracking-tight text-zinc-200">
+                                Welcome back
+                            </h2>
+                            <p className="text-sm text-zinc-500 font-medium">
+                                Sign in to access your dashboard.
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-3 pt-2">
+                            <Link
+                                to="/login"
+                                className="w-full bg-lime-400 text-black font-bold rounded-lg hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98] border border-transparent px-6 py-3 transition-all text-center block"
+                            >
+                                Log In
+                            </Link>
+                            <Link
+                                to="/register"
+                                className="w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold border border-zinc-700 text-sm rounded-lg transition-all text-center block"
+                            >
+                                Create an account
+                            </Link>
+                        </div>
                     </div>
-
                 </div>
             </div>
-        )
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-black text-zinc-100 p-4 md:p-8">
+            <div className="max-w-6xl mx-auto space-y-8">
+                <header className="flex items-center justify-between pb-6 border-b border-zinc-800">
+                    <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-zinc-100 uppercase italic">
+                        Dashboard
+                    </h1>
+                    <div className="flex items-center gap-2">
+                        <Link
+                            to="/settings"
+                            className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+                            aria-label="Settings"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </Link>
+                        <Link
+                            to="/profile"
+                            className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+                            aria-label="Profile"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </Link>
+                    </div>
+                </header>
+
+                {loading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
+                        {[1, 2, 3].map(n => (
+                            <div key={n} className="bg-zinc-900/60 border border-zinc-800 rounded-xl h-24" />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
+                            <p className="text-xs font-bold tracking-widest uppercase text-zinc-500">Total Workouts</p>
+                            <p className="text-3xl font-bold text-zinc-100 mt-2 font-mono">{workoutCount ?? '—'}</p>
+                        </div>
+                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
+                            <p className="text-xs font-bold tracking-widest uppercase text-zinc-500">Personal Records</p>
+                            <p className="text-3xl font-bold text-lime-400 mt-2 font-mono">{prCount ?? '—'}</p>
+                        </div>
+                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
+                            <p className="text-xs font-bold tracking-widest uppercase text-zinc-500">Exercise Library</p>
+                            <p className="text-3xl font-bold text-zinc-100 mt-2 font-mono">{exerciseCount ?? '—'}</p>
+                        </div>
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 space-y-8">
+                        {navItems.map(section => (
+                            <section key={section.category}>
+                                <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-zinc-500 mb-4">
+                                    {section.category}
+                                </h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {section.links.map(link => (
+                                        <Link
+                                            key={link.to}
+                                            to={link.to}
+                                            className="group bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 hover:border-lime-400/40 hover:bg-zinc-800/40 transition-all hover:shadow-lg hover:shadow-lime-400/5 border-l-2 border-l-zinc-800 hover:border-l-lime-400"
+                                        >
+                                            <h3 className="font-display text-sm font-bold text-zinc-200 group-hover:text-lime-400 transition-colors uppercase tracking-wide">
+                                                {link.label}
+                                            </h3>
+                                            <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed group-hover:text-zinc-400 transition-colors">
+                                                {link.desc}
+                                            </p>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+                        ))}
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
+                            <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-zinc-500 mb-4">
+                                Recent Workouts
+                            </h2>
+                            {recentWorkouts.length === 0 ? (
+                                <p className="text-xs text-zinc-600 italic">No workouts logged yet.</p>
+                            ) : (
+                                <ul className="space-y-3">
+                                    {recentWorkouts.map(w => (
+                                        <li key={w.id}>
+                                            <Link
+                                                to="/workouts"
+                                                state={{ preselectedWorkoutId: w.id }}
+                                                className="block bg-zinc-950 border border-zinc-800 rounded-lg p-3 hover:border-lime-400/40 hover:bg-zinc-900 transition-all border-l-2 border-l-transparent hover:border-l-lime-400"
+                                            >
+                                                <p className="text-sm font-semibold text-zinc-200 truncate">{w.name}</p>
+                                                <div className="flex items-center gap-3 mt-1">
+                                                    <span className="text-xs font-mono text-zinc-500">{w.date?.substring(0, 10)}</span>
+                                                    {w.exercises && (
+                                                        <span className="text-xs text-zinc-600">{w.exercises.length} exercises</span>
+                                                    )}
+                                                </div>
+                                            </Link>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            <Link
+                                to="/workouts"
+                                className="mt-4 block text-center text-xs font-bold text-lime-400 hover:text-lime-300 uppercase tracking-wider transition-colors"
+                            >
+                                View all workouts
+                            </Link>
+                        </div>
+
+                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
+                            <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-zinc-500 mb-3">
+                                Quick Actions
+                            </h2>
+                            <div className="space-y-2">
+                                <Link
+                                    to="/active-workout"
+                                    className="block w-full bg-lime-400 text-black font-bold rounded-lg hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98] border border-transparent px-4 py-2.5 text-sm transition-all text-center"
+                                >
+                                    Start Workout
+                                </Link>
+                                <Link
+                                    to="/upload"
+                                    className="block w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold border border-zinc-700 text-sm rounded-lg px-4 py-2.5 transition-all text-center"
+                                >
+                                    Upload Video
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }

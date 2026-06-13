@@ -106,6 +106,22 @@ class PR {
         }
     }
 
+    static async updatePR(userId, id, weight, repetitions, date, note) {
+        try {
+            const query = `
+                UPDATE pr
+                SET weight = $1, repetitions = $2, date = $3, note = $4
+                WHERE id = $5 AND user_id = $6
+                RETURNING *;
+            `;
+            const result = await pool.query(query, [weight, repetitions, date, note, id, userId]);
+            return result.rows[0] || null;
+        } catch (error) {
+            console.error('[PR Model] Error updating PR:', error.message);
+            throw error;
+        }
+    }
+
     static async deletePR(userId, id) {
         try {
             const query = `

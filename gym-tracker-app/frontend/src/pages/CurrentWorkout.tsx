@@ -4,6 +4,7 @@ import Button from "../components/Button";
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../components/NotificationProvider";
 
 interface SetEntry {
     set_number: number;
@@ -28,6 +29,7 @@ interface Routine {
 
 export default function CurrentWorkout() {
     const navigate = useNavigate();
+    const { showNotification } = useNotification();
     const [isWorkoutActive, setIsWorkoutActive] = useState(false);
     const [startTime, setStartTime] = useState<number | null>(null);
     const [elapsedTime, setElapsedTime] = useState(0);
@@ -36,6 +38,7 @@ export default function CurrentWorkout() {
     const [showExercisePicker, setShowExercisePicker] = useState(false);
     const [routines, setRoutines] = useState<Routine[]>([]);
     const [showRoutinePicker, setShowRoutinePicker] = useState(false);
+    const [showFinishModal, setShowFinishModal] = useState(false);
 
     // Rest Timer state
     const [restTime, setRestTime] = useState(0);
@@ -214,7 +217,7 @@ export default function CurrentWorkout() {
 
     const saveWorkout = async () => {
         if (exercises.length === 0) {
-            alert("No exercises to save!");
+            showNotification("No exercises to save!", "error");
             return;
         }
 
@@ -275,15 +278,15 @@ export default function CurrentWorkout() {
             }
 
             if (failedCount === 0) {
-                alert(`Workout saved successfully! (${savedCount} sets)`);
+                showNotification(`Workout saved successfully! (${savedCount} sets)`, "success");
                 navigate("/workouts");
             } else {
-                alert(`Workout saved with ${failedCount} failed set(s). ${savedCount} sets saved successfully.`);
+                showNotification(`Workout saved with ${failedCount} failed set(s).`, "error");
                 navigate("/workouts");
             }
         } catch (err) {
             console.error("Failed to save workout", err);
-            alert("Error saving workout.");
+            showNotification("Error saving workout.", "error");
         }
     };
 
@@ -310,7 +313,7 @@ export default function CurrentWorkout() {
                                 <Button variant="primary" onClick={startWorkout}>Start Empty Workout</Button>
                             </>
                         ) : (
-                            <Button variant="danger" onClick={saveWorkout}>Finish & Save</Button>
+                            <Button variant="danger" onClick={() => setShowFinishModal(true)}>Finish Workout</Button>
                         )}
                     </div>
                 </header>
@@ -469,6 +472,39 @@ export default function CurrentWorkout() {
                                         <div className="text-xs text-zinc-500 mt-1">Click to load exercises</div>
                                     </button>
                                 ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {showFinishModal && (
+                    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                            <h2 className="font-display text-lg font-bold text-zinc-100 uppercase tracking-wide mb-2">
+                                Finish Workout
+                            </h2>
+                            <p className="text-sm text-zinc-400 mb-6">
+                                Duration: {formatTime(elapsedTime)}
+                            </p>
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => { setShowFinishModal(false); saveWorkout(); }}
+                                    className="w-full bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                >
+                                    Save Workout
+                                </button>
+                                <button
+                                    onClick={() => { setShowFinishModal(false); navigate("/"); }}
+                                    className="w-full bg-rose-500/10 text-rose-500 font-bold py-3 rounded-lg border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all"
+                                >
+                                    Delete Workout
+                                </button>
+                                <button
+                                    onClick={() => setShowFinishModal(false)}
+                                    className="w-full bg-zinc-800 text-zinc-300 font-bold py-3 rounded-lg hover:bg-zinc-700 transition-all"
+                                >
+                                    Cancel
+                                </button>
                             </div>
                         </div>
                     </div>

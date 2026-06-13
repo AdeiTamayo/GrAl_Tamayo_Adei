@@ -3,6 +3,7 @@ import Button from '../components/Button';
 import EditableExerciseCard from '../components/EditableExerciseCard';
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import { apiFetch } from "../utils/api";
+import ConfirmModal from '../components/ConfirmModal';
 
 interface SetTemplate {
     id: number;
@@ -46,6 +47,7 @@ export default function RoutinesManagement() {
     const [showPicker, setShowPicker] = useState(false);
 
     const [error, setError] = useState<string | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
     // Layout Reference Focus Wrappers
     const createRoutineRef = useRef<HTMLDivElement>(null);
@@ -167,7 +169,6 @@ export default function RoutinesManagement() {
     }
 
     async function deleteRoutine(id: number) {
-        if (!window.confirm("Are you sure you want to completely remove this routine template?")) return;
         try {
             const res = await apiFetch(`/api/routines/${id}`, { method: "DELETE", headers });
             const data = await res.json();
@@ -340,7 +341,7 @@ export default function RoutinesManagement() {
                                                 <Button type="button" onClick={() => fetchRoutineById(r.id)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
                                                     Open
                                                 </Button>
-                                                <Button type="button" onClick={() => deleteRoutine(r.id)} variant="danger" className="px-2.5 py-1.5 text-xs rounded-lg">
+                                                <Button type="button" onClick={() => setDeleteConfirmId(r.id)} variant="danger" className="px-2.5 py-1.5 text-xs rounded-lg">
                                                     Delete
                                                 </Button>
                                             </div>
@@ -472,6 +473,15 @@ export default function RoutinesManagement() {
                     </div>
                 )}
             </div>
+
+            {deleteConfirmId !== null && (
+                <ConfirmModal
+                    message="Are you sure you want to completely remove this routine template?"
+                    onConfirm={() => deleteRoutine(deleteConfirmId)}
+                    onCancel={() => setDeleteConfirmId(null)}
+                    confirmLabel="Delete"
+                />
+            )}
         </div>
     );
 }

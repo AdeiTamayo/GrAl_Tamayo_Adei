@@ -1,9 +1,13 @@
 const pool = require('../config/database');
 
 class Exercise {
-    static async getExercises() {
+    static async getExercises(page = null, limit = null) {
         try {
-            const query = `
+            const countQuery = `SELECT COUNT(*) as total FROM exercises`;
+            const countResult = await pool.query(countQuery);
+            const total = parseInt(countResult.rows[0].total, 10);
+
+            let query = `
                 SELECT
                     id,
                     name,
@@ -15,10 +19,18 @@ class Exercise {
                     category,
                     is_custom
                 FROM exercises
-                ORDER BY name ASC;
+                ORDER BY name ASC
             `;
-            const result = await pool.query(query);
-            return result.rows;
+
+            const values = [];
+            if (page !== null && limit !== null) {
+                const offset = (page - 1) * limit;
+                query += ` LIMIT $1 OFFSET $2`;
+                values.push(limit, offset);
+            }
+
+            const result = await pool.query(query, values);
+            return { exercises: result.rows, total };
         } catch (error) {
             console.error('[Exercise Model] Error fetching exercises list:', error.message);
             throw error;

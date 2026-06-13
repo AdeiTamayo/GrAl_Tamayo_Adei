@@ -5,66 +5,71 @@ const fs = require('fs').promises;
 
 const processedDir = path.join(__dirname, '../media/output');
 const port = process.env.PORT || 8000;
+const REQUEST_TIMEOUT = 10 * 60 * 1000;
 
-/**
- * Process video for pose estimation
- */
+function sendJsonLine(res, data) {
+    res.write(JSON.stringify(data) + '\n');
+}
+
+async function cleanupUpload(filePath) {
+    if (!filePath) return;
+    try {
+        await fs.unlink(filePath);
+        console.log(`[Cleanup] Deleted upload: ${filePath}`);
+    } catch {}
+}
+
 /**
  * Process video for pose estimation (Normal or Squat specific mode)
  */
 exports.processPoseEstimation = async (req, res) => {
+    req.setTimeout(REQUEST_TIMEOUT);
+
+    res.writeHead(200, {
+        'Content-Type': 'application/x-ndjson',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+    });
+
+    const scriptPath = path.join(__dirname, '../python', 'landmarks_video.py');
+    const validation = validateUpload(req, scriptPath);
+    if (!validation.valid) {
+        sendJsonLine(res, { type: 'error', message: validation.error });
+        return res.end();
+    }
+
+    const mode = req.body.mode || 'normal';
+    const allowedModes = ['normal', 'squat'];
+    const selectedMode = allowedModes.includes(mode.toLowerCase()) ? mode.toLowerCase() : 'normal';
+
+    const inputPath = req.file.path;
+    const prefix = selectedMode === 'squat' ? 'SquatAnalysis-' : 'PoseEstimation-';
+    const outputFilename = prefix + req.file.filename;
+    const outputPath = path.join(processedDir, outputFilename);
+    const extraArgs = ['--mode', selectedMode];
+
     try {
-        const scriptPath = path.join(__dirname, '../python', 'landmarks_video.py');
+        sendJsonLine(res, { type: 'progress', message: 'Starting Python pose estimation...' });
 
-        // Validate upload
-        const validation = validateUpload(req, scriptPath);
-        if (!validation.valid) {
-            return res.status(404).json({ error: validation.error });
-        }
+        await processVideoWithPython(scriptPath, inputPath, outputPath, '--input', '--output', extraArgs, (msg) => {
+            sendJsonLine(res, { type: 'progress', message: msg });
+        });
 
-        console.log('[Processing] Python script found');
-
-        // 1. Get the mode from the request body (default to 'normal' if not provided)
-        const mode = req.body.mode || 'normal';
-
-        // Safety check to ensure valid flags are used
-        const allowedModes = ['normal', 'squat'];
-        const selectedMode = allowedModes.includes(mode.toLowerCase()) ? mode.toLowerCase() : 'normal';
-
-        const inputPath = req.file.path;
-
-        // Add mode prefix to filename to make identification easy down the road
-        const prefix = selectedMode === 'squat' ? 'SquatAnalysis-' : 'PoseEstimation-';
-        const outputFilename = prefix + req.file.filename;
-        const outputPath = path.join(processedDir, outputFilename);
-
-        // 2. Build the extra args array to pass down to Python
-        const extraArgs = ['--mode', selectedMode];
-
-        // Process video with Python including our new mode parameter configurations
-        await processVideoWithPython(scriptPath, inputPath, outputPath, '--input', '--output', extraArgs);
-
-        // Send response with processed video URL
         const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
-        console.log(`[Success] Response URL: ${responseUrl}`);
 
-        // Persist in database using authenticated user
         if (req.userId) {
             const dbProcessType = selectedMode === 'squat' ? 'squat_analysis' : 'pose_estimation';
             await Video.createVideo(req.userId, req.file.filename, dbProcessType, responseUrl);
         }
 
-        res.json({
-            message: `Video processed successfully using ${selectedMode} mode`,
-            processedVideoUrl: responseUrl
-        });
+        sendJsonLine(res, { type: 'done', processedVideoUrl: responseUrl });
+        res.end();
 
     } catch (error) {
-        console.error('[Error] Processing failed:', error.message);
-        return res.status(500).json({
-            error: 'Video processing failed',
-            details: error.message
-        });
+        sendJsonLine(res, { type: 'error', message: error.message });
+        res.end();
+    } finally {
+        await cleanupUpload(inputPath);
     }
 };
 
@@ -72,59 +77,54 @@ exports.processPoseEstimation = async (req, res) => {
  * Process video for barbell tracking
  */
 exports.processBarbellTracking = async (req, res) => {
-    console.log('\n=== New Barbell Tracking Request ===');
-    console.log(`[Request] Received at: ${new Date().toISOString()}`);
+    req.setTimeout(REQUEST_TIMEOUT);
+
+    res.writeHead(200, {
+        'Content-Type': 'application/x-ndjson',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+    });
+
+    const scriptPath = path.join(__dirname, '../python', 'barbell_tracking.py');
+    const validation = validateUpload(req, scriptPath);
+    if (!validation.valid) {
+        sendJsonLine(res, { type: 'error', message: validation.error });
+        return res.end();
+    }
+
+    const inputPath = req.file.path;
+    const outputFilename = 'barbell-' + req.file.filename;
+    const outputPath = path.join(processedDir, outputFilename);
 
     try {
-        const scriptPath = path.join(__dirname, '../python', 'barbell_tracking.py');
+        sendJsonLine(res, { type: 'progress', message: 'Starting Python barbell tracking...' });
 
-        // Validate upload
-        const validation = validateUpload(req, scriptPath);
-        if (!validation.valid) {
-            return res.status(404).json({ error: validation.error });
-        }
+        await processVideoWithPython(scriptPath, inputPath, outputPath, '-i', '-o', [], (msg) => {
+            sendJsonLine(res, { type: 'progress', message: msg });
+        });
 
-        console.log('[Barbell Tracking] Python script found');
-
-        const inputPath = req.file.path;
-        const outputFilename = 'barbell-' + req.file.filename;
-        const outputPath = path.join(processedDir, outputFilename);
-
-        // Process video with Python
-        await processVideoWithPython(scriptPath, inputPath, outputPath, '--i', '--o');
-
-        // Send response with processed video URL
         const responseUrl = `http://localhost:${port}/media/output/${outputFilename}`;
-        console.log(`[Barbell Success] Response URL: ${responseUrl}`);
 
-        // Persist in database using authenticated user
         if (req.userId) {
             await Video.createVideo(req.userId, req.file.filename, 'barbell_tracking', responseUrl);
         }
 
-        res.json({
-            message: 'Barbell tracking completed successfully',
-            processedVideoUrl: responseUrl
-        });
+        sendJsonLine(res, { type: 'done', processedVideoUrl: responseUrl });
+        res.end();
 
     } catch (error) {
-        console.error('[Error] Barbell tracking failed:', error.message);
-        return res.status(500).json({
-            error: 'Barbell tracking failed',
-            details: error.message
-        });
+        sendJsonLine(res, { type: 'error', message: error.message });
+        res.end();
+    } finally {
+        await cleanupUpload(inputPath);
     }
 };
 
 /**
  * Get authenticated user's videos
  */
-/**
- * Get authenticated user's videos (With Server-Side Filters)
- */
 exports.getUserVideos = async (req, res) => {
     try {
-        const { date, type } = req.query; // Capture filters from request query strings
         const directoryPath = path.join(__dirname, '../media/output');
 
         const files = await fs.readdir(directoryPath);
@@ -135,44 +135,17 @@ exports.getUserVideos = async (req, res) => {
             return videoExtensions.includes(ext);
         });
 
-        let videos = await Promise.all(videoFiles.map(async (file) => {
+        const videos = await Promise.all(videoFiles.map(async (file) => {
             const filePath = path.join(directoryPath, file);
             const stats = await fs.stat(filePath);
 
-            // Dynamically assign tags based on database & file prefixes
-            let processType = 'Pose Estimation';
-            let filterType = 'pose_estimation';
-
-            if (file.toLowerCase().includes('squat')) {
-                processType = 'Squat Analysis';
-                filterType = 'squat_analysis';
-            } else if (file.toLowerCase().includes('barbell')) {
-                processType = 'Barbell Tracking';
-                filterType = 'barbell_tracking';
-            }
-
             return {
                 id: file,
-                process_type: processType,
-                filter_type: filterType,
+                process_type: file.includes('pose') ? 'Pose Estimation' : 'Barbell Tracking',
                 processed_url: `/media/output/${file}`,
-                created_at: stats.birthtime // Date Object
+                created_at: stats.birthtime
             };
         }));
-
-        if (type && type !== 'all') {
-            videos = videos.filter(v => v.filter_type === type);
-        }
-
-        if (date) {
-            videos = videos.filter(v => {
-                const videoDateStr = new Date(v.created_at).toISOString().split('T')[0];
-                return videoDateStr === date;
-            });
-        }
-
-        // Sort by newest first
-        videos.sort((a, b) => b.created_at - a.created_at);
 
         res.json({
             success: true,
