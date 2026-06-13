@@ -73,6 +73,20 @@ class User {
     }
 
     /**
+     * Get hashed password for a user (for sensitive operations)
+     */
+    static async findUserPasswordById(id) {
+        try {
+            const query = `SELECT password FROM users WHERE id = $1`;
+            const result = await pool.query(query, [id]);
+            return result.rows[0] || null;
+        } catch (error) {
+            console.error('[User Model] Error finding user password:', error.message);
+            throw error;
+        }
+    }
+
+    /**
      * Update user profile
      */
     static async updateUser(id, data) {
@@ -111,15 +125,29 @@ class User {
     /**
      * Get all weight history entries for a user
      */
-    static async getWeightHistory(userId) {
+    static async getWeightHistory(userId, startDate, endDate) {
         try {
-            const query = `
+            let query = `
                 SELECT id, user_id, weight, date
                 FROM weight_history
                 WHERE user_id = $1
-                ORDER BY date DESC, id DESC;
             `;
-            const result = await pool.query(query, [userId]);
+            const params = [userId];
+            let paramIndex = 2;
+
+            if (startDate) {
+                query += ` AND date >= $${paramIndex++}`;
+                params.push(startDate);
+            }
+
+            if (endDate) {
+                query += ` AND date <= $${paramIndex++}`;
+                params.push(endDate);
+            }
+
+            query += ` ORDER BY date DESC, id DESC;`;
+
+            const result = await pool.query(query, params);
             return result.rows;
         } catch (error) {
             console.error('[User Model] Error getting weight history:', error.message);

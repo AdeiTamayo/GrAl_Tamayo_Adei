@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
+import TransparentNumericInput from "../components/TransparentNumericInput";
 import { useNavigate } from "react-router-dom";
 
 interface SetEntry {
@@ -386,23 +387,29 @@ export default function CurrentWorkout() {
                                                 </td>
                                                 <td className="py-3 px-2 font-mono text-zinc-400">{set.set_number}</td>
                                                 <td className="py-2 px-1">
-                                                    <input
-                                                        type="number"
-                                                        disabled={set.is_done}
+                                                    <TransparentNumericInput
                                                         value={set.weight}
-                                                        onChange={(e) => updateSet(exIdx, setIdx, "weight", e.target.value)}
-                                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-1.5 px-3 text-sm focus:border-lime-400 focus:ring-0 transition-colors disabled:opacity-50"
+                                                        onChange={(val) => updateSet(exIdx, setIdx, "weight", val)}
+                                                        disabled={set.is_done}
                                                         placeholder="0"
+                                                        min={0}
+                                                        max={999}
+                                                        step={0.1}
+                                                        className="w-full"
+                                                        inputClassName="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-1.5 px-3 text-sm focus:border-lime-400 focus:ring-0 transition-colors disabled:opacity-50"
                                                     />
                                                 </td>
                                                 <td className="py-2 px-1">
-                                                    <input
-                                                        type="number"
-                                                        disabled={set.is_done}
+                                                    <TransparentNumericInput
                                                         value={set.repetitions}
-                                                        onChange={(e) => updateSet(exIdx, setIdx, "repetitions", e.target.value)}
-                                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-1.5 px-3 text-sm focus:border-lime-400 focus:ring-0 transition-colors disabled:opacity-50"
+                                                        onChange={(val) => updateSet(exIdx, setIdx, "repetitions", val)}
+                                                        disabled={set.is_done}
                                                         placeholder="0"
+                                                        min={0}
+                                                        max={999}
+                                                        step={1}
+                                                        className="w-full"
+                                                        inputClassName="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-1.5 px-3 text-sm focus:border-lime-400 focus:ring-0 transition-colors disabled:opacity-50"
                                                     />
                                                 </td>
                                                 <td className="py-2 px-2 text-right">

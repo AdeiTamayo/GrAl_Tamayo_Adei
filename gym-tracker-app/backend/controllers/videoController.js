@@ -49,10 +49,9 @@ exports.processPoseEstimation = async (req, res) => {
         console.log(`[Success] Response URL: ${responseUrl}`);
 
         // Persist in database using authenticated user
-        if (req.user && req.user.userId) {
-            // Log target metadata context type safely inside the DB record
+        if (req.userId) {
             const dbProcessType = selectedMode === 'squat' ? 'squat_analysis' : 'pose_estimation';
-            await Video.createVideo(req.user.userId, req.file.filename, dbProcessType, responseUrl);
+            await Video.createVideo(req.userId, req.file.filename, dbProcessType, responseUrl);
         }
 
         res.json({
@@ -99,8 +98,8 @@ exports.processBarbellTracking = async (req, res) => {
         console.log(`[Barbell Success] Response URL: ${responseUrl}`);
 
         // Persist in database using authenticated user
-        if (req.user && req.user.userId) {
-            await Video.createVideo(req.user.userId, req.file.filename, 'barbell_tracking', responseUrl);
+        if (req.userId) {
+            await Video.createVideo(req.userId, req.file.filename, 'barbell_tracking', responseUrl);
         }
 
         res.json({

@@ -54,14 +54,39 @@ exports.deleteUser = async (req, res) => {
     console.log('Delete profile request received');
 
     try {
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).json({
+                success: false,
+                error: 'Password is required to delete account'
+            });
+        }
+
+        const user = await User.findUserPasswordById(req.userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: 'User not found'
+            });
+        }
+
+        const isValid = await User.validatePassword(password, user.password);
+        if (!isValid) {
+            return res.status(403).json({
+                success: false,
+                error: 'Incorrect password'
+            });
+        }
+
         await User.deleteUser(req.userId);
 
         return res.json({
             success: true
         })
 
-
     } catch (error) {
+        console.error('Error deleting user:', error);
         return res.status(500).json({
             success: false,
             error: 'Error deleting user'
@@ -189,7 +214,30 @@ exports.getWeightHistory = async (req, res) => {
             });
         }
 
-        const weightHistory = await User.getWeightHistory(userId);
+        const { startDate, endDate } = req.query;
+
+        if (startDate && isNaN(Date.parse(startDate))) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid startDate format (use YYYY-MM-DD)'
+            });
+        }
+
+        if (endDate && isNaN(Date.parse(endDate))) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid endDate format (use YYYY-MM-DD)'
+            });
+        }
+
+        if (startDate && endDate && startDate > endDate) {
+            return res.status(400).json({
+                success: false,
+                error: 'startDate cannot be after endDate'
+            });
+        }
+
+        const weightHistory = await User.getWeightHistory(userId, startDate, endDate);
 
         return res.status(200).json({
             success: true,

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Button from '../components/Button';
+import Calendar from '../components/Calendar';
 
 // Mock types for the schedule
 type ScheduledWorkout = {
@@ -10,10 +11,20 @@ type ScheduledWorkout = {
 };
 
 export default function Schedule() {
-    // Determine today's day index (0-6)
     const [selectedDayIndex, setSelectedDayIndex] = useState<number>(new Date().getDay());
+    const [showCalendar, setShowCalendar] = useState(false);
+    const calendarRef = useRef<HTMLDivElement>(null);
 
-    // Mock data for a typical week
+    useEffect(() => {
+        function handleClick(e: MouseEvent) {
+            if (calendarRef.current && !calendarRef.current.contains(e.target as Node)) {
+                setShowCalendar(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
+
     const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const mockSchedule: Record<number, ScheduledWorkout> = {
         1: { id: 1, date: 'Monday', routineName: 'Push Day (Chest/Tris)', status: 'completed' },
@@ -26,13 +37,26 @@ export default function Schedule() {
     const selectedWorkout = mockSchedule[selectedDayIndex];
     const isToday = selectedDayIndex === new Date().getDay();
 
+    function handleDateSelect(dateStr: string) {
+        const dayIndex = new Date(dateStr + 'T00:00:00').getDay();
+        setSelectedDayIndex(dayIndex);
+        setShowCalendar(false);
+    }
+
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-2">Schedule</h1>
-                <Button onClick={() => alert('Open calendar picker')} variant="secondary">
-                    Select Week
-                </Button>
+                <div className="relative" ref={calendarRef}>
+                    <Button onClick={() => setShowCalendar(!showCalendar)} variant="secondary">
+                        Select Week
+                    </Button>
+                    {showCalendar && (
+                        <div className="absolute right-0 mt-2 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
+                            <Calendar onSelect={handleDateSelect} />
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Weekly Strip */}

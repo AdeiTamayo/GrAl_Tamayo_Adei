@@ -13,6 +13,27 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage: storage });
+const VIDEO_MIMETYPES = [
+    'video/mp4',
+    'video/mpeg',
+    'video/quicktime',
+    'video/x-msvideo',
+    'video/x-matroska',
+    'video/webm',
+];
+
+function fileFilter(req, file, cb) {
+    if (VIDEO_MIMETYPES.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Only video files are allowed (mp4, mpeg, mov, avi, mkv, webm)'), false);
+    }
+}
+
+const upload = multer({
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: { fileSize: 500 * 1024 * 1024 },
+});
 
 module.exports = upload;

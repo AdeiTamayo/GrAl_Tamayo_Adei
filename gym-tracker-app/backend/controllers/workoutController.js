@@ -34,7 +34,7 @@ exports.getWorkouts = async (req, res) => {
 exports.getWorkoutById = async (req, res) => {
     console.log("Get workout by id request received");
     try {
-        const workout = await Workout.getWorkoutById(req.params.id);
+        const workout = await Workout.getWorkoutById(req.params.id, req.userId);
         if (!workout) {
             return res.status(404).json({
                 success: false,
@@ -129,7 +129,14 @@ exports.updateWorkout = async (req, res) => {
 exports.deleteWorkout = async (req, res) => {
     console.log("Delete workout request received");
     try {
-        await Workout.deleteWorkout(req.params.id);
+        const deleted = await Workout.deleteWorkout(req.params.id, req.userId);
+
+        if (!deleted) {
+            return res.status(404).json({
+                success: false,
+                error: 'Workout not found or unauthorized'
+            });
+        }
 
         return res.json({
             success: true,
@@ -160,7 +167,10 @@ exports.addWorkoutExercise = async (req, res) => {
 exports.deleteWorkoutExercise = async (req, res) => {
     try {
         const workoutExerciseId = req.params.workoutExerciseId;
-        await Workout.deleteWorkoutExercise(workoutExerciseId);
+        const deleted = await Workout.deleteWorkoutExercise(workoutExerciseId, req.userId);
+        if (!deleted) {
+            return res.status(404).json({ success: false, error: 'Exercise not found or unauthorized' });
+        }
         return res.status(200).json({ success: true });
     } catch (error) {
         console.error('[Controller] Delete Workout Exercise Error:', error);
@@ -207,7 +217,10 @@ exports.updateSet = async (req, res) => {
 exports.deleteSet = async (req, res) => {
     try {
         const setId = req.params.setId;
-        await Workout.deleteSet(setId);
+        const deleted = await Workout.deleteSet(setId, req.userId);
+        if (!deleted) {
+            return res.status(404).json({ success: false, error: 'Set not found or unauthorized' });
+        }
         return res.status(200).json({ success: true });
     } catch (error) {
         console.error('[Controller] Delete Set Error:', error);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 
@@ -26,6 +26,70 @@ interface ComparisonRow {
     valA: number;
     valB: number;
     unit: string;
+}
+
+function WorkoutDropdown({
+    label, workouts, value, onChange
+}: {
+    label: string;
+    workouts: { id: number; name: string; date: string }[];
+    value: number | "";
+    onChange: (v: number | "") => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClick(e: MouseEvent) {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
+
+    const selected = workouts.find(w => w.id === value);
+
+    return (
+        <div className="space-y-2 relative" ref={ref}>
+            <label className="text-xs uppercase font-bold text-zinc-500 tracking-widest pl-1">{label}</label>
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-left flex justify-between items-center hover:border-zinc-700 transition-colors"
+            >
+                <span className={selected ? "text-zinc-100" : "text-zinc-500"}>
+                    {selected ? `${selected.date} - ${selected.name}` : "Select a workout..."}
+                </span>
+                <svg className={`w-4 h-4 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            {open && (
+                <ul className="absolute z-20 w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-y-auto max-h-60 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <li
+                        onClick={() => { onChange(""); setOpen(false); }}
+                        className="px-4 py-2.5 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 cursor-pointer transition-colors text-sm"
+                    >
+                        Select a workout...
+                    </li>
+                    {workouts.map(w => (
+                        <li
+                            key={w.id}
+                            onClick={() => { onChange(w.id); setOpen(false); }}
+                            className={`px-4 py-2.5 cursor-pointer transition-colors text-sm flex justify-between items-center ${value === w.id ? "bg-lime-400/10 text-lime-400" : "text-zinc-300 hover:bg-zinc-900 hover:text-white"}`}
+                        >
+                            <span>{w.date} - {w.name}</span>
+                            {value === w.id && (
+                                <svg className="w-4 h-4 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                </svg>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
 }
 
 export default function CompareWorkouts() {
@@ -144,33 +208,18 @@ export default function CompareWorkouts() {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                    <div className="space-y-2">
-                        <label className="text-xs uppercase font-bold text-zinc-500 tracking-widest pl-1">Workout A</label>
-                        <select
-                            value={idA}
-                            onChange={(e) => setIdA(Number(e.target.value) || "")}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:border-lime-400 focus:ring-0"
-                        >
-                            <option value="">Select a workout...</option>
-                            {workoutsList.map(w => (
-                                <option key={w.id} value={w.id}>{w.date} - {w.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-xs uppercase font-bold text-zinc-500 tracking-widest pl-1">Workout B (More Recent)</label>
-                        <select
-                            value={idB}
-                            onChange={(e) => setIdB(Number(e.target.value) || "")}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 focus:border-lime-400 focus:ring-0"
-                        >
-                            <option value="">Select a workout...</option>
-                            {workoutsList.map(w => (
-                                <option key={w.id} value={w.id}>{w.date} - {w.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                    <WorkoutDropdown
+                        label="Workout A"
+                        workouts={workoutsList}
+                        value={idA}
+                        onChange={setIdA}
+                    />
+                    <WorkoutDropdown
+                        label="Workout B (More Recent)"
+                        workouts={workoutsList}
+                        value={idB}
+                        onChange={setIdB}
+                    />
                 </div>
 
                 <div className="flex justify-center mb-10">

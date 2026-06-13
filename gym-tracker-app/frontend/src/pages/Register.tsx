@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import TransparentNumericInput from "../components/TransparentNumericInput";
+import Select from "../components/Select";
 
 export default function Register() {
     const [name, setName] = useState("");
@@ -239,17 +240,17 @@ export default function Register() {
                         <h3 className="text-xs uppercase tracking-wider text-zinc-500 font-bold mb-2">Physical Details (Optional)</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-zinc-400 mb-2">Gender</label>
-                                <select
+                                <Select
+                                    label="Gender"
                                     value={genderId}
-                                    onChange={e => setGenderId(e.target.value)}
-                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors [color-scheme:dark]"
-                                >
-                                    <option value="">Select</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="non-binary">Other</option>
-                                </select>
+                                    onChange={setGenderId}
+                                    options={[
+                                        { value: "", label: "Select" },
+                                        { value: "male", label: "Male" },
+                                        { value: "female", label: "Female" },
+                                        { value: "non-binary", label: "Other" },
+                                    ]}
+                                />
                             </div>
 
                             <div>

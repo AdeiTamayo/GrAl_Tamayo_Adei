@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import TransparentNumericInput from "../components/TransparentNumericInput";
+import Select from "../components/Select";
 
 interface UserProfile {
     name: string;
@@ -259,20 +260,17 @@ export default function Profile() {
                             </div>
                         ))}
 
-                        {/* Gender — select */}
-                        <div>
-                            <label className="block text-sm font-semibold text-zinc-400 mb-2">Gender</label>
-                            <select
-                                value={form.gender ?? ""}
-                                onChange={e => handleChange("gender", e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors appearance-none"
-                            >
-                                <option value="">—</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="non-binary">Non-binary</option>
-                            </select>
-                        </div>
+                        <Select
+                            label="Gender"
+                            value={form.gender ?? ""}
+                            onChange={(val) => handleChange("gender", val)}
+                            options={[
+                                { value: "", label: "—" },
+                                { value: "male", label: "Male" },
+                                { value: "female", label: "Female" },
+                                { value: "non-binary", label: "Non-binary" },
+                            ]}
+                        />
                     </div>
                 )}
 

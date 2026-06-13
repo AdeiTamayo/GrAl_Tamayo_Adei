@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { apiFetch } from '../utils/api';
 import Button from './Button';
+import Select from './Select';
 
 export interface Exercise {
     id: number;
@@ -163,30 +164,36 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                             className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors"
                         />
                         <div className="grid grid-cols-3 gap-2">
-                            <select
+                            <Select
                                 value={filters.muscles}
-                                onChange={e => setFilters({ ...filters, muscles: e.target.value })}
-                                className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-2 text-xs text-zinc-300 focus:outline-none focus:border-lime-400 [color-scheme:dark]"
-                            >
-                                <option value="">Target</option>
-                                {filterOptions.muscles.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
-                            <select
+                                onChange={(val) => setFilters({ ...filters, muscles: val })}
+                                placeholder="Target"
+                                options={[
+                                    { value: "", label: "Target" },
+                                    ...filterOptions.muscles.map(m => ({ value: m, label: m }))
+                                ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
+                            />
+                            <Select
                                 value={filters.equipment}
-                                onChange={e => setFilters({ ...filters, equipment: e.target.value })}
-                                className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-2 text-xs text-zinc-300 focus:outline-none focus:border-lime-400 [color-scheme:dark]"
-                            >
-                                <option value="">Equipment</option>
-                                {filterOptions.equipment.map(e => <option key={e} value={e}>{e}</option>)}
-                            </select>
-                            <select
+                                onChange={(val) => setFilters({ ...filters, equipment: val })}
+                                placeholder="Equipment"
+                                options={[
+                                    { value: "", label: "Equipment" },
+                                    ...filterOptions.equipment.map(e => ({ value: e, label: e }))
+                                ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
+                            />
+                            <Select
                                 value={filters.categoryType}
-                                onChange={e => setFilters({ ...filters, categoryType: e.target.value })}
-                                className="bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-2 text-xs text-zinc-300 focus:outline-none focus:border-lime-400 [color-scheme:dark]"
-                            >
-                                <option value="">Category</option>
-                                {filterOptions.categoryType.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
+                                onChange={(val) => setFilters({ ...filters, categoryType: val })}
+                                placeholder="Category"
+                                options={[
+                                    { value: "", label: "Category" },
+                                    ...filterOptions.categoryType.map(c => ({ value: c, label: c }))
+                                ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
+                            />
                         </div>
                     </div>
 
@@ -230,54 +237,54 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Target Muscle</label>
-                            <select
+                            <Select
                                 value={newTarget}
-                                onChange={e => setNewTarget(e.target.value)}
-                                required
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:border-lime-400 [color-scheme:dark]"
-                            >
-                                <option value="">Select</option>
-                                {filterOptions.muscles.map(m => <option key={m} value={m}>{m}</option>)}
-                            </select>
+                                onChange={(val) => setNewTarget(val)}
+                                placeholder="Select"
+                                options={[
+                                    { value: "", label: "Select" },
+                                    ...filterOptions.muscles.map(m => ({ value: m, label: m }))
+                                ]}
+                            />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Equipment</label>
-                            <select
+                            <Select
                                 value={newEquipment}
-                                onChange={e => setNewEquipment(e.target.value)}
-                                required
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:border-lime-400 [color-scheme:dark]"
-                            >
-                                <option value="">Select</option>
-                                {filterOptions.equipment.map(e => <option key={e} value={e}>{e}</option>)}
-                            </select>
+                                onChange={(val) => setNewEquipment(val)}
+                                placeholder="Select"
+                                options={[
+                                    { value: "", label: "Select" },
+                                    ...filterOptions.equipment.map(e => ({ value: e, label: e }))
+                                ]}
+                            />
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Category</label>
-                            <select
+                            <Select
                                 value={newCategory}
-                                onChange={e => setNewCategory(e.target.value)}
-                                required
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:border-lime-400 [color-scheme:dark]"
-                            >
-                                <option value="">Select</option>
-                                {filterOptions.categoryType.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
+                                onChange={(val) => setNewCategory(val)}
+                                placeholder="Select"
+                                options={[
+                                    { value: "", label: "Select" },
+                                    ...filterOptions.categoryType.map(c => ({ value: c, label: c }))
+                                ]}
+                            />
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Difficulty</label>
-                            <select
+                            <Select
                                 value={newDifficulty}
-                                onChange={e => setNewDifficulty(e.target.value)}
-                                required
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:border-lime-400 [color-scheme:dark]"
-                            >
-                                <option value="beginner">Beginner</option>
-                                <option value="intermediate">Intermediate</option>
-                                <option value="expert">Expert</option>
-                            </select>
+                                onChange={(val) => setNewDifficulty(val)}
+                                placeholder="Select"
+                                options={[
+                                    { value: "beginner", label: "Beginner" },
+                                    { value: "intermediate", label: "Intermediate" },
+                                    { value: "expert", label: "Expert" }
+                                ]}
+                            />
                         </div>
                     </div>
                     <Button type="submit" fullWidth disabled={saving} className="mt-4">

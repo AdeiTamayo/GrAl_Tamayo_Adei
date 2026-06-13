@@ -1,9 +1,20 @@
 const Exercise = require('../models/exercise');
 
+let exercisesCache = null;
+let exercisesCacheTime = 0;
+const CACHE_TTL = 5 * 60 * 1000;
+
 exports.getExercises = async (req, res) => {
   console.log("Get all exercises request received");
 
   try {
+    if (exercisesCache && Date.now() - exercisesCacheTime < CACHE_TTL) {
+      return res.status(200).json({
+        success: true,
+        data: exercisesCache
+      });
+    }
+
     const exercices = await Exercise.getExercises();
 
     if (!exercices) {
@@ -12,6 +23,9 @@ exports.getExercises = async (req, res) => {
         error: 'Exercises not found'
       });
     }
+
+    exercisesCache = exercices;
+    exercisesCacheTime = Date.now();
 
     res.status(200).json({
       success: true,

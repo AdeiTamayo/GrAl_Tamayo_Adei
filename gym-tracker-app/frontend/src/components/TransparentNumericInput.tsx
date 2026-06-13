@@ -9,6 +9,7 @@ interface NumericInputProps {
     step?: number;
     className?: string; // Container class
     inputClassName?: string; // Input element class
+    disabled?: boolean;
 }
 
 export default function TransparentNumericInput({
@@ -19,7 +20,8 @@ export default function TransparentNumericInput({
     max = 999,
     step = 1,
     className = "w-[72px] sm:w-20",
-    inputClassName = "pl-1.5 pr-6 py-1 text-xs font-mono text-lime-400"
+    inputClassName = "pl-1.5 pr-6 py-1 text-xs font-mono text-lime-400",
+    disabled = false
 }: NumericInputProps) {
 
     const handleIncrement = () => {
@@ -48,9 +50,9 @@ export default function TransparentNumericInput({
                 min={min}
                 max={max}
                 step={step}
+                disabled={disabled}
                 onChange={(e) => onChange(e.target.value)}
-                /* pr-6 grants dedicated, un-encroached safe space for the micro-arrows */
-                className={`w-full bg-transparent border border-zinc-800 rounded-lg focus:border-lime-400 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${inputClassName}`}
+                className={`w-full bg-transparent border border-zinc-800 rounded-lg focus:border-lime-400 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 ${inputClassName}`}
             />
 
             {/* Micro-Arrows Control Panel */}

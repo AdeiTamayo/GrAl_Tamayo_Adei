@@ -4,9 +4,8 @@ const videoController = require('../controllers/videoController');
 const upload = require('../middleware/upload');
 const authMiddleware = require('../middleware/auth');
 
-// router.use(verifyToken);
-router.post('/pose-estimation', upload.single('video'), authMiddleware, videoController.processPoseEstimation);
-router.post('/barbell-tracking', upload.single('video'), authMiddleware, videoController.processBarbellTracking);
+router.post('/pose-estimation', authMiddleware, upload.single('video'), videoController.processPoseEstimation);
+router.post('/barbell-tracking', authMiddleware, upload.single('video'), videoController.processBarbellTracking);
 router.get('/', authMiddleware, videoController.getUserVideos);
 
 module.exports = router;

@@ -18,14 +18,14 @@ class Workout {
     }
 
     // Get a specific workout by ID, including its associated exercises and sets
-    static async getWorkoutById(id) {
+    static async getWorkoutById(id, userId) {
         try {
             const workoutQuery = `
                 SELECT *
                 FROM workouts
-                WHERE id = $1;
+                WHERE id = $1 AND user_id = $2;
             `;
-            const workoutResult = await pool.query(workoutQuery, [id]);
+            const workoutResult = await pool.query(workoutQuery, [id, userId]);
             if (workoutResult.rows.length === 0) return null;
 
             const exercisesQuery = `
@@ -124,14 +124,14 @@ class Workout {
     }
 
     // Delete a workout
-    static async deleteWorkout(id) {
+    static async deleteWorkout(id, userId) {
         try {
             const query = `
                 DELETE FROM workouts
-                WHERE id = $1
+                WHERE id = $1 AND user_id = $2
                 RETURNING id;
             `;
-            const result = await pool.query(query, [id]);
+            const result = await pool.query(query, [id, userId]);
             return result.rowCount > 0;
         } catch (error) {
             console.error('[Workout Model] Error deleting workout:', error.message);
@@ -164,11 +164,15 @@ class Workout {
         }
     }
 
-    static async deleteWorkoutExercise(workoutExerciseId) {
+    static async deleteWorkoutExercise(workoutExerciseId, userId) {
         try {
-            // Delete the workout_exercises row by ID
-            const query = `DELETE FROM workout_exercises WHERE id = $1 RETURNING id;`;
-            const result = await pool.query(query, [workoutExerciseId]);
+            const query = `
+                DELETE FROM workout_exercises we
+                USING workouts w
+                WHERE we.workout_id = w.id AND we.id = $1 AND w.user_id = $2
+                RETURNING we.id;
+            `;
+            const result = await pool.query(query, [workoutExerciseId, userId]);
             return result.rowCount > 0;
         } catch (error) {
             console.error('[Workout Model] Error deleting workout exercise:', error.message);
@@ -228,10 +232,15 @@ class Workout {
         }
     }
 
-    static async deleteSet(setId) {
+    static async deleteSet(setId, userId) {
         try {
-            const query = `DELETE FROM sets WHERE id = $1 RETURNING id;`;
-            const result = await pool.query(query, [setId]);
+            const query = `
+                DELETE FROM sets s
+                USING workout_exercises we, workouts w
+                WHERE s.workout_exercise_id = we.id AND we.workout_id = w.id AND s.id = $1 AND w.user_id = $2
+                RETURNING s.id;
+            `;
+            const result = await pool.query(query, [setId, userId]);
             return result.rowCount > 0;
         } catch (error) {
             console.error('[Workout Model] Error deleting set:', error.message);

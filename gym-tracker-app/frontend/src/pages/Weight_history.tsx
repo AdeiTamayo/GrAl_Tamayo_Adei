@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { apiFetch } from "../utils/api";
 import TransparentNumericInput from "../components/TransparentNumericInput";
+import Calendar from "../components/Calendar";
 // 1. Import Recharts components
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -20,6 +21,7 @@ export default function WeightHistory() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [weight, setWeight] = useState<number | "">("");
     const [date, setDate] = useState<string>(new Date().toLocaleDateString('en-CA'));
+    const [showCalendar, setShowCalendar] = useState(false);
 
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(
@@ -153,12 +155,11 @@ export default function WeightHistory() {
 
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
 
-            {/* 3. Added Weight Progress Line Chart Graphic */}
-            {entries.length > 0 && (
-                <div className="w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
-                    <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-4">
-                        Progress Overview
-                    </h3>
+            <div className="w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
+                <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-4">
+                    Progress Overview
+                </h3>
+                {entries.length > 0 ? (
                     <div className="h-[250px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -192,7 +193,7 @@ export default function WeightHistory() {
                                 <Line
                                     type="monotone"
                                     dataKey="weightNum"
-                                    stroke="#a3e635" /* lime-400 matched */
+                                    stroke="#a3e635"
                                     strokeWidth={3}
                                     dot={{ fill: '#a3e635', strokeWidth: 2, r: 4 }}
                                     activeDot={{ r: 6, strokeWidth: 0 }}
@@ -200,8 +201,14 @@ export default function WeightHistory() {
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
-            )}
+                ) : (
+                    <div className="h-[250px] w-full flex items-center justify-center bg-zinc-900/30 rounded-lg border border-zinc-800/50">
+                        <p className="text-zinc-500 font-medium italic text-sm">
+                            Add weight entries to see your progress chart.
+                        </p>
+                    </div>
+                )}
+            </div>
 
             <div className="flex gap-6 items-start flex-col md:flex-row">
                 {/* Form */}
@@ -220,13 +227,23 @@ export default function WeightHistory() {
                             min={0}
                             max={500}
                         />
-                        <input
-                            type="date"
-                            value={date}
-                            onChange={e => setDate(e.target.value)}
-                            required
-                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors [color-scheme:dark]"
-                        />
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setShowCalendar(!showCalendar)}
+                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-all text-left"
+                            >
+                                {date}
+                            </button>
+                            {showCalendar && (
+                                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                                    <Calendar
+                                        selectedDate={date}
+                                        onSelect={(d) => { setDate(d); setShowCalendar(false); }}
+                                    />
+                                </div>
+                            )}
+                        </div>
 
                         <div className="flex gap-3 mt-2">
                             <button type="submit" className="flex-1 bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98]">

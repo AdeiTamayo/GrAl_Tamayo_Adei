@@ -3,6 +3,7 @@ import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import EditableExerciseCard from '../components/EditableExerciseCard';
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
+import Calendar from '../components/Calendar';
 
 // ---- TYPES & INTERFACES ----
 interface SetEntry {
@@ -55,11 +56,13 @@ export default function WorkoutsManagement() {
     const [newWorkoutName, setNewWorkoutName] = useState("");
     const [newWorkoutDate, setNewWorkoutDate] = useState(new Date().toLocaleDateString('en-CA'));
     const [newWorkoutNote, setNewWorkoutNote] = useState("");
+    const [showCreateDatePicker, setShowCreateDatePicker] = useState(false);
 
     // Edit workout form
     const [editName, setEditName] = useState("");
     const [editDate, setEditDate] = useState("");
     const [editNote, setEditNote] = useState("");
+    const [showEditDatePicker, setShowEditDatePicker] = useState(false);
 
     // Add exercise search
     const [showPicker, setShowPicker] = useState(false);
@@ -469,14 +472,23 @@ export default function WorkoutsManagement() {
                                         className="w-full border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-lime-400 focus:outline-none transition-all"
                                     />
                                 </div>
-                                <div>
+                                <div className="relative">
                                     <label className="block text-xs uppercase tracking-wider text-zinc-400 font-bold mb-1.5">Session Date</label>
-                                    <input
-                                        type="date"
-                                        value={newWorkoutDate}
-                                        onChange={(e) => setNewWorkoutDate(e.target.value)}
-                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-lime-400 focus:outline-none transition-all [color-scheme:dark]"
-                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCreateDatePicker(!showCreateDatePicker)}
+                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-lime-400 focus:outline-none transition-all text-left"
+                                    >
+                                        {newWorkoutDate}
+                                    </button>
+                                    {showCreateDatePicker && (
+                                        <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                                            <Calendar
+                                                selectedDate={newWorkoutDate}
+                                                onSelect={(date) => { setNewWorkoutDate(date); setShowCreateDatePicker(false); }}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-xs uppercase tracking-wider text-zinc-400 font-bold mb-1.5">Notes (Optional)</label>
@@ -574,7 +586,23 @@ export default function WorkoutsManagement() {
                                     <div className="absolute right-0 top-full mt-2 w-80 bg-zinc-950 border border-zinc-800 rounded-xl p-4 shadow-xl z-20 flex flex-col gap-3 animate-in fade-in duration-100">
                                         <h4 className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Edit Core Metadata</h4>
                                         <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:border-lime-400 focus:outline-none" />
-                                        <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:border-lime-400 focus:outline-none [color-scheme:dark]" />
+                                        <div className="relative">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowEditDatePicker(!showEditDatePicker)}
+                                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:border-lime-400 focus:outline-none transition-all text-left"
+                                            >
+                                                {editDate}
+                                            </button>
+                                            {showEditDatePicker && (
+                                                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                                                    <Calendar
+                                                        selectedDate={editDate}
+                                                        onSelect={(date) => { setEditDate(date); setShowEditDatePicker(false); }}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                         <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:border-lime-400 focus:outline-none" />
                                         <div className="flex gap-2 justify-end mt-1">
                                             <button type="button" onClick={() => setShowDetailsDropdown(false)} className="text-zinc-400 text-xs font-semibold px-2.5 py-1.5 hover:text-zinc-200">Cancel</button>

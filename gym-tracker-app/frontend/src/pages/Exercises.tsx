@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
+import Select from '../components/Select';
 
 type Exercise = {
     id: number;
@@ -61,6 +62,11 @@ export default function Exercises() {
     });
 
     const [selectedSecondaryMuscles, setSelectedSecondaryMuscles] = useState<string[]>([]);
+    const [formSecondaryPick, setFormSecondaryPick] = useState('');
+    const [formTarget, setFormTarget] = useState('');
+    const [formEquipment, setFormEquipment] = useState('');
+    const [formCategory, setFormCategory] = useState('');
+    const [formDifficulty, setFormDifficulty] = useState('beginner');
 
     const [viewMode, setViewMode] = useState<ViewMode>('list');
 
@@ -106,12 +112,20 @@ export default function Exercises() {
     }, []);
 
     useEffect(() => {
-        if (viewMode === 'edit' && selectedExercise?.secondary_muscles) {
-            setSelectedSecondaryMuscles(selectedExercise.secondary_muscles);
+        if (viewMode === 'edit' && selectedExercise) {
+            setSelectedSecondaryMuscles(selectedExercise.secondary_muscles || []);
+            setFormTarget(selectedExercise.target || '');
+            setFormEquipment(selectedExercise.equipment || '');
+            setFormCategory(selectedExercise.category || '');
+            setFormDifficulty(selectedExercise.difficulty || 'beginner');
         }
 
         if (viewMode === 'create') {
             setSelectedSecondaryMuscles([]);
+            setFormTarget('');
+            setFormEquipment('');
+            setFormCategory('');
+            setFormDifficulty('beginner');
         }
     }, [viewMode, selectedExercise]);
 
@@ -411,95 +425,95 @@ export default function Exercises() {
 
                 <div>
                     <label className="block text-sm font-semibold text-zinc-400 mb-2">Target Muscle</label>
-                    <select
-                        name="target_muscle"
-                        defaultValue={ex?.target || ''}
-                        className="w-full mb-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
-                    >
-                        <option value="">Select Target</option>
-                        {filterOptions.muscles?.map(m => (
-                            <option key={m} value={m}>{m}</option>
-                        ))}
-                    </select>
+                    <Select
+                        value={formTarget}
+                        onChange={(val) => setFormTarget(val)}
+                        placeholder="Select Target"
+                        options={[
+                            { value: "", label: "Select Target" },
+                            ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
+                        ]}
+                    />
+                    <input type="hidden" name="target_muscle" value={formTarget} />
                     <input
                         type="text"
                         name="new_target_muscle"
                         placeholder="Or add new muscle..."
-                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full mt-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
                     <label className="block text-sm font-semibold text-zinc-400 mb-2">Equipment</label>
-                    <select
-                        name="equipment"
-                        defaultValue={ex?.equipment || ''}
-                        className="w-full mb-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
-                    >
-                        <option value="">Select Equipment</option>
-                        {filterOptions.equipment?.map(e => (
-                            <option key={e} value={e}>{e}</option>
-                        ))}
-                    </select>
+                    <Select
+                        value={formEquipment}
+                        onChange={(val) => setFormEquipment(val)}
+                        placeholder="Select Equipment"
+                        options={[
+                            { value: "", label: "Select Equipment" },
+                            ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
+                        ]}
+                    />
+                    <input type="hidden" name="equipment" value={formEquipment} />
                     <input
                         type="text"
                         name="new_equipment"
                         placeholder="Or add new equipment..."
-                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full mt-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
                     <label className="block text-sm font-semibold text-zinc-400 mb-2">Category</label>
-                    <select
-                        name="category"
-                        defaultValue={ex?.category || ''}
-                        className="w-full mb-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
-                    >
-                        <option value="">Select Category</option>
-                        {filterOptions.categoryType?.map(c => (
-                            <option key={c} value={c}>{c}</option>
-                        ))}
-                    </select>
+                    <Select
+                        value={formCategory}
+                        onChange={(val) => setFormCategory(val)}
+                        placeholder="Select Category"
+                        options={[
+                            { value: "", label: "Select Category" },
+                            ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
+                        ]}
+                    />
+                    <input type="hidden" name="category" value={formCategory} />
                     <input
                         type="text"
                         name="new_category"
                         placeholder="Or add new category..."
-                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full mt-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
                     <label className="block text-sm font-semibold text-zinc-400 mb-2">Difficulty</label>
-                    <select
-                        name="difficulty"
-                        defaultValue={ex?.difficulty || 'beginner'}
-                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
-                    >
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="advanced">Advanced</option>
-                    </select>
+                    <Select
+                        value={formDifficulty}
+                        onChange={(val) => setFormDifficulty(val)}
+                        placeholder="Select"
+                        options={[
+                            { value: "beginner", label: "Beginner" },
+                            { value: "intermediate", label: "Intermediate" },
+                            { value: "advanced", label: "Advanced" }
+                        ]}
+                    />
+                    <input type="hidden" name="difficulty" value={formDifficulty} />
                 </div>
 
                 <div>
                     <label className="block text-sm font-semibold text-zinc-400 mb-2">Secondary Muscles</label>
-                    <select
-                        className="w-full mb-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
-                        defaultValue=""
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            if (value && !selectedSecondaryMuscles.includes(value)) {
-                                setSelectedSecondaryMuscles(prev => [...prev, value]);
+                    <Select
+                        value={formSecondaryPick}
+                        onChange={(val) => {
+                            if (val && !selectedSecondaryMuscles.includes(val)) {
+                                setSelectedSecondaryMuscles(prev => [...prev, val]);
                             }
-                            e.target.value = '';
+                            setFormSecondaryPick('');
                         }}
-                    >
-                        <option value="">Select Secondary Muscle</option>
-                        {filterOptions.muscles?.map(m => (
-                            <option key={`sec-${m}`} value={m} disabled={selectedSecondaryMuscles.includes(m)}>{m}</option>
-                        ))}
-                    </select>
+                        placeholder="Select Secondary Muscle"
+                        options={[
+                            { value: "", label: "Select Secondary Muscle" },
+                            ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
+                        ]}
+                    />
                     <input
                         type="text"
                         placeholder="Or add new secondary muscle..."
@@ -588,27 +602,33 @@ export default function Exercises() {
                                 type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
                                 className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
                             />
-                            <select
-                                name="muscles" value={filters.muscles} onChange={handleFilterChange}
-                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
-                            >
-                                <option value="">All Muscles</option>
-                                {filterOptions.muscles?.map(m => (<option key={m} value={m}>{m}</option>))}
-                            </select>
-                            <select
-                                name="equipment" value={filters.equipment} onChange={handleFilterChange}
-                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
-                            >
-                                <option value="">All Equipment</option>
-                                {filterOptions.equipment?.map(e => (<option key={e} value={e}>{e}</option>))}
-                            </select>
-                            <select
-                                name="categoryType" value={filters.categoryType} onChange={handleFilterChange}
-                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors appearance-none"
-                            >
-                                <option value="">All Categories</option>
-                                {filterOptions.categoryType?.map(c => (<option key={c} value={c}>{c}</option>))}
-                            </select>
+                            <Select
+                                value={filters.muscles}
+                                onChange={(val) => setFilters({ ...filters, muscles: val })}
+                                placeholder="All Muscles"
+                                options={[
+                                    { value: "", label: "All Muscles" },
+                                    ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
+                                ]}
+                            />
+                            <Select
+                                value={filters.equipment}
+                                onChange={(val) => setFilters({ ...filters, equipment: val })}
+                                placeholder="All Equipment"
+                                options={[
+                                    { value: "", label: "All Equipment" },
+                                    ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
+                                ]}
+                            />
+                            <Select
+                                value={filters.categoryType}
+                                onChange={(val) => setFilters({ ...filters, categoryType: val })}
+                                placeholder="All Categories"
+                                options={[
+                                    { value: "", label: "All Categories" },
+                                    ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
+                                ]}
+                            />
                         </div>
                     )}
                 </div>

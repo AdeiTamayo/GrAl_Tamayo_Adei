@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, FormEvent } from "react";
 import { apiFetch } from "../utils/api";
+import TransparentNumericInput from "../components/TransparentNumericInput";
+import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
 
 interface Goal {
     id: number;
@@ -10,22 +12,16 @@ interface Goal {
     created_at: string;
 }
 
-interface Exercise {
-    id: number;
-    name: string;
-}
-
 export default function Goals() {
     const [goals, setGoals] = useState<Goal[]>([]);
-    const [allExercises, setAllExercises] = useState<Exercise[]>([]);
-    const [exercises, setExercises] = useState<Exercise[]>([]);
 
     // Form state
-    const [searchQuery, setSearchQuery] = useState("");
     const [selectedExerciseId, setSelectedExerciseId] = useState<number | "">("");
+    const [selectedExerciseName, setSelectedExerciseName] = useState("");
     const [targetWeight, setTargetWeight] = useState<number | "">("");
     const [targetReps, setTargetReps] = useState<number | "">("");
     const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
+    const [showPicker, setShowPicker] = useState(false);
 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -37,30 +33,8 @@ export default function Goals() {
     }), [token]);
 
     useEffect(() => {
-        Promise.all([fetchGoals(), fetchExercises()]).finally(() => setIsLoading(false));
+        fetchGoals().finally(() => setIsLoading(false));
     }, [headers]);
-
-    // Handle search filtering
-    useEffect(() => {
-        if (!searchQuery) {
-            setExercises(allExercises);
-        } else {
-            const query = searchQuery.toLowerCase();
-            setExercises(allExercises.filter(ex => ex.name.toLowerCase().includes(query)));
-        }
-    }, [searchQuery, allExercises]);
-
-    async function fetchExercises() {
-        try {
-            const res = await apiFetch("/api/exercises", { headers });
-            const data = await res.json();
-            const fetchedExercises = data.exercises || data.data || data || [];
-            setAllExercises(fetchedExercises);
-            setExercises(fetchedExercises);
-        } catch (err: any) {
-            console.error("Failed to fetch exercises", err);
-        }
-    }
 
     async function fetchGoals() {
         try {
@@ -107,19 +81,18 @@ export default function Goals() {
     function handleEditGoal(goal: Goal) {
         setEditingGoalId(goal.id);
         setSelectedExerciseId(goal.exercise_id);
+        setSelectedExerciseName(goal.exercise_name);
         setTargetWeight(Number(goal.target_weight));
         setTargetReps(goal.target_reps);
-        setSearchQuery("");
         setError(null);
     }
 
     function resetForm() {
         setEditingGoalId(null);
         setSelectedExerciseId("");
+        setSelectedExerciseName("");
         setTargetWeight("");
         setTargetReps("");
-        setSearchQuery("");
-        setError(null);
     }
 
     async function deleteGoal(id: number) {
@@ -151,42 +124,52 @@ export default function Goals() {
                         {editingGoalId ? "Edit Goal" : "Add New Goal"}
                     </h3>
                     <form onSubmit={handleAddGoal} className="flex flex-col gap-4">
-                        <input
-                            type="text"
-                            placeholder="Search exercise..."
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
+                        <button
+                            type="button"
+                            onClick={() => setShowPicker(true)}
                             disabled={!!editingGoalId}
-                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors disabled:opacity-50"
-                        />
-                        <select
-                            value={selectedExerciseId}
-                            onChange={e => setSelectedExerciseId(Number(e.target.value))}
-                            required
-                            disabled={!!editingGoalId}
-                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors disabled:opacity-50 appearance-none"
+                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-left text-zinc-100 hover:border-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <option value="" disabled>Select Exercise</option>
-                            {exercises?.map(ex => (
-                                <option key={ex.id} value={ex.id}>{ex.name}</option>
-                            ))}
-                        </select>
-                        <input
-                            type="number"
-                            step="0.1"
+                            {selectedExerciseName || <span className="text-zinc-500">Select Exercise</span>}
+                        </button>
+                        {showPicker && (
+                            <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                                <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-zinc-950 border border-zinc-800 rounded-3xl flex flex-col">
+                                    <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                                        <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
+                                        <button onClick={() => setShowPicker(false)} className="text-zinc-500 hover:text-white text-xl leading-none">&times;</button>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-4">
+                                        <ExercisePicker
+                                            onSelect={(ex) => {
+                                                setSelectedExerciseId(ex.id);
+                                                setSelectedExerciseName(ex.name);
+                                                setShowPicker(false);
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        <TransparentNumericInput
                             placeholder="Target Weight (kg)"
                             value={targetWeight}
-                            onChange={e => setTargetWeight(Number(e.target.value))}
-                            required
-                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                            onChange={(val) => setTargetWeight(val === "" ? "" : Number(val))}
+                            className="w-full"
+                            inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                            step={0.1}
+                            min={0}
+                            max={999}
                         />
-                        <input
-                            type="number"
+                        <TransparentNumericInput
                             placeholder="Target Reps"
                             value={targetReps}
-                            onChange={e => setTargetReps(Number(e.target.value))}
-                            required
-                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                            onChange={(val) => setTargetReps(val === "" ? "" : Number(val))}
+                            className="w-full"
+                            inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                            step={1}
+                            min={0}
+                            max={999}
                         />
 
                         <div className="flex gap-3 mt-2">

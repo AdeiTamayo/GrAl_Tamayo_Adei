@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Video } from "../../types";
 import { apiFetch } from "../utils/api";
+import Select from "../components/Select";
+import Calendar from "../components/Calendar";
 
 export default function UserVideos() {
     const [videos, setVideos] = useState<Video[]>([]);
@@ -66,36 +68,24 @@ export default function UserVideos() {
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     <div className="flex flex-col min-w-[140px] flex-1 md:flex-initial">
                         <label className="text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">Analysis Type</label>
-                        <select
+                        <Select
                             value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
-                            className="bg-zinc-900 border border-zinc-800 rounded-lg py-1.5 px-3 text-xs text-zinc-200 focus:border-lime-400 focus:ring-0 cursor-pointer"
-                        >
-                            <option value="all">All Movements</option>
-                            <option value="pose_estimation">Pose Estimation</option>
-                            <option value="squat_analysis">Squat Analysis</option>
-                            <option value="barbell_tracking">Barbell Tracking</option>
-                        </select>
+                            onChange={setFilterType}
+                            options={[
+                                { value: "all", label: "All Movements" },
+                                { value: "pose_estimation", label: "Pose Estimation" },
+                                { value: "squat_analysis", label: "Squat Analysis" },
+                                { value: "barbell_tracking", label: "Barbell Tracking" },
+                            ]}
+                        />
                     </div>
 
                     <div className="flex flex-col min-w-[140px] flex-1 md:flex-initial">
                         <label className="text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">Date Recorded</label>
-                        <div className="relative">
-                            <input
-                                type="date"
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
-                                className="bg-zinc-900 border border-zinc-800 rounded-lg py-1.5 px-3 text-xs text-zinc-200 focus:border-lime-400 focus:ring-0 w-full cursor-pointer"
-                            />
-                            {filterDate && (
-                                <button
-                                    onClick={() => setFilterDate("")}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-xs font-bold"
-                                >
-                                    ✕
-                                </button>
-                            )}
-                        </div>
+                        <DateFilterButton
+                            value={filterDate}
+                            onChange={setFilterDate}
+                        />
                     </div>
                 </div>
             </div>
@@ -150,6 +140,50 @@ export default function UserVideos() {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function DateFilterButton({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClick(e: MouseEvent) {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
+
+    return (
+        <div className="relative" ref={ref}>
+            <button
+                type="button"
+                onClick={() => setOpen(!open)}
+                className="bg-zinc-900 border border-zinc-800 rounded-lg py-1.5 px-3 text-xs text-zinc-200 focus:border-lime-400 focus:outline-none w-full text-left flex items-center justify-between gap-2"
+            >
+                <span>{value || "Any date"}</span>
+                <svg className={`w-3 h-3 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            {value && (
+                <button
+                    onClick={() => { onChange(""); setOpen(false); }}
+                    className="absolute right-8 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-xs font-bold z-10"
+                >
+                    ✕
+                </button>
+            )}
+            {open && (
+                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <Calendar
+                        selectedDate={value || undefined}
+                        onSelect={(date) => { onChange(date); setOpen(false); }}
+                    />
                 </div>
             )}
         </div>

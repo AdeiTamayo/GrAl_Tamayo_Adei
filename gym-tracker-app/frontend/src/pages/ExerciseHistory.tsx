@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
@@ -12,11 +13,24 @@ interface HistoryPoint {
 }
 
 export default function ExerciseHistory() {
+    const [searchParams] = useSearchParams();
     const [selectedExercise, setSelectedExercise] = useState<ExerciseMeta | null>(null);
     const [history, setHistory] = useState<HistoryPoint[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [showPicker, setShowPicker] = useState(false);
+
+    const exerciseIdParam = searchParams.get('exerciseId');
+    const exerciseNameParam = searchParams.get('exerciseName');
+
+    useEffect(() => {
+        if (exerciseIdParam && exerciseNameParam) {
+            setSelectedExercise({
+                id: Number(exerciseIdParam),
+                name: decodeURIComponent(exerciseNameParam),
+            } as ExerciseMeta);
+        }
+    }, [exerciseIdParam, exerciseNameParam]);
 
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({

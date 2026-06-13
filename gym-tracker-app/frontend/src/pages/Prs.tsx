@@ -1,6 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../utils/api";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import TransparentNumericInput from "../components/TransparentNumericInput";
+import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
+import Calendar from "../components/Calendar";
 
 interface PRSummary {
     id: number;
@@ -20,11 +23,6 @@ interface PRHistory {
     note: string | null;
 }
 
-interface Exercise {
-    id: number;
-    name: string;
-}
-
 export default function PersonalRecords() {
     const [prSummary, setPrSummary] = useState<PRSummary[]>([]);
     const [selectedExerciseName, setSelectedExerciseName] = useState<string | null>(null);
@@ -34,8 +32,8 @@ export default function PersonalRecords() {
     const [loading, setLoading] = useState(true);
 
     // Form state
-    const [exercises, setExercises] = useState<Exercise[]>([]);
     const [formExerciseId, setFormExerciseId] = useState<number | "">("");
+    const [formExerciseName, setFormExerciseName] = useState("");
     const [newWeight, setNewWeight] = useState<number | "">("");
     const [newReps, setNewReps] = useState<number | "">("");
     const [newDate, setNewDate] = useState("");
@@ -44,9 +42,8 @@ export default function PersonalRecords() {
 
     // UX states
     const [showAddForm, setShowAddForm] = useState(false);
-    const [exerciseSearch, setExerciseSearch] = useState("");
-    const [showDropdown, setShowDropdown] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [showPicker, setShowPicker] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     // Removed useMemo to guarantee fresh authorization tokens on every network dispatch
     const getHeaders = () => ({
@@ -55,28 +52,8 @@ export default function PersonalRecords() {
     });
 
     useEffect(() => {
-        Promise.all([fetchPrSummary(), fetchExercises()]).finally(() => setLoading(false));
+        fetchPrSummary().finally(() => setLoading(false));
     }, []);
-
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setShowDropdown(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    async function fetchExercises() {
-        try {
-            const res = await apiFetch("/api/exercises", { headers: getHeaders() });
-            const data = await res.json();
-            if (data.success) setExercises(data.data);
-        } catch (err) {
-            console.error("Failed to fetch exercises", err);
-        }
-    }
 
     async function fetchPrSummary() {
         try {
@@ -132,7 +109,7 @@ export default function PersonalRecords() {
             if (data.success) {
                 fetchPrSummary();
                 setFormExerciseId("");
-                setExerciseSearch("");
+                setFormExerciseName("");
                 setNewWeight("");
                 setNewReps("");
                 setNewDate("");
@@ -172,10 +149,6 @@ export default function PersonalRecords() {
             setError(err instanceof Error ? err.message : "An error occurred while deleting entry");
         }
     }
-
-    const filteredExercises = exercises.filter(ex =>
-        ex.name.toLowerCase().includes(exerciseSearch.toLowerCase())
-    );
 
     // Chart explicitly needs chronological sorting (Oldest -> Newest)
     const chartData = useMemo(() => {
@@ -222,63 +195,71 @@ export default function PersonalRecords() {
 
                         {showAddForm && (
                             <form onSubmit={createPR} className="flex flex-col gap-4 mt-6 border-t border-zinc-800/80 pt-6">
-                                <div className="relative" ref={dropdownRef}>
-                                    <input
-                                        type="text"
-                                        placeholder="Search and select exercise..."
-                                        value={exerciseSearch}
-                                        onChange={e => {
-                                            setExerciseSearch(e.target.value);
-                                            setFormExerciseId("");
-                                            setShowDropdown(true);
-                                        }}
-                                        onFocus={() => setShowDropdown(true)}
-                                        required
-                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
-                                    />
-                                    {showDropdown && filteredExercises.length > 0 && (
-                                        <ul className="absolute z-10 w-full mt-2 bg-zinc-900 border border-zinc-800 rounded-lg shadow-2xl overflow-y-auto max-h-48 py-2">
-                                            {filteredExercises.map(ex => (
-                                                <li
-                                                    key={ex.id}
-                                                    onClick={() => {
-                                                        setExerciseSearch(ex.name);
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPicker(true)}
+                                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-left text-zinc-100 hover:border-zinc-700 transition-colors"
+                                >
+                                    {formExerciseName || <span className="text-zinc-500">Select Exercise</span>}
+                                </button>
+                                {showPicker && (
+                                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-zinc-950 border border-zinc-800 rounded-3xl flex flex-col">
+                                            <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                                                <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
+                                                <button onClick={() => setShowPicker(false)} className="text-zinc-500 hover:text-white text-xl leading-none">&times;</button>
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto p-4">
+                                                <ExercisePicker
+                                                    onSelect={(ex) => {
                                                         setFormExerciseId(ex.id);
-                                                        setShowDropdown(false);
+                                                        setFormExerciseName(ex.name);
+                                                        setShowPicker(false);
                                                     }}
-                                                    className="px-4 py-2.5 text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer transition-colors"
-                                                >
-                                                    {ex.name}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input
-                                        type="number"
-                                        step="0.1"
+                                    <TransparentNumericInput
                                         placeholder="Weight (kg)"
                                         value={newWeight}
-                                        onChange={e => setNewWeight(e.target.value === "" ? "" : Number(e.target.value))}
-                                        required
-                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                        onChange={(val) => setNewWeight(val === "" ? "" : Number(val))}
+                                        className="w-full"
+                                        inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                        step={0.1}
+                                        min={0}
+                                        max={999}
                                     />
-                                    <input
-                                        type="number"
+                                    <TransparentNumericInput
                                         placeholder="Reps"
                                         value={newReps}
-                                        onChange={e => setNewReps(e.target.value === "" ? "" : Number(e.target.value))}
-                                        required
-                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                        onChange={(val) => setNewReps(val === "" ? "" : Number(val))}
+                                        className="w-full"
+                                        inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                        step={1}
+                                        min={0}
+                                        max={999}
                                     />
                                 </div>
-                                <input
-                                    type="date"
-                                    value={newDate}
-                                    onChange={e => setNewDate(e.target.value)}
-                                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-colors [color-scheme:dark]"
-                                />
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDatePicker(!showDatePicker)}
+                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-all text-left"
+                                    >
+                                        {newDate || <span className="text-zinc-500">Select date</span>}
+                                    </button>
+                                    {showDatePicker && (
+                                        <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
+                                            <Calendar
+                                                selectedDate={newDate || undefined}
+                                                onSelect={(date) => { setNewDate(date); setShowDatePicker(false); }}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                                 <input
                                     type="text"
                                     placeholder="Note (optional)"
