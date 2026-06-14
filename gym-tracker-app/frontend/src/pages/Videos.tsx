@@ -61,7 +61,7 @@ export default function UserVideos() {
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 space-y-6">
             {/* TITLE SECTION */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-zinc-800 pb-5">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-subtle pb-5">
                 <div>
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Your Videos</h1>
                 </div>
@@ -69,7 +69,7 @@ export default function UserVideos() {
                 {/* FILTER CONTROLS BAR */}
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     <div className="flex flex-col min-w-[140px] flex-1 md:flex-initial">
-                        <label className="text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">Analysis Type</label>
+                        <label className="text-[10px] uppercase font-bold text-dim mb-1 tracking-wider">Analysis Type</label>
                         <Select
                             value={filterType}
                             onChange={setFilterType}
@@ -83,7 +83,7 @@ export default function UserVideos() {
                     </div>
 
                     <div className="flex flex-col min-w-[140px] flex-1 md:flex-initial">
-                        <label className="text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">Date Recorded</label>
+                        <label className="text-[10px] uppercase font-bold text-dim mb-1 tracking-wider">Date Recorded</label>
                         <DateFilterButton
                             value={filterDate}
                             onChange={setFilterDate}
@@ -91,7 +91,7 @@ export default function UserVideos() {
                     </div>
 
                     <div className="flex flex-col min-w-[120px] flex-1 md:flex-initial">
-                        <label className="text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">Order By</label>
+                        <label className="text-[10px] uppercase font-bold text-dim mb-1 tracking-wider">Order By</label>
                         <Select
                             value={sortOrder}
                             onChange={setSortOrder}
@@ -108,12 +108,12 @@ export default function UserVideos() {
             {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
                     {[1, 2, 3].map(n => (
-                        <div key={n} className="bg-zinc-900/40 border border-zinc-800 rounded-xl h-80" />
+                        <div key={n} className="bg-surface/40 border border-subtle rounded-xl h-80" />
                     ))}
                 </div>
             ) : videos.length === 0 ? (
-                <div className="text-center py-16 bg-zinc-950 rounded-xl border border-zinc-900">
-                    <p className="text-zinc-500 font-medium italic text-sm">
+                <div className="text-center py-16 bg-card rounded-xl border border-subtle">
+                    <p className="text-dim font-medium italic text-sm">
                         No videos match your selected filter criteria.
                     </p>
                 </div>
@@ -122,9 +122,9 @@ export default function UserVideos() {
                     {videos.map(video => (
                         <div
                             key={video.id}
-                            className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-zinc-700/80 transition-all duration-200"
+                            className="bg-card border border-subtle/80 rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-hover/80 transition-all duration-200"
                         >
-                            <div className="bg-black border border-zinc-900 rounded-lg overflow-hidden relative aspect-[3/4] shadow-inner mb-3 flex items-center justify-center">
+                            <div className="bg-black border border-subtle rounded-lg overflow-hidden relative aspect-[3/4] shadow-inner mb-3 flex items-center justify-center">
                                 <video
                                     className="w-full h-full object-contain"
                                     controls
@@ -138,12 +138,12 @@ export default function UserVideos() {
                             </div>
 
                             {/* CARD DETAILS FOOTER */}
-                            <div className="pt-2 border-t border-zinc-900 flex items-center justify-between gap-2">
+                            <div className="pt-2 border-t border-subtle flex items-center justify-between gap-2">
                                 <div className="truncate">
                                     <strong className="text-xs font-bold text-lime-400 uppercase tracking-wider block truncate">
                                         {video.process_type}
                                     </strong>
-                                    <span className="text-[10px] tracking-tight text-zinc-500 font-mono mt-0.5 block">
+                                    <span className="text-[10px] tracking-tight text-dim font-mono mt-0.5 block">
                                         {new Date(video.created_at).toLocaleDateString(undefined, {
                                             month: 'short',
                                             day: 'numeric',
@@ -177,17 +177,17 @@ function DateFilterButton({ value, onChange }: { value: string; onChange: (val: 
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-left flex items-center justify-between gap-2 text-zinc-200 hover:border-zinc-700 transition-colors focus:border-lime-400 focus:outline-none"
+                className="w-full bg-surface border border-subtle rounded-lg px-4 py-3 text-left flex items-center justify-between gap-2 text-heading hover:border-hover transition-colors focus:border-lime-400 focus:outline-none"
             >
                 <span>{value || "Any date"}</span>
-                <svg className={`w-3 h-3 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-3 h-3 text-dim transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             {value && (
                 <button
                     onClick={() => { onChange(""); setOpen(false); }}
-                    className="absolute right-8 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 text-xs font-bold z-10"
+                    className="absolute right-8 top-1/2 -translate-y-1/2 text-dim hover:text-body text-xs font-bold z-10"
                 >
                     ✕
                 </button>

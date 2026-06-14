@@ -145,7 +145,7 @@ export default function WeightHistory() {
         }
     }
 
-    if (isLoading) return <div className="p-8 text-zinc-400 font-medium animate-pulse">Loading weight history...</div>;
+    if (isLoading) return <div className="p-8 text-muted font-medium animate-pulse">Loading weight history...</div>;
 
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
@@ -155,8 +155,8 @@ export default function WeightHistory() {
 
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
 
-            <div className="w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
-                <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-4">
+            <div className="w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
+                <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-4">
                     Progress Overview
                 </h3>
                 {entries.length > 0 ? (
@@ -187,7 +187,7 @@ export default function WeightHistory() {
                                         color: '#f4f4f5'
                                     }}
                                     itemStyle={{ color: '#a3e635' }}
-                                    labelClassName="text-zinc-500 text-xs font-semibold"
+                                    labelClassName="text-dim text-xs font-semibold"
                                     formatter={(value) => [`${value} kg`, 'Weight']}
                                 />
                                 <Line
@@ -202,8 +202,8 @@ export default function WeightHistory() {
                         </ResponsiveContainer>
                     </div>
                 ) : (
-                    <div className="h-[250px] w-full flex items-center justify-center bg-zinc-900/30 rounded-lg border border-zinc-800/50">
-                        <p className="text-zinc-500 font-medium italic text-sm">
+                    <div className="h-[250px] w-full flex items-center justify-center bg-surface/30 rounded-lg border border-subtle/50">
+                        <p className="text-dim font-medium italic text-sm">
                             Add weight entries to see your progress chart.
                         </p>
                     </div>
@@ -212,8 +212,8 @@ export default function WeightHistory() {
 
             <div className="flex gap-6 items-start flex-col md:flex-row">
                 {/* Form */}
-                <div className="flex-none w-full md:w-[350px] bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
-                    <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">
+                <div className="flex-none w-full md:w-[350px] bg-card border border-subtle rounded-xl p-6 shadow-xl">
+                    <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">
                         {editingId ? "Edit Weight Entry" : "Add Weight Entry"}
                     </h3>
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -222,7 +222,7 @@ export default function WeightHistory() {
                             value={weight}
                             onChange={(val) => setWeight(val === "" ? "" : Number(val))}
                             className="w-full"
-                            inputClassName="px-4 py-3 text-zinc-100 placeholder:text-zinc-600 bg-zinc-900 border-zinc-800"
+                            inputClassName="px-4 py-3 text-body placeholder:text-dim bg-surface border-subtle"
                             step={0.1}
                             min={0}
                             max={500}
@@ -231,7 +231,7 @@ export default function WeightHistory() {
                             <button
                                 type="button"
                                 onClick={() => setShowCalendar(!showCalendar)}
-                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-all text-left"
+                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body focus:border-lime-400 focus:outline-none transition-all text-left"
                             >
                                 {date}
                             </button>
@@ -253,7 +253,7 @@ export default function WeightHistory() {
                                 <button
                                     type="button"
                                     onClick={resetForm}
-                                    className="flex-1 bg-transparent border border-zinc-700 text-zinc-300 font-bold py-3 rounded-lg hover:bg-zinc-800 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className="flex-1 bg-transparent border border-subtle text-muted font-bold py-3 rounded-lg hover:bg-elevated transition-all hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     Cancel
                                 </button>
@@ -263,23 +263,23 @@ export default function WeightHistory() {
                 </div>
 
                 {/* List */}
-                <div className="flex-1 w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
-                    <h2 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">Entries</h2>
+                <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
+                    <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">Entries</h2>
                     {entries.length === 0 ? (
-                        <div className="text-center py-10 bg-zinc-900/50 rounded-lg border border-zinc-800/80">
-                            <p className="text-zinc-500 font-medium italic">No weight entries yet.</p>
+                        <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
+                            <p className="text-dim font-medium italic">No weight entries yet.</p>
                         </div>
                     ) : (
                         <ul className="space-y-3">
                             {entries.map(entry => (
                                 <li
                                     key={entry.id}
-                                    className="bg-zinc-900/40 border border-zinc-800/80 rounded-lg p-4 flex justify-between items-center hover:border-zinc-700 transition-colors"
+                                    className="bg-surface/40 border border-subtle/80 rounded-lg p-4 flex justify-between items-center hover:border-hover transition-colors"
                                 // ... rest of list items
                                 >
                                     <div>
-                                        <strong className="text-xl font-bold text-zinc-100">{Number(entry.weight)} kg</strong>
-                                        <div className="text-sm text-zinc-500 font-medium mt-1">{entry.date?.slice(0, 10)}</div>
+                                        <strong className="text-xl font-bold text-body">{Number(entry.weight)} kg</strong>
+                                        <div className="text-sm text-dim font-medium mt-1">{entry.date?.slice(0, 10)}</div>
                                     </div>
                                     <div className="flex gap-2">
                                         <button

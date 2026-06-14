@@ -52,7 +52,7 @@ export default function TransparentNumericInput({
                 step={step}
                 disabled={disabled}
                 onChange={(e) => onChange(e.target.value)}
-                className={`w-full bg-transparent border border-zinc-800 rounded-lg focus:border-lime-400 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 ${inputClassName}`}
+                className={`w-full bg-transparent border border-subtle rounded-lg focus:border-lime-400 focus:outline-none transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 ${inputClassName}`}
             />
 
             {/* Micro-Arrows Control Panel */}
@@ -60,7 +60,7 @@ export default function TransparentNumericInput({
                 <button
                     type="button"
                     onClick={handleIncrement}
-                    className="text-[7px] text-zinc-500 hover:text-lime-400 p-0.4 leading-none focus:outline-none select-none"
+                    className="text-[7px] text-dim hover:text-lime-400 p-0.4 leading-none focus:outline-none select-none"
                     title="Increase"
                 >
                     ▲
@@ -68,7 +68,7 @@ export default function TransparentNumericInput({
                 <button
                     type="button"
                     onClick={handleDecrement}
-                    className="text-[7px] text-zinc-500 hover:text-lime-400 p-0.4 leading-none focus:outline-none select-none"
+                    className="text-[7px] text-dim hover:text-lime-400 p-0.4 leading-none focus:outline-none select-none"
                     title="Decrease"
                 >
                     ▼

@@ -134,10 +134,10 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
     }
 
     return (
-        <div className="flex flex-col h-full max-h-[80vh] bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="flex flex-col h-full max-h-[80vh] bg-card border border-subtle rounded-2xl overflow-hidden shadow-2xl">
             {/* Header */}
-            <div className="p-4 border-b border-zinc-800 flex justify-between items-center bg-zinc-900/50">
-                <h3 className="text-lg font-display font-bold text-zinc-100 uppercase tracking-tight">{viewMode === 'list' ? title : 'New Exercise'}</h3>
+            <div className="p-4 border-b border-subtle flex justify-between items-center bg-surface/50">
+                <h3 className="text-lg font-display font-bold text-body uppercase tracking-tight">{viewMode === 'list' ? title : 'New Exercise'}</h3>
                 <div className="flex gap-2">
                     {viewMode === 'list' ? (
                         <Button variant="secondary" onClick={() => setViewMode('create')} className="text-xs px-3 py-1.5">Create Custom</Button>
@@ -145,7 +145,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                         <Button variant="secondary" onClick={() => setViewMode('list')} className="text-xs px-3 py-1.5">Back to Search</Button>
                     )}
                     {onClose && (
-                        <button onClick={onClose} className="p-1.5 text-zinc-500 hover:text-zinc-100 transition-colors">
+                        <button onClick={onClose} className="p-1.5 text-dim hover:text-body transition-colors">
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     )}
@@ -155,13 +155,13 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
             {viewMode === 'list' ? (
                 <>
                     {/* Search & Filters */}
-                    <div className="p-4 border-b border-zinc-800 space-y-3 bg-zinc-900/20">
+                    <div className="p-4 border-b border-subtle space-y-3 bg-surface/20">
                         <input
                             type="text"
                             placeholder="Filter by name..."
                             value={filters.search}
                             onChange={e => setFilters({ ...filters, search: e.target.value })}
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors"
+                            className="w-full bg-surface border border-subtle rounded-xl px-4 py-2.5 text-sm text-body focus:outline-none focus:border-lime-400 transition-colors"
                         />
                         <div className="grid grid-cols-3 gap-2">
                             <Select
@@ -200,21 +200,21 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                     {/* Results List */}
                     <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-zinc-800">
                         {loading ? (
-                            <div className="p-8 text-center text-zinc-500 animate-pulse">Loading exercises...</div>
+                            <div className="p-8 text-center text-dim animate-pulse">Loading exercises...</div>
                         ) : filteredExercises.length === 0 ? (
-                            <div className="p-8 text-center text-zinc-600">No exercises found</div>
+                            <div className="p-8 text-center text-dim">No exercises found</div>
                         ) : (
                             <div className="space-y-1">
                                 {filteredExercises.map(ex => (
                                     <button
                                         key={ex.id}
                                         onClick={() => onSelect(ex)}
-                                        className="w-full text-left p-3 rounded-xl hover:bg-zinc-900 group transition-all border border-transparent hover:border-zinc-800"
+                                        className="w-full text-left p-3 rounded-xl hover:bg-surface group transition-all border border-transparent hover:border-subtle"
                                     >
-                                        <div className="font-bold text-zinc-200 group-hover:text-lime-400 transition-colors uppercase tracking-tight text-sm">{ex.name}</div>
+                                        <div className="font-bold text-heading group-hover:text-lime-400 transition-colors uppercase tracking-tight text-sm">{ex.name}</div>
                                         <div className="flex gap-2 mt-1 blur-[0.2px] group-hover:blur-0 transition-all">
-                                            <span className="text-[10px] uppercase font-bold text-zinc-500 bg-zinc-800/50 px-1.5 py-0.5 rounded tracking-widest">{ex.target}</span>
-                                            <span className="text-[10px] uppercase font-bold text-zinc-500 bg-zinc-800/50 px-1.5 py-0.5 rounded tracking-widest">{ex.equipment}</span>
+                                            <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.target}</span>
+                                            <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.equipment}</span>
                                         </div>
                                     </button>
                                 ))}
@@ -225,18 +225,18 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
             ) : (
                 <form onSubmit={handleCreateExercise} className="p-6 space-y-4 overflow-y-auto flex-1">
                     <div>
-                        <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Exercise Name</label>
+                        <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Exercise Name</label>
                         <input
                             type="text"
                             value={newName}
                             onChange={e => setNewName(e.target.value)}
                             required
-                            className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-zinc-100 focus:outline-none focus:border-lime-400"
+                            className="w-full bg-surface border border-subtle rounded-xl px-4 py-2.5 text-body focus:outline-none focus:border-lime-400"
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Target Muscle</label>
+                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Target Muscle</label>
                             <Select
                                 value={newTarget}
                                 onChange={(val) => setNewTarget(val)}
@@ -248,7 +248,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Equipment</label>
+                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Equipment</label>
                             <Select
                                 value={newEquipment}
                                 onChange={(val) => setNewEquipment(val)}
@@ -262,7 +262,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Category</label>
+                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Category</label>
                             <Select
                                 value={newCategory}
                                 onChange={(val) => setNewCategory(val)}
@@ -274,7 +274,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1.5">Difficulty</label>
+                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Difficulty</label>
                             <Select
                                 value={newDifficulty}
                                 onChange={(val) => setNewDifficulty(val)}

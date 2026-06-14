@@ -77,23 +77,23 @@ export default function Calendar({ selectedDate, onSelect, events = {}, classNam
     const monthName = new Date(viewDate.year, viewDate.month).toLocaleString('default', { month: 'long' });
 
     return (
-        <div className={`bg-zinc-950 border border-zinc-800 rounded-xl p-4 shadow-xl backdrop-blur-md ${className}`}>
+        <div className={`bg-card border border-subtle rounded-xl p-4 shadow-xl backdrop-blur-md ${className}`}>
             <div className="flex items-center justify-between mb-4">
                 <button
                     onClick={prevMonth}
-                    className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+                    className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors"
                     aria-label="Previous month"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <h3 className="text-lg font-bold text-zinc-100">
+                <h3 className="text-lg font-bold text-body">
                     {monthName} {viewDate.year}
                 </h3>
                 <button
                     onClick={nextMonth}
-                    className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+                    className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors"
                     aria-label="Next month"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +104,7 @@ export default function Calendar({ selectedDate, onSelect, events = {}, classNam
 
             <div className="grid grid-cols-7 mb-1">
                 {WEEKDAYS.map(day => (
-                    <div key={day} className="text-center text-xs font-bold text-zinc-500 uppercase py-2">
+                    <div key={day} className="text-center text-xs font-bold text-dim uppercase py-2">
                         {day}
                     </div>
                 ))}
@@ -131,7 +131,7 @@ export default function Calendar({ selectedDate, onSelect, events = {}, classNam
                                     ? 'bg-lime-400 text-black'
                                     : isToday
                                         ? 'bg-lime-400/10 text-lime-400 border border-lime-400/30'
-                                        : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100'
+                                        : 'text-muted hover:bg-elevated hover:text-body'
                                 }
                             `}
                         >
@@ -141,7 +141,7 @@ export default function Calendar({ selectedDate, onSelect, events = {}, classNam
                                     event.status === 'completed' ? 'bg-lime-400' :
                                     event.status === 'rest' ? 'bg-blue-400' :
                                     event.status === 'missed' ? 'bg-rose-500' :
-                                    'bg-zinc-500'
+                                    'bg-elevated'
                                 }`} />
                             )}
                         </button>

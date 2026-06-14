@@ -38,7 +38,7 @@ export default function Register() {
     };
 
     const getPasswordStrength = (passStr: string) => {
-        if (!passStr) return { score: 0, label: "", color: "text-zinc-600" };
+        if (!passStr) return { score: 0, label: "", color: "text-dim" };
 
         let score = 0;
         if (passStr.length >= 8) score++;
@@ -140,10 +140,10 @@ export default function Register() {
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 py-12">
-            <form onSubmit={handleSubmit} className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 sm:p-10 w-full max-w-2xl flex flex-col gap-6 shadow-2xl">
-                <div className="border-b border-zinc-800/80 pb-6 mb-2">
-                    <h2 className="text-4xl font-display text-zinc-100 uppercase tracking-tight mb-2">Register</h2>
-                    <p className="text-zinc-400 font-medium">Create your account to start tracking your journey.</p>
+            <form onSubmit={handleSubmit} className="bg-card border border-subtle rounded-xl p-6 sm:p-10 w-full max-w-2xl flex flex-col gap-6 shadow-2xl">
+                <div className="border-b border-subtle/80 pb-6 mb-2">
+                    <h2 className="text-4xl font-display text-body uppercase tracking-tight mb-2">Register</h2>
+                    <p className="text-muted font-medium">Create your account to start tracking your journey.</p>
                 </div>
 
                 {/* Main Error Form Message (Now just clean red text) */}
@@ -156,30 +156,30 @@ export default function Register() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Basic Info */}
                     <div className="space-y-4">
-                        <h3 className="text-xs uppercase tracking-wider text-zinc-500 font-bold mb-2">Identify</h3>
+                        <h3 className="text-xs uppercase tracking-wider text-dim font-bold mb-2">Identify</h3>
                         <div>
-                            <label className="block text-sm font-semibold text-zinc-400 mb-2">Name (optional)</label>
+                            <label className="block text-sm font-semibold text-muted mb-2">Name (optional)</label>
                             <input
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors"
+                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-zinc-400 mb-2">Surname (optional)</label>
+                            <label className="block text-sm font-semibold text-muted mb-2">Surname (optional)</label>
                             <input
                                 type="text"
                                 value={surname}
                                 onChange={(e) => setSurname(e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors "
+                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors "
                             />
                         </div>
 
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-semibold text-zinc-400">Email</label>
+                                <label className="block text-sm font-semibold text-muted">Email</label>
                                 {email && !isEmailValid(email) && (
                                     <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Invalid Format</span>
                                 )}
@@ -189,7 +189,7 @@ export default function Register() {
                                 value={email}
                                 required
                                 onChange={(e) => setEmail(e.target.value)}
-                                className={`w-full bg-zinc-900 border rounded-lg p-3 text-zinc-100 focus:outline-none transition-colors ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-zinc-800 focus:border-lime-400"
+                                className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-lime-400"
                                     }`}
                             />
                         </div>
@@ -197,10 +197,10 @@ export default function Register() {
 
                     {/* Security */}
                     <div className="space-y-4">
-                        <h3 className="text-xs uppercase tracking-wider text-zinc-500 font-bold mb-2">Security</h3>
+                        <h3 className="text-xs uppercase tracking-wider text-dim font-bold mb-2">Security</h3>
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-semibold text-zinc-400">Password</label>
+                                <label className="block text-sm font-semibold text-muted">Password</label>
                                 {password && (
                                     <span className={`text-[10px] font-bold uppercase tracking-wider ${pwdStrength.color}`}>
                                         Strength: {pwdStrength.label}
@@ -212,13 +212,13 @@ export default function Register() {
                                 value={password}
                                 required
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors"
+                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors"
                             />
                         </div>
 
                         <div>
                             <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-semibold text-zinc-400">Confirm Password</label>
+                                <label className="block text-sm font-semibold text-muted">Confirm Password</label>
                                 {confirmPassword && password !== confirmPassword && (
                                     <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Mismatch</span>
                                 )}
@@ -228,7 +228,7 @@ export default function Register() {
                                 value={confirmPassword}
                                 required
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className={`w-full bg-zinc-900 border rounded-lg p-3 text-zinc-100 focus:outline-none transition-colors ${confirmPassword && password !== confirmPassword ? "border-rose-500/50 focus:border-rose-500" : "border-zinc-800 focus:border-lime-400"
+                                className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors ${confirmPassword && password !== confirmPassword ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-lime-400"
                                     }`}
                             />
                         </div>
@@ -236,7 +236,7 @@ export default function Register() {
 
                     {/* Physical Details */}
                     <div className="space-y-4 md:col-span-2">
-                        <h3 className="text-xs uppercase tracking-wider text-zinc-500 font-bold mb-2">Physical Details (Optional)</h3>
+                        <h3 className="text-xs uppercase tracking-wider text-dim font-bold mb-2">Physical Details (Optional)</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <Select
@@ -253,24 +253,24 @@ export default function Register() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-zinc-400 mb-2">Weight (kg)</label>
+                                <label className="block text-sm font-semibold text-muted mb-2">Weight (kg)</label>
                                 <TransparentNumericInput
                                     value={weight}
                                     onChange={setWeight}
                                     className="w-full"
-                                    inputClassName="pl-3 pr-10 py-3 text-sm text-zinc-100 bg-zinc-900"
+                                    inputClassName="pl-3 pr-10 py-3 text-sm text-body bg-surface"
                                     max={500}
                                     step={0.5}
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-zinc-400 mb-2">Height (cm)</label>
+                                <label className="block text-sm font-semibold text-muted mb-2">Height (cm)</label>
                                 <TransparentNumericInput
                                     value={height}
                                     onChange={setHeight}
                                     className="w-full"
-                                    inputClassName="pl-3 pr-10 py-3 text-sm text-zinc-100 bg-zinc-900"
+                                    inputClassName="pl-3 pr-10 py-3 text-sm text-body bg-surface"
                                     max={300}
                                     step={1}
                                 />
@@ -279,13 +279,13 @@ export default function Register() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-zinc-400 mb-2">Birth date</label>
+                                <label className="block text-sm font-semibold text-muted mb-2">Birth date</label>
                                 <input
                                     type="date"
                                     value={birthDate}
                                     onChange={(e) => setBirthDate(e.target.value)}
                                     max={new Date().toLocaleDateString('en-CA')}
-                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors [color-scheme:dark]"
+                                    className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors [color-scheme:dark]"
                                 />
                             </div>
                         </div>
@@ -301,7 +301,7 @@ export default function Register() {
                     >
                         {isLoading ? "Creating Account..." : "Register Now"}
                     </Button>
-                    <p className="text-center text-zinc-500 text-sm mt-8">
+                    <p className="text-center text-dim text-sm mt-8">
                         Already have an account?{" "}
                         <button
                             type="button"

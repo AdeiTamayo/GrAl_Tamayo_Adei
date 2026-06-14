@@ -65,10 +65,10 @@ export default function Login() {
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center p-4">
-            <form onSubmit={handleSubmit} className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 sm:p-8 w-full max-w-md flex flex-col gap-5 shadow-2xl">
+            <form onSubmit={handleSubmit} className="bg-card border border-subtle rounded-xl p-6 sm:p-8 w-full max-w-md flex flex-col gap-5 shadow-2xl">
                 <div>
-                    <h2 className="text-3xl font-display text-zinc-100 uppercase tracking-tight mb-1">Login</h2>
-                    <p className="text-zinc-400 text-sm">Welcome back to GymTracker.</p>
+                    <h2 className="text-3xl font-display text-body uppercase tracking-tight mb-1">Login</h2>
+                    <p className="text-muted text-sm">Welcome back to GymTracker.</p>
                 </div>
 
                 {/* Errore-mezu nagusia: Testu gorri garbia eta soildua */}
@@ -80,7 +80,7 @@ export default function Login() {
 
                 <div>
                     <div className="flex justify-between items-center mb-2">
-                        <label className="block text-sm font-semibold text-zinc-400">Email</label>
+                        <label className="block text-sm font-semibold text-muted">Email</label>
                         {email && !isEmailValid(email) && (
                             <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Incorrect format</span>
                         )}
@@ -90,20 +90,20 @@ export default function Login() {
                         value={email}
                         required
                         onChange={e => setEmail(e.target.value)}
-                        className={`w-full bg-zinc-900 border rounded-lg p-3 text-zinc-100 focus:outline-none transition-colors placeholder:text-zinc-600 ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-zinc-800 focus:border-lime-400"
+                        className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors placeholder:text-dim ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-lime-400"
                             }`}
                         placeholder="your@email.com"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Password</label>
+                    <label className="block text-sm font-semibold text-muted mb-2">Password</label>
                     <input
                         type="password"
                         value={password}
                         required
                         onChange={e => setPassword(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors placeholder:text-zinc-600"
+                        className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors placeholder:text-dim"
                         placeholder="••••••••"
                     />
                 </div>
@@ -118,7 +118,7 @@ export default function Login() {
                 </Button>
 
                 <div className="pt-2">
-                    <p className="text-center text-zinc-500 text-sm">
+                    <p className="text-center text-dim text-sm">
                         You don't have an account?{" "}
                         <button
                             type="button"

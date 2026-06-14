@@ -176,7 +176,7 @@ export default function Profile() {
         return String(val);
     }
 
-    if (loading) return <p className="text-zinc-400 p-8">Loading...</p>;
+    if (loading) return <p className="text-muted p-8">Loading...</p>;
 
     // Clean text error format for initial fetch failures
     if (error && !profile) return <p className="text-rose-500 font-semibold p-8">{error}</p>;
@@ -184,14 +184,14 @@ export default function Profile() {
 
     return (
         <div className="max-w-3xl mx-auto p-4 md:p-8 mt-4 md:mt-8 relative">
-            <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 md:p-10 shadow-xl">
+            <div className="bg-card border border-subtle rounded-xl p-6 md:p-10 shadow-xl">
                 {/* Header */}
-                <div className="flex items-center gap-4 pb-6 border-b border-zinc-800/80 mb-6">
+                <div className="flex items-center gap-4 pb-6 border-b border-subtle/80 mb-6">
                     <div>
-                        <h1 className="text-3xl font-display text-zinc-100 uppercase tracking-tight">
+                        <h1 className="text-3xl font-display text-body uppercase tracking-tight">
                             {profile.name} {profile.surname}
                         </h1>
-                        <p className="text-zinc-400 font-medium mt-1">Manage your account details and preferences.</p>
+                        <p className="text-muted font-medium mt-1">Manage your account details and preferences.</p>
                     </div>
                 </div>
 
@@ -219,9 +219,9 @@ export default function Profile() {
                             { label: "Birthdate", value: formatBirthDate(profile.birth_date) },
                             { label: "Gender", value: profile.gender ?? "—" },
                         ].map(({ label, value }) => (
-                            <div key={label} className="bg-zinc-900/50 border border-zinc-800/50 rounded-lg p-4 flex flex-col gap-1">
-                                <strong className="text-xs uppercase tracking-wider text-zinc-500">{label}</strong>
-                                <span className="text-zinc-100 font-medium text-lg">{value}</span>
+                            <div key={label} className="bg-surface/50 border border-subtle/50 rounded-lg p-4 flex flex-col gap-1">
+                                <strong className="text-xs uppercase tracking-wider text-dim">{label}</strong>
+                                <span className="text-body font-medium text-lg">{value}</span>
                             </div>
                         ))}
                     </div>
@@ -238,13 +238,13 @@ export default function Profile() {
                             { label: "Birth date", field: "birth_date" as keyof UserProfile, type: "date" },
                         ].map(({ label, field, type }) => (
                             <div key={field}>
-                                <label className="block text-sm font-semibold text-zinc-400 mb-2">{label}</label>
+                                <label className="block text-sm font-semibold text-muted mb-2">{label}</label>
                                 {type === "number" ? (
                                     <TransparentNumericInput
                                         value={getFormValue(field)}
                                         onChange={val => handleChange(field, val)}
                                         className="w-full"
-                                        inputClassName="p-3 text-zinc-100 bg-zinc-900 border-zinc-800"
+                                        inputClassName="p-3 text-body bg-surface border-subtle"
                                         max={field === "weight" ? 500 : 300}
                                         step={field === "weight" ? 0.1 : 1}
                                     />
@@ -254,7 +254,7 @@ export default function Profile() {
                                         value={getFormValue(field)}
                                         onChange={e => handleChange(field, e.target.value)}
                                         max={type === "date" ? new Date().toLocaleDateString('en-CA') : undefined}
-                                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-lime-400 transition-colors [color-scheme:dark]"
+                                        className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors [color-scheme:dark]"
                                     />
                                 )}
                             </div>
@@ -275,7 +275,7 @@ export default function Profile() {
                 )}
 
                 {/* Action buttons */}
-                <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-zinc-800/80">
+                <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-subtle/80">
                     {editing ? (
                         <>
                             <button
@@ -287,7 +287,7 @@ export default function Profile() {
                             </button>
                             <button
                                 onClick={cancelEdit}
-                                className="flex-1 bg-transparent text-zinc-300 font-bold py-3 px-4 rounded-lg border border-zinc-700 hover:bg-zinc-800 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="flex-1 bg-transparent text-muted font-bold py-3 px-4 rounded-lg border border-subtle hover:bg-elevated transition-all hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 Cancel
                             </button>
@@ -303,7 +303,7 @@ export default function Profile() {
 
                             <button
                                 onClick={() => logout()}
-                                className="flex-1 bg-transparent text-zinc-300 font-bold py-3 px-4 rounded-lg border border-zinc-800 hover:bg-zinc-900 hover:text-zinc-100 hover:border-zinc-700 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="flex-1 bg-transparent text-muted font-bold py-3 px-4 rounded-lg border border-subtle hover:bg-surface hover:text-body hover:border-hover transition-all hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 Logout
                             </button>
@@ -322,15 +322,15 @@ export default function Profile() {
             {/* --- Confirm Account Deletion Modal --- */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-                    <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-xl p-6 md:p-8 shadow-2xl">
+                    <div className="w-full max-w-md bg-card border border-subtle rounded-xl p-6 md:p-8 shadow-2xl">
                         <h2 className="text-xl font-display text-rose-500 uppercase tracking-tight mb-2">Delete Account Permanently</h2>
-                        <p className="text-sm text-zinc-400 mb-6 leading-relaxed">
+                        <p className="text-sm text-muted mb-6 leading-relaxed">
                             This action cannot be undone. Please type your password to confirm you want to delete your profile and wipe all logged application metrics.
                         </p>
 
                         <form onSubmit={handleDeleteAccountSubmit} className="space-y-4">
                             <div>
-                                <label className="block text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-2">
+                                <label className="block text-xs uppercase tracking-wider text-dim font-semibold mb-2">
                                     Account Password
                                 </label>
                                 <input
@@ -339,7 +339,7 @@ export default function Profile() {
                                     placeholder="••••••••"
                                     value={passwordConfirm}
                                     onChange={(e) => setPasswordConfirm(e.target.value)}
-                                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-zinc-100 focus:outline-none focus:border-rose-500 transition-colors"
+                                    className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-rose-500 transition-colors"
                                 />
                             </div>
 
@@ -348,7 +348,7 @@ export default function Profile() {
                                     type="button"
                                     onClick={() => { setShowDeleteModal(false); setPasswordConfirm(""); }}
                                     disabled={deleting}
-                                    className="flex-1 bg-zinc-900 text-zinc-300 font-bold py-3 px-4 rounded-lg border border-zinc-800 hover:bg-zinc-800 transition-all"
+                                    className="flex-1 bg-surface text-muted font-bold py-3 px-4 rounded-lg border border-subtle hover:bg-elevated transition-all"
                                 >
                                     Cancel
                                 </button>

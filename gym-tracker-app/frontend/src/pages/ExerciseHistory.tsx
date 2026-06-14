@@ -76,20 +76,20 @@ export default function ExerciseHistory() {
     }, [history]);
 
     return (
-        <div className="p-6 font-sans bg-black text-zinc-100 min-h-screen">
+        <div className="p-6 font-sans bg-body text-body min-h-screen">
             <div className="max-w-6xl mx-auto">
                 <header className="mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">
                             Progress History
                         </h1>
-                        <p className="text-zinc-400 mt-1">Visualize your strength gains over time.</p>
+                        <p className="text-muted mt-1">Visualize your strength gains over time.</p>
                     </div>
 
                     <div className="w-full md:w-auto">
                         <button
                             onClick={() => setShowPicker(true)}
-                            className="w-full md:w-64 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-zinc-100 hover:border-lime-400 transition-all flex justify-between items-center"
+                            className="w-full md:w-64 bg-surface border border-subtle rounded-xl px-4 py-3 text-body hover:border-lime-400 transition-all flex justify-between items-center"
                         >
                             <span className="truncate">{selectedExercise ? selectedExercise.name : "Select Exercise..."}</span>
                             <span className="text-lime-400">🔍</span>
@@ -99,10 +99,10 @@ export default function ExerciseHistory() {
 
                 {showPicker && (
                     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-zinc-950 border border-zinc-800 rounded-3xl flex flex-col">
-                            <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
+                            <div className="p-4 border-b border-subtle flex justify-between items-center">
                                 <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
-                                <button onClick={() => setShowPicker(false)} className="text-zinc-500 hover:text-white">✕</button>
+                                <button onClick={() => setShowPicker(false)} className="text-dim hover:text-white">✕</button>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4">
                                 <ExercisePicker
@@ -117,8 +117,8 @@ export default function ExerciseHistory() {
                 )}
 
                 {!selectedExercise && (
-                    <div className="text-center py-20 bg-zinc-900/30 rounded-3xl border border-zinc-900 border-dashed">
-                        <p className="text-zinc-500 text-lg">Choose an exercise to view your progress charts.</p>
+                    <div className="text-center py-20 bg-surface/30 rounded-3xl border border-subtle border-dashed">
+                        <p className="text-dim text-lg">Choose an exercise to view your progress charts.</p>
                     </div>
                 )}
 
@@ -126,18 +126,18 @@ export default function ExerciseHistory() {
                     <div className="text-center py-8 bg-red-900/20 rounded-3xl border border-red-900 mb-6">
                         <p className="text-red-400 text-lg font-medium">{fetchError}</p>
                         {fetchError.includes("Cannot connect") && (
-                            <p className="text-zinc-500 text-sm mt-2">Start the backend with <code className="text-lime-400">cd backend && node server.js</code></p>
+                            <p className="text-dim text-sm mt-2">Start the backend with <code className="text-lime-400">cd backend && node server.js</code></p>
                         )}
                         {fetchError.includes("Invalid token") && (
-                            <p className="text-zinc-500 text-sm mt-2">Please log in again.</p>
+                            <p className="text-dim text-sm mt-2">Please log in again.</p>
                         )}
                     </div>
                 )}
 
                 {selectedExercise && history.length === 0 && !isLoading && !fetchError && (
-                    <div className="text-center py-20 bg-zinc-900/30 rounded-3xl border border-zinc-900 border-dashed">
-                        <p className="text-zinc-500 text-lg">No session data found for this exercise yet.</p>
-                        <p className="text-zinc-600 text-sm mt-2">Save a workout containing this exercise to see your progress.</p>
+                    <div className="text-center py-20 bg-surface/30 rounded-3xl border border-subtle border-dashed">
+                        <p className="text-dim text-lg">No session data found for this exercise yet.</p>
+                        <p className="text-dim text-sm mt-2">Save a workout containing this exercise to see your progress.</p>
                     </div>
                 )}
 
@@ -150,8 +150,8 @@ export default function ExerciseHistory() {
                 {selectedExercise && history.length > 0 && (
                     <div className="grid grid-cols-1 gap-10">
                         {/* Max Weight Chart */}
-                        <div className="bg-zinc-950 border border-zinc-900 p-6 rounded-3xl shadow-xl">
-                            <h2 className="text-xl font-bold mb-6 text-zinc-300 flex items-center gap-2">
+                        <div className="bg-card border border-subtle p-6 rounded-3xl shadow-xl">
+                            <h2 className="text-xl font-bold mb-6 text-muted flex items-center gap-2">
                                 <span className="w-2 h-6 bg-lime-400 rounded-full"></span>
                                 Max Weight (kg)
                             </h2>
@@ -179,8 +179,8 @@ export default function ExerciseHistory() {
                         </div>
 
                         {/* Total Volume Chart */}
-                        <div className="bg-zinc-950 border border-zinc-900 p-6 rounded-3xl shadow-xl">
-                            <h2 className="text-xl font-bold mb-6 text-zinc-300 flex items-center gap-2">
+                        <div className="bg-card border border-subtle p-6 rounded-3xl shadow-xl">
+                            <h2 className="text-xl font-bold mb-6 text-muted flex items-center gap-2">
                                 <span className="w-2 h-6 bg-blue-400 rounded-full"></span>
                                 Total Volume (kg × reps)
                             </h2>

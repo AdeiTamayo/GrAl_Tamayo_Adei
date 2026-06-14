@@ -198,7 +198,7 @@ export default function PersonalRecords() {
         return [...prHistory].sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight))[0]?.id;
     }, [prHistory]);
 
-    if (loading) return <div className="p-8 text-zinc-400 font-medium animate-pulse">Loading Personal Records...</div>;
+    if (loading) return <div className="p-8 text-muted font-medium animate-pulse">Loading Personal Records...</div>;
 
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
@@ -213,32 +213,32 @@ export default function PersonalRecords() {
                 <div className="flex-none w-full lg:w-[450px] space-y-6">
 
                     {/* Add Manual PR Form */}
-                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-7 shadow-xl">
+                    <div className="bg-card border border-subtle rounded-xl p-7 shadow-xl">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase">Log a PR</h3>
+                            <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Log a PR</h3>
                             <button
                                 onClick={() => setShowAddForm(!showAddForm)}
-                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all focus:outline-none ${showAddForm ? 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700' : 'bg-lime-400 text-black hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98]'}`}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all focus:outline-none ${showAddForm ? 'bg-elevated text-muted hover:bg-hover' : 'bg-lime-400 text-black hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98]'}`}
                             >
                                 {showAddForm ? "Cancel" : "Add PR"}
                             </button>
                         </div>
 
                         {showAddForm && (
-                            <form onSubmit={createPR} className="flex flex-col gap-4 mt-6 border-t border-zinc-800/80 pt-6">
+                            <form onSubmit={createPR} className="flex flex-col gap-4 mt-6 border-t border-subtle/80 pt-6">
                                 <button
                                     type="button"
                                     onClick={() => setShowPicker(true)}
-                                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-left text-zinc-100 hover:border-zinc-700 transition-colors"
+                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-left text-body hover:border-hover transition-colors"
                                 >
-                                    {formExerciseName || <span className="text-zinc-500">Select Exercise</span>}
+                                    {formExerciseName || <span className="text-dim">Select Exercise</span>}
                                 </button>
                                 {showPicker && (
                                     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-zinc-950 border border-zinc-800 rounded-3xl flex flex-col">
-                                            <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
+                                            <div className="p-4 border-b border-subtle flex justify-between items-center">
                                                 <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
-                                                <button onClick={() => setShowPicker(false)} className="text-zinc-500 hover:text-white text-xl leading-none">&times;</button>
+                                                <button onClick={() => setShowPicker(false)} className="text-dim hover:text-white text-xl leading-none">&times;</button>
                                             </div>
                                             <div className="flex-1 overflow-y-auto p-4">
                                                 <ExercisePicker
@@ -258,7 +258,7 @@ export default function PersonalRecords() {
                                         value={newWeight}
                                         onChange={(val) => setNewWeight(val === "" ? "" : Number(val))}
                                         className="w-full"
-                                        inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                                         step={0.1}
                                         min={0}
                                         max={999}
@@ -268,7 +268,7 @@ export default function PersonalRecords() {
                                         value={newReps}
                                         onChange={(val) => setNewReps(val === "" ? "" : Number(val))}
                                         className="w-full"
-                                        inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                                         step={1}
                                         min={0}
                                         max={999}
@@ -278,9 +278,9 @@ export default function PersonalRecords() {
                                     <button
                                         type="button"
                                         onClick={() => setShowDatePicker(!showDatePicker)}
-                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-all text-left"
+                                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body focus:border-lime-400 focus:outline-none transition-all text-left"
                                     >
-                                        {newDate || <span className="text-zinc-500">Select date</span>}
+                                        {newDate || <span className="text-dim">Select date</span>}
                                     </button>
                                     {showDatePicker && (
                                         <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
@@ -296,7 +296,7 @@ export default function PersonalRecords() {
                                     placeholder="Note (optional)"
                                     value={newNote}
                                     onChange={e => setNewNote(e.target.value)}
-                                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                                 />
                                 <button type="submit" disabled={isCreating || !formExerciseId} className="w-full bg-lime-400 text-black font-bold py-3 mt-2 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
                                     {isCreating ? "Adding..." : "Log PR"}
@@ -305,11 +305,11 @@ export default function PersonalRecords() {
                         )}
                     </div>
 
-                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
-                        <h2 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">Current Best PRs</h2>
+                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-xl">
+                        <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">Current Best PRs</h2>
                         {prSummary.length === 0 ? (
-                            <div className="text-center py-10 bg-zinc-900/50 rounded-lg border border-zinc-800/80">
-                                <p className="text-zinc-500 font-medium italic">No PRs recorded yet. Go lift something heavy!</p>
+                            <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
+                                <p className="text-dim font-medium italic">No PRs recorded yet. Go lift something heavy!</p>
                             </div>
                         ) : (
                             <ul className="space-y-3">
@@ -317,16 +317,16 @@ export default function PersonalRecords() {
                                     <li
                                         key={pr.id}
                                         onClick={() => fetchPrHistory(pr.exercise_id, pr.exercise_name)}
-                                        className={`bg-zinc-900/40 border border-zinc-800/80 rounded-lg p-4 cursor-pointer hover:border-lime-400/50 hover:bg-zinc-900 transition-all ${selectedExerciseId === pr.exercise_id ? 'border-lime-400/50 bg-zinc-900 shadow-md ring-1 ring-lime-400/20' : ''}`}
+                                        className={`bg-surface/40 border border-subtle/80 rounded-lg p-4 cursor-pointer hover:border-lime-400/50 hover:bg-surface transition-all ${selectedExerciseId === pr.exercise_id ? 'border-lime-400/50 bg-surface shadow-md ring-1 ring-lime-400/20' : ''}`}
                                     >
                                         <div className="flex justify-between items-center">
                                             <div>
                                                 <strong className="text-lg font-bold text-lime-400 capitalize">{pr.exercise_name}</strong>
-                                                <div className="text-sm text-zinc-500 font-medium mt-1">{pr.date?.substring(0, 10)}</div>
+                                                <div className="text-sm text-dim font-medium mt-1">{pr.date?.substring(0, 10)}</div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-2xl font-bold text-zinc-100">{pr.weight} kg</span>
-                                                <div className="text-sm text-zinc-400 font-medium mt-1">{pr.repetitions} reps</div>
+                                                <span className="text-2xl font-bold text-body">{pr.weight} kg</span>
+                                                <div className="text-sm text-muted font-medium mt-1">{pr.repetitions} reps</div>
                                             </div>
                                         </div>
                                     </li>
@@ -338,14 +338,14 @@ export default function PersonalRecords() {
 
                 {/* --- Right Column: PR History Timeline --- */}
                 {selectedExerciseName && (
-                    <div className="flex-1 w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 lg:p-8 shadow-xl">
+                    <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 lg:p-8 shadow-xl">
                         <div className="flex justify-between items-start mb-6">
                             <h2 className="font-display text-2xl font-bold text-lime-400 tracking-wide uppercase">{selectedExerciseName} Progress</h2>
-                            <button onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 rounded-lg font-bold text-sm transition-colors border border-zinc-800">Close</button>
+                            <button onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} className="px-4 py-2 bg-surface hover:bg-elevated text-muted rounded-lg font-bold text-sm transition-colors border border-subtle">Close</button>
                         </div>
 
                         {/* Progress Chart */}
-                        <div className="h-64 md:h-80 w-full mb-10 bg-zinc-900/30 rounded-2xl p-4 border border-zinc-800/50">
+                        <div className="h-64 md:h-80 w-full mb-10 bg-surface/30 rounded-2xl p-4 border border-subtle/50">
                             {chartData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={chartData}>
@@ -380,33 +380,33 @@ export default function PersonalRecords() {
                                     </LineChart>
                                 </ResponsiveContainer>
                             ) : (
-                                <div className="h-full flex items-center justify-center text-zinc-500 italic text-sm">No chart layout data found</div>
+                                <div className="h-full flex items-center justify-center text-dim italic text-sm">No chart layout data found</div>
                             )}
                         </div>
 
-                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-6 flex items-center gap-2">
+                        <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-6 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 bg-lime-400 rounded-full"></span>
                             History Timeline
                         </h3>
 
-                        <ul className="relative border-l border-zinc-800 ml-3 md:ml-6 pl-6 pb-2 space-y-8 mt-4">
+                        <ul className="relative border-l border-subtle ml-3 md:ml-6 pl-6 pb-2 space-y-8 mt-4">
                             {prHistory.map((history) => (
                                 <li key={history.id} className="relative">
                                     <div className="absolute w-3 h-3 bg-lime-400 rounded-full -left-[1.95rem] top-1.5 ring-4 ring-zinc-950"></div>
-                                    <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-4 md:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-zinc-700 transition-colors">
+                                    <div className="bg-surface/40 border border-subtle/80 rounded-xl p-4 md:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-hover transition-colors">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
-                                                <span className="text-sm font-bold text-zinc-400 uppercase tracking-wider">{history.date?.substring(0, 10)}</span>
+                                                <span className="text-sm font-bold text-muted uppercase tracking-wider">{history.date?.substring(0, 10)}</span>
                                                 {history.id === currentMaxRecordId && (
                                                     <span className="text-[10px] font-bold uppercase tracking-widest bg-lime-400/10 text-lime-400 border border-lime-400/20 px-2 py-0.5 rounded-full">
                                                         All-Time Best
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="text-xl text-zinc-100 font-medium">
+                                            <div className="text-xl text-body font-medium">
                                                 <strong className="font-bold">{history.weight} kg</strong> for <strong className="font-bold">{history.repetitions} reps</strong>
                                             </div>
-                                            {history.note && <div className="mt-3 text-sm text-zinc-500 bg-zinc-900 p-3 rounded-lg border border-zinc-800"><span className="text-zinc-600 font-medium">Note:</span> {history.note}</div>}
+                                            {history.note && <div className="mt-3 text-sm text-dim bg-surface p-3 rounded-lg border border-subtle"><span className="text-dim font-medium">Note:</span> {history.note}</div>}
                                         </div>
                                         <div className="flex gap-2 shrink-0">
                                             <button
@@ -447,15 +447,15 @@ export default function PersonalRecords() {
 
             {editRecord && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-sm bg-zinc-950 border border-zinc-800 rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <h2 className="font-display text-lg font-bold text-zinc-100 uppercase tracking-wide mb-4">Edit PR</h2>
+                    <div className="w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-4">Edit PR</h2>
                         <div className="space-y-4">
                             <TransparentNumericInput
                                 placeholder="Weight (kg)"
                                 value={editRecord.weight}
                                 onChange={(val) => setEditRecord({ ...editRecord, weight: val === "" ? "" : Number(val) })}
                                 className="w-full"
-                                inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                                 step={0.1} min={0} max={999}
                             />
                             <TransparentNumericInput
@@ -463,16 +463,16 @@ export default function PersonalRecords() {
                                 value={editRecord.repetitions}
                                 onChange={(val) => setEditRecord({ ...editRecord, repetitions: val === "" ? "" : Number(val) })}
                                 className="w-full"
-                                inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                                 step={1} min={0} max={999}
                             />
                             <div className="relative">
                                 <button
                                     type="button"
                                     onClick={() => setShowEditDatePicker(!showEditDatePicker)}
-                                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 focus:border-lime-400 focus:outline-none transition-all text-left"
+                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body focus:border-lime-400 focus:outline-none transition-all text-left"
                                 >
-                                    {editRecord.date || <span className="text-zinc-500">Select date</span>}
+                                    {editRecord.date || <span className="text-dim">Select date</span>}
                                 </button>
                                 {showEditDatePicker && (
                                     <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
@@ -488,7 +488,7 @@ export default function PersonalRecords() {
                                 placeholder="Note (optional)"
                                 value={editRecord.note}
                                 onChange={e => setEditRecord({ ...editRecord, note: e.target.value })}
-                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                             />
                             <div className="space-y-3 pt-2">
                                 <button
@@ -499,7 +499,7 @@ export default function PersonalRecords() {
                                 </button>
                                 <button
                                     onClick={() => setEditRecord(null)}
-                                    className="w-full bg-zinc-800 text-zinc-300 font-bold py-3 rounded-lg hover:bg-zinc-700 transition-all"
+                                    className="w-full bg-elevated text-muted font-bold py-3 rounded-lg hover:bg-hover transition-all"
                                 >
                                     Cancel
                                 </button>

@@ -73,16 +73,16 @@ export default function EditableExerciseCard({
     };
 
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm">
+        <div className="bg-surface border border-subtle rounded-xl p-5 shadow-sm">
             {/* Component Action Bar Header */}
-            <div className="flex justify-between items-center mb-5 pb-3 border-b border-zinc-800/60">
-                <h4 className="font-display font-bold text-zinc-100 uppercase tracking-wide text-base">
+            <div className="flex justify-between items-center mb-5 pb-3 border-b border-subtle/60">
+                <h4 className="font-display font-bold text-body uppercase tracking-wide text-base">
                     {exerciseName}
                 </h4>
                 <button
                     type="button"
                     onClick={onRemoveExercise}
-                    className="text-zinc-500 hover:text-rose-400 text-xs font-semibold tracking-wider uppercase transition-colors"
+                    className="text-dim hover:text-rose-400 text-xs font-semibold tracking-wider uppercase transition-colors"
                 >
                     Remove
                 </button>
@@ -94,7 +94,7 @@ export default function EditableExerciseCard({
                 {setsExist && (
                     <div className="space-y-2">
                         {/* Widescreen Columns Headers Metadata Labelings */}
-                        <div className="hidden md:grid grid-cols-12 gap-3 px-2 text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500 pb-1">
+                        <div className="hidden md:grid grid-cols-12 gap-3 px-2 text-[10px] font-mono font-bold uppercase tracking-widest text-dim pb-1">
                             <div className="col-span-1">Set</div>
                             <div className="col-span-2">Weight (kg)</div>
                             <div className="col-span-2">Reps</div>
@@ -108,19 +108,19 @@ export default function EditableExerciseCard({
                             {sets.map((set) => (
                                 <div
                                     key={set.id}
-                                    className="grid grid-cols-4 md:grid-cols-12 gap-2 md:gap-3 items-center bg-zinc-950/40 md:bg-transparent border border-zinc-800/40 md:border-none p-3 md:p-0 rounded-xl md:rounded-none group"
+                                    className="grid grid-cols-4 md:grid-cols-12 gap-2 md:gap-3 items-center bg-card/40 md:bg-transparent border border-subtle/40 md:border-none p-3 md:p-0 rounded-xl md:rounded-none group"
                                 >
                                     {/* Set Index Metric Node */}
-                                    <div className="col-span-4 md:col-span-1 flex items-center justify-between md:block border-b border-zinc-800/40 md:border-0 pb-2 md:pb-0 mb-1 md:mb-0">
-                                        <span className="text-[10px] font-mono uppercase text-zinc-500 md:hidden">Set Count</span>
-                                        <span className="text-zinc-400 font-black font-mono text-sm bg-zinc-900 md:bg-transparent px-2.5 py-1 md:p-0 rounded-md">
+                                    <div className="col-span-4 md:col-span-1 flex items-center justify-between md:block border-b border-subtle/40 md:border-0 pb-2 md:pb-0 mb-1 md:mb-0">
+                                        <span className="text-[10px] font-mono uppercase text-dim md:hidden">Set Count</span>
+                                        <span className="text-muted font-black font-mono text-sm bg-surface md:bg-transparent px-2.5 py-1 md:p-0 rounded-md">
                                             {set.set_number}
                                         </span>
                                     </div>
 
                                     {/* Mass Weight Input Wrapper */}
                                     <div className="col-span-2 md:col-span-2">
-                                        <span className="text-[9px] font-mono uppercase text-zinc-600 block mb-1 md:hidden">Weight</span>
+                                        <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Weight</span>
                                         <TransparentNumericInput
                                             value={set.weight ?? ""}
                                             onChange={(val) => onUpdateSet(set.id, 'weight', val)}
@@ -131,7 +131,7 @@ export default function EditableExerciseCard({
 
                                     {/* Repeat Executions Wrapper */}
                                     <div className="col-span-2 md:col-span-2">
-                                        <span className="text-[9px] font-mono uppercase text-zinc-600 block mb-1 md:hidden">Reps</span>
+                                        <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Reps</span>
                                         <TransparentNumericInput
                                             value={set.reps ?? ""}
                                             onChange={(val) => onUpdateSet(set.id, 'reps', val)}
@@ -142,7 +142,7 @@ export default function EditableExerciseCard({
 
                                     {/* Temporal Duration Trackings */}
                                     <div className="col-span-2 md:col-span-2">
-                                        <span className="text-[9px] font-mono uppercase text-zinc-600 block mb-1 md:hidden">Time (s)</span>
+                                        <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Time (s)</span>
                                         <TransparentNumericInput
                                             value={set.time ?? ""}
                                             onChange={(val) => onUpdateSet(set.id, 'time', val)}
@@ -154,20 +154,20 @@ export default function EditableExerciseCard({
                                     {/* Readable Row Note Area field */}
                                     {showNotesField && (
                                         <div className="col-span-2 md:col-span-4">
-                                            <span className="text-[9px] font-mono uppercase text-zinc-600 block mb-1 md:hidden">Notes</span>
+                                            <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Notes</span>
                                             <textarea
                                                 rows={1}
                                                 value={set.note || ""}
                                                 onChange={e => onUpdateSet(set.id, 'note', e.target.value)}
                                                 onBlur={() => onBlurSet(set.id)}
-                                                className="w-full bg-zinc-950 border border-zinc-800 focus:border-lime-400/80 rounded-xl px-3 py-1.5 text-zinc-200 text-xs font-mono focus:outline-none transition-all resize-y min-h-[34px]"
+                                                className="w-full bg-card border border-subtle focus:border-lime-400/80 rounded-xl px-3 py-1.5 text-heading text-xs font-mono focus:outline-none transition-all resize-y min-h-[34px]"
                                                 placeholder="Add details..."
                                             />
                                         </div>
                                     )}
 
                                     {/* Row Destruction Trigger Action */}
-                                    <div className="col-span-4 md:col-span-1 text-right mt-2 md:mt-0 pt-2 md:pt-0 border-t border-zinc-800/40 md:border-0">
+                                    <div className="col-span-4 md:col-span-1 text-right mt-2 md:mt-0 pt-2 md:pt-0 border-t border-subtle/40 md:border-0">
                                         <button
                                             type="button"
                                             onClick={() => onRemoveSet(set.id)}
@@ -187,48 +187,48 @@ export default function EditableExerciseCard({
                     <Button
                         type="button"
                         variant="secondary"
-                        className="w-full py-2.5 rounded-xl border border-dashed border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/40 text-xs font-mono text-zinc-400 transition-all mt-2"
+                        className="w-full py-2.5 rounded-xl border border-dashed border-subtle hover:border-hover hover:bg-surface/40 text-xs font-mono text-muted transition-all mt-2"
                         onClick={() => setIsAddingSet(true)}
                     >
                         + Add Set
                     </Button>
                 ) : (
-                    <form onSubmit={handleAddSetSubmit} className="grid grid-cols-1 gap-4 bg-zinc-950/40 p-4 rounded-xl border border-zinc-800 mt-3 shadow-sm animate-in fade-in zoom-in-95 duration-150">
+                    <form onSubmit={handleAddSetSubmit} className="grid grid-cols-1 gap-4 bg-card/40 p-4 rounded-xl border border-subtle mt-3 shadow-sm animate-in fade-in zoom-in-95 duration-150">
                         {/* Fields Sub-Grid Row Container */}
                         <div className="grid grid-cols-3 gap-3">
                             <div>
-                                <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-1">Weight</label>
+                                <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-dim mb-1">Weight</label>
                                 <TransparentNumericInput value={newWeight} onChange={setNewWeight} max={999} step={2.5} />
                             </div>
                             <div>
-                                <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-1">Reps</label>
+                                <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-dim mb-1">Reps</label>
                                 <TransparentNumericInput value={newReps} onChange={setNewReps} max={100} step={1} />
                             </div>
                             <div>
-                                <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-zinc-500 mb-1">Time (s)</label>
+                                <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-dim mb-1">Time (s)</label>
                                 <TransparentNumericInput value={newTime} onChange={setNewTime} max={3600} step={5} />
                             </div>
                         </div>
 
                         {/* Interactive Large Expandable Textarea Field Switcher */}
                         {showNotesField && (
-                            <div className="w-full border-t border-zinc-900 pt-2">
+                            <div className="w-full border-t border-subtle pt-2">
                                 {!showNoteForm ? (
                                     <button
                                         type="button"
                                         onClick={() => setShowNoteForm(true)}
-                                        className="text-xs font-mono text-zinc-500 hover:text-lime-400 transition-colors flex items-center gap-1.5"
+                                        className="text-xs font-mono text-dim hover:text-lime-400 transition-colors flex items-center gap-1.5"
                                     >
                                         📝 {newNote ? 'Edit Set Note' : 'Add Set Note'}
                                     </button>
                                 ) : (
                                     <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-150">
                                         <div className="flex justify-between items-center mb-1">
-                                            <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-zinc-500">Set Note Details</label>
+                                            <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-dim">Set Note Details</label>
                                             <button
                                                 type="button"
                                                 onClick={() => setShowNoteForm(false)}
-                                                className="text-[10px] font-mono text-zinc-500 hover:text-zinc-300"
+                                                className="text-[10px] font-mono text-dim hover:text-body"
                                             >
                                                 Hide Field
                                             </button>
@@ -238,7 +238,7 @@ export default function EditableExerciseCard({
                                             value={newNote}
                                             onChange={e => setNewNote(e.target.value)}
                                             placeholder="Specify variables (e.g., dropset, partial reps, warm-up pacing...)"
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-zinc-200 font-mono focus:outline-none focus:border-lime-400 transition-colors resize-y shadow-inner"
+                                            className="w-full bg-card border border-subtle rounded-xl px-3 py-2 text-xs text-heading font-mono focus:outline-none focus:border-lime-400 transition-colors resize-y shadow-inner"
                                         />
                                     </div>
                                 )}
@@ -246,7 +246,7 @@ export default function EditableExerciseCard({
                         )}
 
                         {/* Primary Interaction Buttons Block */}
-                        <div className="flex gap-2 w-full justify-end pt-2 border-t border-zinc-900">
+                        <div className="flex gap-2 w-full justify-end pt-2 border-t border-subtle">
                             <Button type="button" variant="secondary" className="px-3 py-2 text-xs rounded-xl" onClick={() => { setIsAddingSet(false); setShowNoteForm(false); }}>Cancel</Button>
                             <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-xl">Add Set</Button>
                         </div>

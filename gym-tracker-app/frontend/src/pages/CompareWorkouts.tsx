@@ -51,24 +51,24 @@ function WorkoutDropdown({
 
     return (
         <div className="space-y-2 relative" ref={ref}>
-            <label className="text-xs uppercase font-bold text-zinc-500 tracking-widest pl-1">{label}</label>
+            <label className="text-xs uppercase font-bold text-dim tracking-widest pl-1">{label}</label>
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-left flex justify-between items-center hover:border-zinc-700 transition-colors"
+                className="w-full bg-card border border-subtle rounded-xl px-4 py-3 text-left flex justify-between items-center hover:border-hover transition-colors"
             >
-                <span className={selected ? "text-zinc-100" : "text-zinc-500"}>
+                <span className={selected ? "text-body" : "text-dim"}>
                     {selected ? `${selected.date} - ${selected.name}` : "Select a workout..."}
                 </span>
-                <svg className={`w-4 h-4 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-4 h-4 text-dim transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             {open && (
-                <ul className="absolute z-20 w-full mt-1 bg-zinc-950 border border-zinc-800 rounded-xl shadow-2xl overflow-y-auto max-h-60 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                <ul className="absolute z-20 w-full mt-1 bg-card border border-subtle rounded-xl shadow-2xl overflow-y-auto max-h-60 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
                     <li
                         onClick={() => { onChange(""); setOpen(false); }}
-                        className="px-4 py-2.5 text-zinc-500 hover:bg-zinc-900 hover:text-zinc-300 cursor-pointer transition-colors text-sm"
+                        className="px-4 py-2.5 text-dim hover:bg-surface hover:text-body cursor-pointer transition-colors text-sm"
                     >
                         Select a workout...
                     </li>
@@ -76,7 +76,7 @@ function WorkoutDropdown({
                         <li
                             key={w.id}
                             onClick={() => { onChange(w.id); setOpen(false); }}
-                            className={`px-4 py-2.5 cursor-pointer transition-colors text-sm flex justify-between items-center ${value === w.id ? "bg-lime-400/10 text-lime-400" : "text-zinc-300 hover:bg-zinc-900 hover:text-white"}`}
+                            className={`px-4 py-2.5 cursor-pointer transition-colors text-sm flex justify-between items-center ${value === w.id ? "bg-lime-400/10 text-lime-400" : "text-muted hover:bg-surface hover:text-white"}`}
                         >
                             <span>{w.date} - {w.name}</span>
                             {value === w.id && (
@@ -191,20 +191,20 @@ export default function CompareWorkouts() {
 
     const renderDiff = (valA: number, valB: number, unit: string) => {
         const diff = valB - valA;
-        if (diff === 0) return <span className="text-zinc-500">-</span>;
+        if (diff === 0) return <span className="text-dim">-</span>;
         const color = diff > 0 ? "text-lime-400" : "text-red-400";
         const sign = diff > 0 ? "+" : "";
         return <span className={`${color} font-bold`}>{sign}{diff.toFixed(1)}{unit}</span>;
     };
 
     return (
-        <div className="p-6 font-sans bg-black text-zinc-100 min-h-screen">
+        <div className="p-6 font-sans bg-body text-body min-h-screen">
             <div className="max-w-5xl mx-auto">
                 <header className="mb-10 text-center">
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">
                         Workout Comparison
                     </h1>
-                    <p className="text-zinc-400 mt-2">Select two workouts to see your progress side by side.</p>
+                    <p className="text-muted mt-2">Select two workouts to see your progress side by side.</p>
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -240,16 +240,16 @@ export default function CompareWorkouts() {
                 )}
 
                 {workoutA && workoutB && comparisonData.length === 0 && (
-                    <div className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-2xl text-center text-zinc-400">
+                    <div className="bg-surface/50 border border-subtle p-8 rounded-2xl text-center text-muted">
                         No common exercises found between these two sessions.
                     </div>
                 )}
 
                 {comparisonData.length > 0 && workoutA && workoutB && (
-                    <div className="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl">
+                    <div className="overflow-hidden rounded-2xl border border-subtle bg-card shadow-2xl">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-zinc-900/50 text-zinc-400 text-xs uppercase tracking-widest border-b border-zinc-800">
+                                <tr className="bg-surface/50 text-muted text-xs uppercase tracking-widest border-b border-subtle">
                                     <th className="py-4 px-6">Exercise</th>
                                     <th className="py-4 px-6">Metric</th>
                                     <th className="py-4 px-6">{workoutA.date}</th>
@@ -259,9 +259,9 @@ export default function CompareWorkouts() {
                             </thead>
                             <tbody>
                                 {comparisonData.map((row, idx) => (
-                                    <tr key={idx} className="border-b border-zinc-900 hover:bg-zinc-900/30 transition-colors">
-                                        <td className="py-4 px-6 font-bold text-zinc-100">{row.name}</td>
-                                        <td className="py-4 px-6 text-zinc-400 italic text-sm">{row.metric}</td>
+                                    <tr key={idx} className="border-b border-subtle hover:bg-surface/30 transition-colors">
+                                        <td className="py-4 px-6 font-bold text-body">{row.name}</td>
+                                        <td className="py-4 px-6 text-muted italic text-sm">{row.metric}</td>
                                         <td className="py-4 px-6 font-mono">{row.valA.toFixed(1)}{row.unit}</td>
                                         <td className="py-4 px-6 font-mono">{row.valB.toFixed(1)}{row.unit}</td>
                                         <td className="py-4 px-6 font-mono">{renderDiff(row.valA, row.valB, row.unit)}</td>

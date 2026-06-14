@@ -107,7 +107,7 @@ export default function Goals() {
         }
     }
 
-    if (isLoading) return <div className="p-8 text-zinc-400 font-medium animate-pulse">Loading goals...</div>;
+    if (isLoading) return <div className="p-8 text-muted font-medium animate-pulse">Loading goals...</div>;
 
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
@@ -119,8 +119,8 @@ export default function Goals() {
             <div className="flex gap-6 flex-col md:flex-row items-start">
 
                 {/* Form to add/edit goal */}
-                <div className="flex-none w-full md:w-[380px] bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
-                    <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">
+                <div className="flex-none w-full md:w-[380px] bg-card border border-subtle rounded-xl p-6 shadow-xl">
+                    <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">
                         {editingGoalId ? "Edit Goal" : "Add New Goal"}
                     </h3>
                     <form onSubmit={handleAddGoal} className="flex flex-col gap-4">
@@ -128,16 +128,16 @@ export default function Goals() {
                             type="button"
                             onClick={() => setShowPicker(true)}
                             disabled={!!editingGoalId}
-                            className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-left text-zinc-100 hover:border-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-left text-body hover:border-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {selectedExerciseName || <span className="text-zinc-500">Select Exercise</span>}
+                            {selectedExerciseName || <span className="text-dim">Select Exercise</span>}
                         </button>
                         {showPicker && (
                             <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                                <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-zinc-950 border border-zinc-800 rounded-3xl flex flex-col">
-                                    <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                                <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
+                                    <div className="p-4 border-b border-subtle flex justify-between items-center">
                                         <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
-                                        <button onClick={() => setShowPicker(false)} className="text-zinc-500 hover:text-white text-xl leading-none">&times;</button>
+                                        <button onClick={() => setShowPicker(false)} className="text-dim hover:text-white text-xl leading-none">&times;</button>
                                     </div>
                                     <div className="flex-1 overflow-y-auto p-4">
                                         <ExercisePicker
@@ -156,7 +156,7 @@ export default function Goals() {
                             value={targetWeight}
                             onChange={(val) => setTargetWeight(val === "" ? "" : Number(val))}
                             className="w-full"
-                            inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                            inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                             step={0.1}
                             min={0}
                             max={999}
@@ -166,7 +166,7 @@ export default function Goals() {
                             value={targetReps}
                             onChange={(val) => setTargetReps(val === "" ? "" : Number(val))}
                             className="w-full"
-                            inputClassName="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                            inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                             step={1}
                             min={0}
                             max={999}
@@ -177,7 +177,7 @@ export default function Goals() {
                                 {editingGoalId ? "Update Goal" : "Create Goal"}
                             </button>
                             {editingGoalId && (
-                                <button type="button" onClick={resetForm} className="flex-1 bg-transparent border border-zinc-700 text-zinc-300 font-bold py-3 rounded-lg hover:bg-zinc-800 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                                <button type="button" onClick={resetForm} className="flex-1 bg-transparent border border-subtle text-muted font-bold py-3 rounded-lg hover:bg-elevated transition-all hover:scale-[1.02] active:scale-[0.98]">
                                     Cancel
                                 </button>
                             )}
@@ -186,26 +186,26 @@ export default function Goals() {
                 </div>
 
                 {/* List of goals */}
-                <div className="flex-1 w-full bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl">
-                    <h2 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mb-5">Current Goals</h2>
+                <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
+                    <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">Current Goals</h2>
                     {!goals || goals.length === 0 ? (
-                        <div className="text-center py-10 bg-zinc-900/50 rounded-lg border border-zinc-800/80">
-                            <p className="text-zinc-500 font-medium italic">No goals set yet. Time to aim high.</p>
+                        <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
+                            <p className="text-dim font-medium italic">No goals set yet. Time to aim high.</p>
                         </div>
                     ) : (
                         <ul className="space-y-3">
                             {goals?.map(g => (
-                                <li key={g.id} className={`bg-zinc-900/40 border ${editingGoalId === g.id ? "border-lime-400/50" : "border-zinc-800/80"} rounded-lg p-5 flex flex-col sm:flex-row justify-between sm:items-center hover:border-zinc-700 transition-colors gap-4`}>
+                                <li key={g.id} className={`bg-surface/40 border ${editingGoalId === g.id ? "border-lime-400/50" : "border-subtle/80"} rounded-lg p-5 flex flex-col sm:flex-row justify-between sm:items-center hover:border-hover transition-colors gap-4`}>
                                     <div>
                                         <strong className="text-xl font-bold text-lime-400 capitalize">{g.exercise_name}</strong>
-                                        <div className="text-zinc-100 font-medium text-lg mt-1">
+                                        <div className="text-body font-medium text-lg mt-1">
                                             {g.target_weight} kg × {g.target_reps} reps
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleEditGoal(g)}
-                                            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-md font-medium text-sm transition-colors"
+                                            className="px-4 py-2 bg-elevated hover:bg-hover text-muted rounded-md font-medium text-sm transition-colors"
                                         >
                                             Edit
                                         </button>

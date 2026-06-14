@@ -153,8 +153,8 @@ export default function UploadVideo() {
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Video Analysis</h1>
             </div>
 
-            <div className="max-w-xl mx-auto bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-6">
-                <h2 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase">Upload Video</h2>
+            <div className="max-w-xl mx-auto bg-card border border-subtle rounded-xl p-6 shadow-xl space-y-6">
+                <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Upload Video</h2>
 
                 <div
                     onDragOver={handleDragOver}
@@ -164,8 +164,8 @@ export default function UploadVideo() {
                     className={`
                         border-2 border-dashed rounded-xl py-16 px-6 text-center transition-all duration-200 select-none
                         ${isDragging
-                            ? 'border-lime-400 bg-zinc-900/50 text-lime-400 shadow-[0_0_20px_rgba(163,230,53,0.15)]'
-                            : 'border-zinc-700 bg-zinc-900/40 text-zinc-400 hover:border-lime-400/50 hover:bg-zinc-900/60'
+                            ? 'border-lime-400 bg-surface/50 text-lime-400 shadow-[0_0_20px_rgba(163,230,53,0.15)]'
+                            : 'border-subtle bg-surface/40 text-muted hover:border-lime-400/50 hover:bg-surface/60'
                         }
                         ${isProcessing ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}
                     `}
@@ -173,18 +173,18 @@ export default function UploadVideo() {
                     {file ? (
                         <div className="space-y-3">
                             <div className="text-lime-400 text-4xl mb-2">✓</div>
-                            <p className="font-bold text-zinc-200 text-sm truncate max-w-full px-2">
+                            <p className="font-bold text-heading text-sm truncate max-w-full px-2">
                                 {file.name}
                             </p>
-                            <p className="text-xs text-zinc-500 font-mono">
+                            <p className="text-xs text-dim font-mono">
                                 {(file.size / 1024 / 1024).toFixed(2)} MB
                             </p>
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            <div className="text-4xl text-zinc-600 mb-2">↑</div>
-                            <p className="text-sm font-bold text-zinc-300 tracking-wide">Click to upload or drag and drop</p>
-                            <p className="text-xs text-zinc-500 font-mono tracking-widest">MP4, MOV, AVI</p>
+                            <div className="text-4xl text-dim mb-2">↑</div>
+                            <p className="text-sm font-bold text-muted tracking-wide">Click to upload or drag and drop</p>
+                            <p className="text-xs text-dim font-mono tracking-widest">MP4, MOV, AVI</p>
                         </div>
                     )}
                     <input
@@ -198,8 +198,8 @@ export default function UploadVideo() {
                 </div>
 
                 {file && (
-                    <div className="flex flex-col gap-3 pt-4 border-t border-zinc-800/80">
-                        <h3 className="font-display text-sm font-bold text-zinc-400 tracking-wide uppercase mb-2">Analysis Options</h3>
+                    <div className="flex flex-col gap-3 pt-4 border-t border-subtle/80">
+                        <h3 className="font-display text-sm font-bold text-muted tracking-wide uppercase mb-2">Analysis Options</h3>
 
                         <Button
                             type="button"
@@ -234,7 +234,7 @@ export default function UploadVideo() {
                 )}
 
                 {progress && !error && (
-                    <div className="mt-6 p-4 bg-zinc-900/50 border border-zinc-800 rounded-lg">
+                    <div className="mt-6 p-4 bg-surface/50 border border-subtle rounded-lg">
                         <p className="text-sm text-lime-400 font-bold tracking-wide font-mono leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
                             {progress}
                         </p>

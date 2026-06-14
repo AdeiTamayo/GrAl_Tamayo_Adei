@@ -222,7 +222,7 @@ export default function RoutinesManagement() {
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             {/* Top Toolbar Level */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-subtle pb-5">
                 <div>
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Routines Management</h1>
                 </div>
@@ -242,35 +242,35 @@ export default function RoutinesManagement() {
                     </Button>
 
                     {showCreateDropdown && (
-                        <div className="absolute right-0 mt-2 w-80 md:w-96 bg-zinc-950 border border-zinc-800 rounded-xl p-5 shadow-2xl z-30 animate-in fade-in slide-in-from-top-2 duration-150 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                        <div className="absolute right-0 mt-2 w-80 md:w-96 bg-card border border-subtle rounded-xl p-5 shadow-2xl z-30 animate-in fade-in slide-in-from-top-2 duration-150 max-h-[80vh] overflow-y-auto custom-scrollbar">
                             <form onSubmit={handleCreateRoutine} className="flex flex-col gap-4">
                                 <div>
-                                    <label className="block text-xs uppercase tracking-wider text-zinc-400 font-bold mb-1.5">Routine Name *</label>
+                                    <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name *</label>
                                     <input
                                         type="text"
                                         value={newRoutineName}
                                         onChange={(e) => setNewRoutineName(e.target.value)}
                                         required
                                         placeholder="e.g., Heavy Push Day"
-                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:border-lime-400 focus:outline-none transition-all"
+                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-lime-400 focus:outline-none transition-all"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs uppercase tracking-wider text-zinc-400 font-bold mb-1.5">Notes (Optional)</label>
+                                    <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Notes (Optional)</label>
                                     <input
                                         type="text"
                                         placeholder="Focus on progressive overload mechanics"
                                         value={newRoutineNote}
                                         onChange={(e) => setNewRoutineNote(e.target.value)}
-                                        className="w-full border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-all"
+                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-all"
                                     />
                                 </div>
 
                                 {/* Staged Matrix Matrix Build Zone */}
-                                <div className="border-t border-zinc-800/80 pt-4 mt-1">
+                                <div className="border-t border-subtle/80 pt-4 mt-1">
                                     <div className="flex justify-between items-center mb-2">
-                                        <label className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Staged Exercises</label>
-                                        <span className="text-xs px-2 py-0.5 font-mono font-bold bg-zinc-800 text-zinc-300 rounded-full border border-zinc-700">
+                                        <label className="text-xs uppercase tracking-wider text-muted font-bold">Staged Exercises</label>
+                                        <span className="text-xs px-2 py-0.5 font-mono font-bold bg-elevated text-muted rounded-full border border-subtle">
                                             {stagedExercises.length} Added
                                         </span>
                                     </div>
@@ -278,14 +278,14 @@ export default function RoutinesManagement() {
                                     {stagedExercises.length > 0 && (
                                         <div className="mb-3 max-h-32 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                                             {stagedExercises.map((se, i) => (
-                                                <div key={se.tempId || i} className="flex justify-between items-center bg-zinc-900/60 px-3 py-2 rounded-xl border border-zinc-800/80">
-                                                    <span className="text-xs text-zinc-300 font-medium truncate max-w-[75%]">
-                                                        <span className="text-zinc-500 font-mono mr-1">{String(i + 1).padStart(2, '0')}</span> {se.name}
+                                                <div key={se.tempId || i} className="flex justify-between items-center bg-surface/60 px-3 py-2 rounded-xl border border-subtle/80">
+                                                    <span className="text-xs text-muted font-medium truncate max-w-[75%]">
+                                                        <span className="text-dim font-mono mr-1">{String(i + 1).padStart(2, '0')}</span> {se.name}
                                                     </span>
                                                     <button
                                                         type="button"
                                                         onClick={() => setStagedExercises(prev => prev.filter(item => item.tempId !== se.tempId))}
-                                                        className="text-zinc-500 hover:text-rose-400 text-xs font-semibold px-1"
+                                                        className="text-dim hover:text-rose-400 text-xs font-semibold px-1"
                                                     >
                                                         Remove
                                                     </button>
@@ -294,7 +294,7 @@ export default function RoutinesManagement() {
                                         </div>
                                     )}
 
-                                    <div className="bg-zinc-900/40 border border-dashed border-zinc-800 rounded-xl p-2">
+                                    <div className="bg-surface/40 border border-dashed border-subtle rounded-xl p-2">
                                         <ExercisePicker
                                             title="Stage Exercise Entry"
                                             onSelect={stageNewExercise}
@@ -321,21 +321,21 @@ export default function RoutinesManagement() {
             <div className="flex gap-6 items-start flex-col xl:flex-row">
                 {/* Left Listing Sidebar */}
                 <div className="flex-none w-full xl:w-[400px]">
-                    <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-5 shadow-md">
-                        <h2 className="font-display text-sm font-bold text-zinc-400 tracking-wider uppercase mb-4">Saved Templates Shelf</h2>
+                    <div className="bg-surface/60 border border-subtle rounded-xl p-5 shadow-md">
+                        <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase mb-4">Saved Templates Shelf</h2>
                         {routines.length === 0 ? (
-                            <div className="text-center py-10 bg-zinc-950/40 rounded-xl border border-zinc-800/60">
-                                <p className="text-zinc-500 text-sm font-medium italic px-4">No templates configured yet.</p>
+                            <div className="text-center py-10 bg-card/40 rounded-xl border border-subtle/60">
+                                <p className="text-dim text-sm font-medium italic px-4">No templates configured yet.</p>
                             </div>
                         ) : (
                             <ul className="space-y-2.5 list-none p-0 m-0">
                                 {routines.map((r) => {
                                     const isCurrent = selectedRoutine?.id === r.id;
                                     return (
-                                        <li key={r.id} className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group ${isCurrent ? 'bg-zinc-900 border-lime-400/50' : 'bg-zinc-950/40 border-zinc-800/80 hover:border-zinc-700'}`}>
+                                        <li key={r.id} className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group ${isCurrent ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}>
                                             <div className="truncate max-w-[65%]">
-                                                <span className="text-sm font-semibold text-zinc-200 block truncate">{r.name}</span>
-                                                <span className="text-zinc-500 text-[10px] font-mono tracking-wider uppercase mt-0.5 block">Template Profile</span>
+                                                <span className="text-sm font-semibold text-heading block truncate">{r.name}</span>
+                                                <span className="text-dim text-[10px] font-mono tracking-wider uppercase mt-0.5 block">Template Profile</span>
                                             </div>
                                             <div className="flex gap-2 shrink-0">
                                                 <Button type="button" onClick={() => fetchRoutineById(r.id)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
@@ -355,7 +355,7 @@ export default function RoutinesManagement() {
 
                 {/* Right Interactive Workspace Panel */}
                 {selectedRoutine && (
-                    <div className="flex-1 w-full bg-zinc-900 border border-zinc-800 rounded-xl p-6 shadow-md space-y-6 relative">
+                    <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative">
 
                         {/* Header Details Wrapper with Dropdown Flow Control */}
                         <div className="flex justify-between items-start mb-6" ref={detailsDropdownRef}>
@@ -365,7 +365,7 @@ export default function RoutinesManagement() {
                                 </h2>
 
                                 {selectedRoutine.note && (
-                                    <p className="font-sans text-sm text-zinc-300 mt-2 bg-zinc-950/30 p-3 rounded-xl border border-zinc-800/40">{selectedRoutine.note}</p>
+                                    <p className="font-sans text-sm text-muted mt-2 bg-card/30 p-3 rounded-xl border border-subtle/40">{selectedRoutine.note}</p>
                                 )}
                             </div>
 
@@ -386,12 +386,12 @@ export default function RoutinesManagement() {
                                 </Button>
 
                                 {showDetailsDropdown && (
-                                    <div className="absolute right-0 top-full mt-2 w-80 bg-zinc-950 border border-zinc-800 rounded-xl p-4 shadow-xl z-20 flex flex-col gap-3 animate-in fade-in duration-100">
-                                        <h4 className="text-xs uppercase tracking-wider text-zinc-400 font-bold">Edit Core Metadata</h4>
-                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:border-lime-400 focus:outline-none" />
-                                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-3 py-2 text-xs text-zinc-100 focus:border-lime-400 focus:outline-none" />
+                                    <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-subtle rounded-xl p-4 shadow-xl z-20 flex flex-col gap-3 animate-in fade-in duration-100">
+                                        <h4 className="text-xs uppercase tracking-wider text-muted font-bold">Edit Core Metadata</h4>
+                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-lime-400 focus:outline-none" />
+                                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-lime-400 focus:outline-none" />
                                         <div className="flex gap-2 justify-end mt-1">
-                                            <button type="button" onClick={() => setShowDetailsDropdown(false)} className="text-zinc-400 text-xs font-semibold px-2.5 py-1.5 hover:text-zinc-200">Cancel</button>
+                                            <button type="button" onClick={() => setShowDetailsDropdown(false)} className="text-muted text-xs font-semibold px-2.5 py-1.5 hover:text-heading">Cancel</button>
                                             <Button type="button" onClick={saveRoutineEdit} variant="primary" className="px-3 py-1 text-xs rounded-md">Save Changes</Button>
                                         </div>
                                     </div>
@@ -399,12 +399,12 @@ export default function RoutinesManagement() {
                             </div>
                         </div>
 
-                        <hr className="border-none border-t border-zinc-800/60" />
+                        <hr className="border-none border-t border-subtle/60" />
 
                         {/* Exercises List Display Block */}
                         <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase">Routine Exercices</h3>
                         {!selectedRoutine.exercises || selectedRoutine.exercises.length === 0 ? (
-                            <p className="text-xs text-zinc-500 font-sans py-6 text-center border border-dashed border-zinc-800 rounded-xl bg-zinc-950/20">
+                            <p className="text-xs text-dim font-sans py-6 text-center border border-dashed border-subtle rounded-xl bg-card/20">
                                 No exercises configured for this routine template yet. Append elements via the container panel below.
                             </p>
                         ) : (
@@ -446,7 +446,7 @@ export default function RoutinesManagement() {
                         )}
 
                         {/* Search Exercises Dropdown Selection Panel */}
-                        <div className="pt-6 border-t border-zinc-800/60">
+                        <div className="pt-6 border-t border-subtle/60">
                             <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase mb-3">Add New Exercise to Template</h3>
 
                             <div className="flex flex-col gap-4">
@@ -454,7 +454,7 @@ export default function RoutinesManagement() {
                                     <Button
                                         variant="secondary"
                                         fullWidth
-                                        className="py-4 border-dashed border-zinc-800 hover:border-lime-500/50 hover:bg-lime-500/5 transition-all text-sm font-semibold"
+                                        className="py-4 border-dashed border-subtle hover:border-lime-500/50 hover:bg-lime-500/5 transition-all text-sm font-semibold"
                                         onClick={() => setShowPicker(true)}
                                     >
                                         Add exercise

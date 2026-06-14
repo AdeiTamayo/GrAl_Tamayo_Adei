@@ -17,7 +17,7 @@ export default function ActiveWorkoutBanner() {
     if (!isWorkoutActive) return null;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-zinc-900 border-t border-zinc-700 shadow-xl">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-subtle shadow-xl">
             <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center gap-3 sm:gap-4 flex-wrap">
                 <div className="flex items-center gap-2 shrink-0">
                     <span className="relative flex h-2.5 w-2.5">
@@ -29,7 +29,7 @@ export default function ActiveWorkoutBanner() {
                     </span>
                 </div>
 
-                <div className="text-zinc-100 font-mono text-sm font-bold tabular-nums shrink-0">
+                <div className="text-body font-mono text-sm font-bold tabular-nums shrink-0">
                     {formatTime(elapsedTime)}
                 </div>
 
@@ -39,7 +39,7 @@ export default function ActiveWorkoutBanner() {
                     </div>
                 )}
 
-                <div className="text-zinc-400 text-sm truncate min-w-0 flex-1">
+                <div className="text-muted text-sm truncate min-w-0 flex-1">
                     {workoutName}
                     {activeExerciseName && <span className="hidden sm:inline"> — {activeExerciseName}</span>}
                 </div>

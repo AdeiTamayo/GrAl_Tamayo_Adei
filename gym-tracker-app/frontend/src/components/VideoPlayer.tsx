@@ -6,7 +6,7 @@ interface VideoPlayerProps {
 
 export default function VideoPlayer({ src, className = '', poster }: VideoPlayerProps) {
     return (
-        <div className={`bg-black border border-zinc-900 rounded-lg overflow-hidden relative shadow-inner ${className}`}>
+        <div className={`bg-black border border-subtle rounded-lg overflow-hidden relative shadow-inner ${className}`}>
             <video
                 className="w-full h-full object-contain"
                 controls

@@ -133,7 +133,7 @@ export default function Exercises() {
                 <button
                     key={p}
                     onClick={function() { setPage(p); }}
-                    className={'px-3 py-1.5 rounded-lg text-xs font-bold transition-colors' + (isActive ? ' bg-lime-400 text-black' : ' bg-zinc-800 text-zinc-300 hover:bg-zinc-700')}
+                    className={'px-3 py-1.5 rounded-lg text-xs font-bold transition-colors' + (isActive ? ' bg-lime-400 text-black' : ' bg-elevated text-muted hover:bg-hover')}
                 >
                     {p}
                 </button>
@@ -438,7 +438,7 @@ export default function Exercises() {
 
             {/* Clean Status Messages without Box Borders */}
             <div className="flex flex-col gap-1.5">
-                {loading && <p className="text-sm text-zinc-400 font-medium">Loading...</p>}
+                {loading && <p className="text-sm text-muted font-medium">Loading...</p>}
                 {error && viewMode !== 'create' && viewMode !== 'edit' && (
                     <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">{error}</p>
                 )}
@@ -453,7 +453,7 @@ export default function Exercises() {
                         <div className="flex gap-4 w-full flex-col sm:flex-row">
                             <input
                                 type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
-                                className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                             />
                             <Select
                                 value={filters.muscles}
@@ -514,9 +514,9 @@ export default function Exercises() {
                         onCancel={backToList}
                     />
                 ) : viewMode === 'details' && selectedExercise ? (
-                    <div className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-4">
-                        <h2 className="font-display text-2xl font-bold text-zinc-100 tracking-wide uppercase">{selectedExercise.name}</h2>
-                        <div className="flex flex-wrap gap-4 text-zinc-300 mb-6 bg-zinc-900/50 p-4 rounded-lg">
+                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-xl space-y-4">
+                        <h2 className="font-display text-2xl font-bold text-body tracking-wide uppercase">{selectedExercise.name}</h2>
+                        <div className="flex flex-wrap gap-4 text-muted mb-6 bg-surface/50 p-4 rounded-lg">
                             <span><strong>Body Part:</strong> {selectedExercise.bodyPart}</span>
                             <span><strong>Target:</strong> {selectedExercise.target}</span>
                             <span><strong>Equipment:</strong> {selectedExercise.equipment}</span>
@@ -525,19 +525,19 @@ export default function Exercises() {
                             <span><strong>Secondary Muscles:</strong> {selectedExercise.secondary_muscles?.join(', ') || 'None'}</span>
                         </div>
 
-                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase">Description</h3>
-                        <p className="text-zinc-400 whitespace-pre-wrap">{selectedExercise.description || 'No description available.'}</p>
+                        <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Description</h3>
+                        <p className="text-muted whitespace-pre-wrap">{selectedExercise.description || 'No description available.'}</p>
 
-                        <h3 className="font-display text-lg font-bold text-zinc-200 tracking-wide uppercase mt-6">Instructions</h3>
+                        <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mt-6">Instructions</h3>
                         {selectedExercise.instructions && selectedExercise.instructions.length > 0 ? (
-                            <ol className="list-decimal list-inside space-y-2 text-zinc-400">
+                            <ol className="list-decimal list-inside space-y-2 text-muted">
                                 {selectedExercise.instructions.map((step, idx) => (<li key={idx}>{step}</li>))}
                             </ol>
                         ) : (
-                            <p className="text-zinc-400">No instructions available.</p>
+                            <p className="text-muted">No instructions available.</p>
                         )}
 
-                        <div className="flex gap-4 mt-8 pt-4 border-t border-zinc-800">
+                        <div className="flex gap-4 mt-8 pt-4 border-t border-subtle">
                             <Button type="button" variant="secondary" onClick={() => setViewMode('edit')}>Edit Exercise</Button>
                             <Button type="button" variant="danger" onClick={() => setDeleteConfirmId(selectedExercise.id)}>Delete Exercise</Button>
                         </div>
@@ -576,32 +576,32 @@ export default function Exercises() {
                                 <li
                                     key={ex.id}
                                     onClick={() => fetchExerciseById(ex.id)}
-                                    className="bg-zinc-900/40 border cursor-pointer border-zinc-800/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-lime-400/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-lime-400/5"
+                                    className="bg-surface/40 border cursor-pointer border-subtle/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-lime-400/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-lime-400/5"
                                 >
                                     <div>
-                                        <h2 className="font-display text-xl font-bold text-zinc-100 mb-2 truncate">{ex.name}</h2>
-                                        <div className="text-sm text-zinc-400 space-x-2">
-                                            <span className="inline-block bg-zinc-800 px-2 py-1 rounded text-zinc-300">{ex.target}</span>
-                                            <span className="inline-block bg-zinc-800 px-2 py-1 rounded text-zinc-300">{ex.equipment}</span>
+                                        <h2 className="font-display text-xl font-bold text-body mb-2 truncate">{ex.name}</h2>
+                                        <div className="text-sm text-muted space-x-2">
+                                            <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.target}</span>
+                                            <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.equipment}</span>
                                         </div>
                                     </div>
                                 </li>
                             ))
                         ) : (
-                            !loading && <p className="text-zinc-400 col-span-2">No exercises found.</p>
+                            !loading && <p className="text-muted col-span-2">No exercises found.</p>
                         )}
                     </ul>
 
                     {filteredExercises.length > pageSize && (
-                        <div className="flex items-center justify-between pt-4 border-t border-zinc-800/60">
-                            <p className="text-xs text-zinc-500 font-mono">
+                        <div className="flex items-center justify-between pt-4 border-t border-subtle/60">
+                            <p className="text-xs text-dim font-mono">
                                 Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filteredExercises.length)} of {filteredExercises.length}
                             </p>
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setPage(p => Math.max(1, p - 1))}
                                     disabled={page === 1}
-                                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-elevated text-muted hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     Previous
                                 </button>
@@ -609,7 +609,7 @@ export default function Exercises() {
                                 <button
                                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                     disabled={page === totalPages}
-                                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-zinc-300 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-elevated text-muted hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 >
                                     Next
                                 </button>
@@ -684,8 +684,8 @@ function ExerciseForm({
     onCancel
 }: ExerciseFormProps) {
     return (
-        <form onSubmit={(e) => onSubmit(e, ex?.id)} className="bg-zinc-950/80 border border-zinc-800 rounded-xl p-6 shadow-xl space-y-4">
-            <h2 className="font-display text-xl font-bold text-zinc-100 tracking-wide uppercase mb-4">
+        <form onSubmit={(e) => onSubmit(e, ex?.id)} className="bg-card border border-subtle rounded-xl p-6 shadow-xl space-y-4">
+            <h2 className="font-display text-xl font-bold text-body tracking-wide uppercase mb-4">
                 {isEdit ? 'Edit Exercise' : 'Create Custom Exercise'}
             </h2>
 
@@ -696,31 +696,31 @@ function ExerciseForm({
             )}
 
             <div>
-                <label className="block text-sm font-semibold text-zinc-400 mb-2">Exercise Name *</label>
+                <label className="block text-sm font-semibold text-muted mb-2">Exercise Name *</label>
                 <input
                     type="text"
                     name="name"
                     required
                     value={formName}
                     onChange={e => setFormName(e.target.value)}
-                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                 />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Body Part</label>
+                    <label className="block text-sm font-semibold text-muted mb-2">Body Part</label>
                     <input
                         type="text"
                         name="bodyPart"
                         value={formBodyPart}
                         onChange={e => setFormBodyPart(e.target.value)}
-                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Target Muscle *</label>
+                    <label className="block text-sm font-semibold text-muted mb-2">Target Muscle *</label>
                     <Select
                         value={formTarget}
                         onChange={(val) => setFormTarget(val)}
@@ -735,12 +735,12 @@ function ExerciseForm({
                         type="text"
                         name="new_target_muscle"
                         placeholder="Or add new muscle..."
-                        className="w-full mt-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full mt-2 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Equipment *</label>
+                    <label className="block text-sm font-semibold text-muted mb-2">Equipment *</label>
                     <Select
                         value={formEquipment}
                         onChange={(val) => setFormEquipment(val)}
@@ -755,12 +755,12 @@ function ExerciseForm({
                         type="text"
                         name="new_equipment"
                         placeholder="Or add new equipment..."
-                        className="w-full mt-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full mt-2 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Category *</label>
+                    <label className="block text-sm font-semibold text-muted mb-2">Category *</label>
                     <Select
                         value={formCategory}
                         onChange={(val) => setFormCategory(val)}
@@ -775,12 +775,12 @@ function ExerciseForm({
                         type="text"
                         name="new_category"
                         placeholder="Or add new category..."
-                        className="w-full mt-2 border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full mt-2 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Difficulty</label>
+                    <label className="block text-sm font-semibold text-muted mb-2">Difficulty</label>
                     <Select
                         value={formDifficulty}
                         onChange={(val) => setFormDifficulty(val)}
@@ -795,7 +795,7 @@ function ExerciseForm({
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-zinc-400 mb-2">Secondary Muscles</label>
+                    <label className="block text-sm font-semibold text-muted mb-2">Secondary Muscles</label>
                     <Select
                         value={formSecondaryPick}
                         onChange={(val) => {
@@ -813,7 +813,7 @@ function ExerciseForm({
                     <input
                         type="text"
                         placeholder="Or add new secondary muscle..."
-                        className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 e.preventDefault();
@@ -827,10 +827,10 @@ function ExerciseForm({
                     />
                     <div className="flex flex-wrap gap-2 mt-3">
                         {selectedSecondaryMuscles.map(muscle => (
-                            <div key={muscle} className="flex items-center gap-2 bg-zinc-800 px-3 py-1 rounded-full text-zinc-200 text-sm">
+                            <div key={muscle} className="flex items-center gap-2 bg-elevated px-3 py-1 rounded-full text-heading text-sm">
                                 <span>{muscle}</span>
                                 <input type="hidden" name="secondary_muscles" value={muscle} />
-                                <button type="button" className="text-zinc-400 hover:text-rose-500 font-bold" onClick={() => setSelectedSecondaryMuscles(prev => prev.filter(m => m !== muscle))}>✕</button>
+                                <button type="button" className="text-muted hover:text-rose-500 font-bold" onClick={() => setSelectedSecondaryMuscles(prev => prev.filter(m => m !== muscle))}>✕</button>
                             </div>
                         ))}
                     </div>
@@ -838,22 +838,22 @@ function ExerciseForm({
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-zinc-400 mb-2">Description</label>
+                <label className="block text-sm font-semibold text-muted mb-2">Description</label>
                 <textarea
                     name="description"
                     defaultValue={ex?.description || ''}
                     rows={3}
-                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-zinc-400 mb-2">Instructions (one per line)</label>
+                <label className="block text-sm font-semibold text-muted mb-2">Instructions (one per line)</label>
                 <textarea
                     name="instructions"
                     defaultValue={ex?.instructions?.join('\n') || ''}
                     rows={4}
-                    className="w-full border border-zinc-800 bg-zinc-900 rounded-lg px-4 py-3 text-zinc-100 placeholder:text-zinc-600 focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                 />
             </div>
 

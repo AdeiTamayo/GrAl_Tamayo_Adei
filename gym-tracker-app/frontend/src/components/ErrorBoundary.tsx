@@ -27,11 +27,11 @@ export default class ErrorBoundary extends Component<Props, State> {
         if (this.state.hasError) {
             return (
                 <div className="max-w-xl mx-auto p-8 mt-16 text-center">
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 shadow-xl">
+                    <div className="bg-card border border-subtle rounded-xl p-8 shadow-xl">
                         <h1 className="font-display text-2xl font-bold text-rose-400 uppercase italic mb-4">
                             Something went wrong
                         </h1>
-                        <p className="text-zinc-400 text-sm mb-6">
+                        <p className="text-muted text-sm mb-6">
                             {this.state.error?.message || 'An unexpected error occurred'}
                         </p>
                         <button

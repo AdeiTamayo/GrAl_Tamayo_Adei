@@ -92,23 +92,23 @@ export default function Hero() {
 
     if (!isLoggedIn) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-black text-zinc-100 p-4">
+            <div className="flex items-center justify-center min-h-screen bg-body text-body p-4">
                 <div className="w-full max-w-md text-center space-y-8">
                     <div className="space-y-3">
                         <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight text-lime-400 uppercase">
                             Gym Tracker
                         </h1>
-                        <p className="text-zinc-400 text-lg font-medium max-w-sm mx-auto">
+                        <p className="text-muted text-lg font-medium max-w-sm mx-auto">
                             Track your workouts, analyze your form, and crush your goals.
                         </p>
                     </div>
 
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-8 shadow-xl space-y-4">
+                    <div className="bg-card border border-subtle rounded-2xl p-8 shadow-xl space-y-4">
                         <div className="space-y-1">
-                            <h2 className="font-display text-lg font-bold uppercase tracking-tight text-zinc-200">
+                            <h2 className="font-display text-lg font-bold uppercase tracking-tight text-heading">
                                 Welcome back
                             </h2>
-                            <p className="text-sm text-zinc-500 font-medium">
+                            <p className="text-sm text-dim font-medium">
                                 Sign in to access your dashboard.
                             </p>
                         </div>
@@ -121,7 +121,7 @@ export default function Hero() {
                             </Link>
                             <Link
                                 to="/register"
-                                className="w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold border border-zinc-700 text-sm rounded-lg transition-all text-center block"
+                                className="w-full px-4 py-3 bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-lg transition-all text-center block"
                             >
                                 Create an account
                             </Link>
@@ -133,16 +133,16 @@ export default function Hero() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-zinc-100 p-4 md:p-8">
+        <div className="min-h-screen bg-body text-body p-4 md:p-8">
             <div className="max-w-6xl mx-auto space-y-8">
-                <header className="flex items-center justify-between pb-6 border-b border-zinc-800">
-                    <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-zinc-100 uppercase italic">
+                <header className="flex items-center justify-between pb-6 border-b border-subtle">
+                    <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-body uppercase italic">
                         Dashboard
                     </h1>
                     <div className="flex items-center gap-2">
                         <Link
                             to="/settings"
-                            className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+                            className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors"
                             aria-label="Settings"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@ export default function Hero() {
                         </Link>
                         <Link
                             to="/profile"
-                            className="p-2 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors"
+                            className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors"
                             aria-label="Profile"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,22 +165,22 @@ export default function Hero() {
                 {loading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
                         {[1, 2, 3].map(n => (
-                            <div key={n} className="bg-zinc-900/60 border border-zinc-800 rounded-xl h-24" />
+                            <div key={n} className="bg-surface/60 border border-subtle rounded-xl h-24" />
                         ))}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-                            <p className="text-xs font-bold tracking-widest uppercase text-zinc-500">Total Workouts</p>
-                            <p className="text-3xl font-bold text-zinc-100 mt-2 font-mono">{workoutCount ?? '—'}</p>
+                        <div className="bg-card border border-subtle rounded-xl p-5">
+                            <p className="text-xs font-bold tracking-widest uppercase text-dim">Total Workouts</p>
+                            <p className="text-3xl font-bold text-body mt-2 font-mono">{workoutCount ?? '—'}</p>
                         </div>
-                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-                            <p className="text-xs font-bold tracking-widest uppercase text-zinc-500">Personal Records</p>
+                        <div className="bg-card border border-subtle rounded-xl p-5">
+                            <p className="text-xs font-bold tracking-widest uppercase text-dim">Personal Records</p>
                             <p className="text-3xl font-bold text-lime-400 mt-2 font-mono">{prCount ?? '—'}</p>
                         </div>
-                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-                            <p className="text-xs font-bold tracking-widest uppercase text-zinc-500">Exercise Library</p>
-                            <p className="text-3xl font-bold text-zinc-100 mt-2 font-mono">{exerciseCount ?? '—'}</p>
+                        <div className="bg-card border border-subtle rounded-xl p-5">
+                            <p className="text-xs font-bold tracking-widest uppercase text-dim">Exercise Library</p>
+                            <p className="text-3xl font-bold text-body mt-2 font-mono">{exerciseCount ?? '—'}</p>
                         </div>
                     </div>
                 )}
@@ -189,7 +189,7 @@ export default function Hero() {
                     <div className="lg:col-span-2 space-y-8">
                         {navItems.map(section => (
                             <section key={section.category}>
-                                <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-zinc-500 mb-4">
+                                <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim mb-4">
                                     {section.category}
                                 </h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -197,12 +197,12 @@ export default function Hero() {
                                         <Link
                                             key={link.to}
                                             to={link.to}
-                                            className="group bg-zinc-900/30 border-2 border-zinc-800 rounded-xl p-4 hover:border-lime-400/40 hover:bg-zinc-800/40 transition-all hover:shadow-lg hover:shadow-lime-400/5"
+                                            className="group bg-surface/30 border-2 border-subtle rounded-xl p-4 hover:border-lime-400/40 hover:bg-elevated/40 transition-all hover:shadow-lg hover:shadow-lime-400/5"
                                         >
-                                            <h3 className="font-display text-sm font-bold text-zinc-200 group-hover:text-lime-400 transition-colors uppercase tracking-wide">
+                                            <h3 className="font-display text-sm font-bold text-heading group-hover:text-lime-400 transition-colors uppercase tracking-wide">
                                                 {link.label}
                                             </h3>
-                                            <p className="text-xs text-zinc-500 mt-1.5 leading-relaxed group-hover:text-zinc-400 transition-colors">
+                                            <p className="text-xs text-dim mt-1.5 leading-relaxed group-hover:text-muted transition-colors">
                                                 {link.desc}
                                             </p>
                                         </Link>
@@ -213,12 +213,12 @@ export default function Hero() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-                            <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-zinc-500 mb-4">
+                        <div className="bg-card border border-subtle rounded-xl p-5">
+                            <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim mb-4">
                                 Recent Workouts
                             </h2>
                             {recentWorkouts.length === 0 ? (
-                                <p className="text-xs text-zinc-600 italic">No workouts logged yet.</p>
+                                <p className="text-xs text-dim italic">No workouts logged yet.</p>
                             ) : (
                                 <ul className="space-y-3">
                                     {recentWorkouts.map(w => (
@@ -226,13 +226,13 @@ export default function Hero() {
                                             <Link
                                                 to="/workouts"
                                                 state={{ preselectedWorkoutId: w.id }}
-                                                className="block bg-zinc-950 border-2 border-zinc-800 rounded-lg p-3 hover:border-lime-400/40 hover:bg-zinc-900 transition-all"
+                                                className="block bg-card border-2 border-subtle rounded-lg p-3 hover:border-lime-400/40 hover:bg-surface transition-all"
                                             >
-                                                <p className="text-sm font-semibold text-zinc-200 truncate">{w.name}</p>
+                                                <p className="text-sm font-semibold text-heading truncate">{w.name}</p>
                                                 <div className="flex items-center gap-3 mt-1">
-                                                    <span className="text-xs font-mono text-zinc-500">{w.date?.substring(0, 10)}</span>
+                                                    <span className="text-xs font-mono text-dim">{w.date?.substring(0, 10)}</span>
                                                     {w.exercises && (
-                                                        <span className="text-xs text-zinc-600">{w.exercises.length} exercises</span>
+                                                        <span className="text-xs text-dim">{w.exercises.length} exercises</span>
                                                     )}
                                                 </div>
                                             </Link>
@@ -248,8 +248,8 @@ export default function Hero() {
                             </Link>
                         </div>
 
-                        <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-5">
-                            <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-zinc-500 mb-3">
+                        <div className="bg-card border border-subtle rounded-xl p-5">
+                            <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim mb-3">
                                 Quick Actions
                             </h2>
                             <div className="space-y-2">
@@ -261,7 +261,7 @@ export default function Hero() {
                                 </Link>
                                 <Link
                                     to="/upload"
-                                    className="block w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-100 font-bold border border-zinc-700 text-sm rounded-lg px-4 py-2.5 transition-all text-center"
+                                    className="block w-full bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-lg px-4 py-2.5 transition-all text-center"
                                 >
                                     Upload Video
                                 </Link>
