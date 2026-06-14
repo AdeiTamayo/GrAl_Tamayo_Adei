@@ -184,7 +184,19 @@ exports.addSet = async (req, res) => {
         const { weight, reps, time, note } = req.body;
 
         const row = await Workout.insertSet(workoutExerciseId, weight, reps, time, note);
-        return res.status(201).json({ success: true, data: row });
+
+        let isPr = false;
+        try {
+            const exerciseId = await Workout.getExerciseIdForWorkoutExercise(workoutExerciseId, req.userId);
+            if (exerciseId && weight > 0 && reps > 0) {
+                const pr = await PR.checkAndLogPR(req.userId, exerciseId, weight, reps, null, note);
+                isPr = pr !== null;
+            }
+        } catch (prError) {
+            console.error('[Controller] PR check failed (non-blocking):', prError.message);
+        }
+
+        return res.status(201).json({ success: true, data: row, isPr });
     } catch (error) {
         console.error('[Controller] Add Set Error:', error);
         return res.status(500).json({ success: false, error: 'Failed to add set' });

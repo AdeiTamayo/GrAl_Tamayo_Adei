@@ -140,6 +140,7 @@ export default function CurrentWorkout() {
 
             let savedCount = 0;
             let failedCount = 0;
+            const prExercises: string[] = [];
 
             for (const ex of exercises) {
                 const exRes = await apiFetch(`/api/workouts/${workoutId}/exercises`, {
@@ -170,6 +171,9 @@ export default function CurrentWorkout() {
                         const setData = await setRes.json();
                         if (setData.success) {
                             savedCount++;
+                            if (setData.isPr) {
+                                prExercises.push(ex.name);
+                            }
                         } else {
                             failedCount++;
                         }
@@ -181,11 +185,19 @@ export default function CurrentWorkout() {
 
             resetWorkout();
 
+            const uniquePrs = Array.from(new Set(prExercises));
+
             if (failedCount === 0) {
-                showNotification(`Workout saved successfully! (${savedCount} sets)`, "success");
+                const msg = uniquePrs.length > 0
+                    ? `Workout saved! New PR${uniquePrs.length > 1 ? 's' : ''}: ${uniquePrs.join(', ')}`
+                    : `Workout saved successfully! (${savedCount} sets)`;
+                showNotification(msg, "success");
                 navigate("/workouts");
             } else {
-                showNotification(`Workout saved with ${failedCount} failed set(s).`, "error");
+                const msg = uniquePrs.length > 0
+                    ? `Saved with ${failedCount} failed set(s). New PRs: ${uniquePrs.join(', ')}`
+                    : `Workout saved with ${failedCount} failed set(s).`;
+                showNotification(msg, "error");
                 navigate("/workouts");
             }
         } catch (err) {

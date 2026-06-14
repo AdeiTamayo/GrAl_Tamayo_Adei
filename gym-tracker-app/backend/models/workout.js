@@ -232,6 +232,22 @@ class Workout {
         }
     }
 
+    static async getExerciseIdForWorkoutExercise(workoutExerciseId, userId) {
+        try {
+            const query = `
+                SELECT we.exercise_id
+                FROM workout_exercises we
+                JOIN workouts w ON we.workout_id = w.id
+                WHERE we.id = $1 AND w.user_id = $2
+            `;
+            const result = await pool.query(query, [workoutExerciseId, userId]);
+            return result.rows[0]?.exercise_id || null;
+        } catch (error) {
+            console.error('[Workout Model] Error fetching exercise_id:', error.message);
+            throw error;
+        }
+    }
+
     static async deleteSet(setId, userId) {
         try {
             const query = `
