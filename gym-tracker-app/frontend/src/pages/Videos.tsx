@@ -12,6 +12,7 @@ export default function UserVideos() {
     // Filter states
     const [filterType, setFilterType] = useState<string>("all");
     const [filterDate, setFilterDate] = useState<string>("");
+    const [sortOrder, setSortOrder] = useState<string>("desc");
 
     const token = localStorage.getItem("user_login_token");
 
@@ -27,6 +28,7 @@ export default function UserVideos() {
         const params = new URLSearchParams();
         if (filterType !== "all") params.append("type", filterType);
         if (filterDate) params.append("date", filterDate);
+        if (sortOrder) params.append("sort", sortOrder);
 
         apiFetch(`/api/videos?${params.toString()}`, {
             headers: {
@@ -46,7 +48,7 @@ export default function UserVideos() {
                 setError(err.message || "Failed to fetch videos");
                 setLoading(false);
             });
-    }, [token, filterType, filterDate]);
+    }, [token, filterType, filterDate, sortOrder]);
 
     if (error) {
         return (
@@ -85,6 +87,18 @@ export default function UserVideos() {
                         <DateFilterButton
                             value={filterDate}
                             onChange={setFilterDate}
+                        />
+                    </div>
+
+                    <div className="flex flex-col min-w-[120px] flex-1 md:flex-initial">
+                        <label className="text-[10px] uppercase font-bold text-zinc-500 mb-1 tracking-wider">Order By</label>
+                        <Select
+                            value={sortOrder}
+                            onChange={setSortOrder}
+                            options={[
+                                { value: "desc", label: "Newest First" },
+                                { value: "asc", label: "Oldest First" },
+                            ]}
                         />
                     </div>
                 </div>
@@ -163,7 +177,7 @@ function DateFilterButton({ value, onChange }: { value: string; onChange: (val: 
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="bg-zinc-900 border border-zinc-800 rounded-lg py-1.5 px-3 text-xs text-zinc-200 focus:border-lime-400 focus:outline-none w-full text-left flex items-center justify-between gap-2"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 text-left flex items-center justify-between gap-2 text-zinc-200 hover:border-zinc-700 transition-colors focus:border-lime-400 focus:outline-none"
             >
                 <span>{value || "Any date"}</span>
                 <svg className={`w-3 h-3 text-zinc-500 transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

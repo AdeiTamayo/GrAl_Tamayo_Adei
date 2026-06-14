@@ -138,14 +138,27 @@ exports.getUserVideos = async (req, res) => {
         const videos = await Promise.all(videoFiles.map(async (file) => {
             const filePath = path.join(directoryPath, file);
             const stats = await fs.stat(filePath);
+            const isSquat = file.toLowerCase().includes('squat');
+            const isPose = file.toLowerCase().includes('pose');
+
+            let processType = 'Barbell Tracking';
+            if (isSquat) processType = 'Squat Analysis';
+            else if (isPose) processType = 'Pose Estimation';
 
             return {
                 id: file,
-                process_type: file.includes('pose') ? 'Pose Estimation' : 'Barbell Tracking',
+                process_type: processType,
                 processed_url: `/media/output/${file}`,
                 created_at: stats.birthtime
             };
         }));
+
+        const sort = req.query.sort || 'desc';
+        videos.sort((a, b) => {
+            const dateA = new Date(a.created_at).getTime();
+            const dateB = new Date(b.created_at).getTime();
+            return sort === 'asc' ? dateA - dateB : dateB - dateA;
+        });
 
         res.json({
             success: true,
