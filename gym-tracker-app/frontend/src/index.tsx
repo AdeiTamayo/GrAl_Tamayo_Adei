@@ -6,6 +6,7 @@ import App from './App';
 import Navbar from './components/Navbar';
 import ErrorBoundary from './components/ErrorBoundary';
 import NotificationProvider from './components/NotificationProvider';
+import WorkoutProvider from './components/WorkoutContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -14,10 +15,12 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <NotificationProvider>
-        <BrowserRouter>
-          < Navbar />
-          <App />
-        </BrowserRouter >
+        <WorkoutProvider>
+          <BrowserRouter>
+            < Navbar />
+            <App />
+          </BrowserRouter >
+        </WorkoutProvider>
       </NotificationProvider>
     </ErrorBoundary>
   </React.StrictMode>

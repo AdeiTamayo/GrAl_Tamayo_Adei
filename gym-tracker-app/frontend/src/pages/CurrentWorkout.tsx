@@ -3,23 +3,9 @@ import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import TransparentNumericInput from "../components/TransparentNumericInput";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useNotification } from "../components/NotificationProvider";
-
-interface SetEntry {
-    set_number: number;
-    weight: number | string;
-    repetitions: number | string;
-    note: string;
-    is_done: boolean; // Tracking completed status
-}
-
-interface ActiveExercise {
-    exercise_id: number;
-    name: string;
-    rest_time: number; // Storing the exercise's specific rest/time setting
-    sets: SetEntry[];
-}
+import { useWorkout } from "../components/WorkoutContext";
 
 interface Routine {
     id: number;
@@ -29,22 +15,34 @@ interface Routine {
 
 export default function CurrentWorkout() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { showNotification } = useNotification();
-    const [isWorkoutActive, setIsWorkoutActive] = useState(false);
-    const [startTime, setStartTime] = useState<number | null>(null);
-    const [elapsedTime, setElapsedTime] = useState(0);
-    const [workoutName, setWorkoutName] = useState("New Workout");
-    const [exercises, setExercises] = useState<ActiveExercise[]>([]);
+    const {
+        isWorkoutActive,
+        elapsedTime,
+        workoutName,
+        exercises,
+        isRestTimerActive,
+        restTime,
+        setWorkoutName,
+        startWorkout,
+        resetWorkout,
+        setExercises,
+        addExercise,
+        addSet,
+        toggleSetDone,
+        updateSet,
+        updateExerciseRest,
+        removeSet,
+        removeExercise,
+        skipRestTimer,
+        addRestTime,
+    } = useWorkout();
+
     const [showExercisePicker, setShowExercisePicker] = useState(false);
     const [routines, setRoutines] = useState<Routine[]>([]);
     const [showRoutinePicker, setShowRoutinePicker] = useState(false);
     const [showFinishModal, setShowFinishModal] = useState(false);
-
-    // Rest Timer state
-    const [restTime, setRestTime] = useState(0);
-    const [isRestTimerActive, setIsRestTimerActive] = useState(false);
-    const [restStartTime, setRestStartTime] = useState<number | null>(null);
-    const [restDuration, setRestDuration] = useState(60); // Dynamic or standard default
 
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({
@@ -52,34 +50,12 @@ export default function CurrentWorkout() {
         "Content-Type": "application/json",
     }), [token]);
 
-    // Workout Timer
     useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isWorkoutActive && startTime) {
-            interval = setInterval(() => {
-                setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
-            }, 1000);
+        if (searchParams.get('finish') === '1') {
+            setShowFinishModal(true);
+            navigate('/active-workout', { replace: true });
         }
-        return () => clearInterval(interval);
-    }, [isWorkoutActive, startTime]);
-
-    // Rest Timer
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isRestTimerActive && restStartTime) {
-            interval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - restStartTime) / 1000);
-                const remaining = restDuration - elapsed;
-                if (remaining <= 0) {
-                    setIsRestTimerActive(false);
-                    setRestTime(0);
-                } else {
-                    setRestTime(remaining);
-                }
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [isRestTimerActive, restStartTime, restDuration]);
+    }, [searchParams, navigate]);
 
     useEffect(() => {
         fetchRoutines();
@@ -97,11 +73,6 @@ export default function CurrentWorkout() {
         }
     };
 
-    const startWorkout = () => {
-        setIsWorkoutActive(true);
-        setStartTime(Date.now());
-    };
-
     const loadRoutine = async (routineId: number) => {
         try {
             const res = await apiFetch(`/api/routines/${routineId}`, { headers });
@@ -110,7 +81,6 @@ export default function CurrentWorkout() {
                 const routine = data.data;
                 setWorkoutName(routine.name);
                 const loadedExercises = routine.exercises.map((ex: any) => {
-                    // Set default to 60s if backend time is missing or 0
                     const exerciseRest = parseInt(ex.planned_time) || 60;
                     return {
                         exercise_id: ex.exercise_id || ex.id,
@@ -134,78 +104,10 @@ export default function CurrentWorkout() {
         }
     };
 
-    const addExercise = (exercise: ExerciseMeta) => {
-        setExercises([...exercises, {
-            exercise_id: exercise.id,
-            name: exercise.name,
-            rest_time: 60, // default if manual added
-            sets: [{ set_number: 1, weight: "", repetitions: "", note: "", is_done: false }]
-        }]);
+    const handleAddExercise = (exercise: ExerciseMeta) => {
+        addExercise(exercise);
         setShowExercisePicker(false);
         if (!isWorkoutActive) startWorkout();
-    };
-
-    const addSet = (exerciseIndex: number) => {
-        const newExercises = [...exercises];
-        const lastSet = newExercises[exerciseIndex].sets[newExercises[exerciseIndex].sets.length - 1];
-        newExercises[exerciseIndex].sets.push({
-            set_number: newExercises[exerciseIndex].sets.length + 1,
-            weight: lastSet?.weight || "",
-            repetitions: lastSet?.repetitions || "",
-            note: "",
-            is_done: false
-        });
-        setExercises(newExercises);
-    };
-
-    const toggleSetDone = (exerciseIndex: number, setIndex: number) => {
-        const newExercises = [...exercises];
-        const currentSet = newExercises[exerciseIndex].sets[setIndex];
-
-        // Toggle the done state
-        currentSet.is_done = !currentSet.is_done;
-        setExercises(newExercises);
-
-        // Trigger rest timer using specific exercise time configured only if marked complete
-        if (currentSet.is_done) {
-            const exerciseRestDuration = newExercises[exerciseIndex].rest_time;
-            startRestTimer(exerciseRestDuration);
-        }
-    };
-
-    const updateSet = (exerciseIndex: number, setIndex: number, field: keyof SetEntry, value: any) => {
-        const newExercises = [...exercises];
-        newExercises[exerciseIndex].sets[setIndex] = {
-            ...newExercises[exerciseIndex].sets[setIndex],
-            [field]: value
-        };
-        setExercises(newExercises);
-    };
-
-    const updateExerciseRest = (exerciseIndex: number, value: number) => {
-        const newExercises = [...exercises];
-        newExercises[exerciseIndex].rest_time = value < 0 ? 0 : value;
-        setExercises(newExercises);
-    };
-
-    const removeSet = (exerciseIndex: number, setIndex: number) => {
-        const newExercises = [...exercises];
-        newExercises[exerciseIndex].sets.splice(setIndex, 1);
-        newExercises[exerciseIndex].sets = newExercises[exerciseIndex].sets.map((s, i) => ({ ...s, set_number: i + 1 }));
-        setExercises(newExercises);
-    };
-
-    const removeExercise = (exerciseIndex: number) => {
-        const newExercises = [...exercises];
-        newExercises.splice(exerciseIndex, 1);
-        setExercises(newExercises);
-    };
-
-    const startRestTimer = (duration: number) => {
-        setRestDuration(duration);
-        setRestTime(duration);
-        setRestStartTime(Date.now());
-        setIsRestTimerActive(true);
     };
 
     const formatTime = (seconds: number) => {
@@ -277,6 +179,8 @@ export default function CurrentWorkout() {
                 }
             }
 
+            resetWorkout();
+
             if (failedCount === 0) {
                 showNotification(`Workout saved successfully! (${savedCount} sets)`, "success");
                 navigate("/workouts");
@@ -323,10 +227,10 @@ export default function CurrentWorkout() {
                         <span className="font-bold uppercase tracking-wider text-lime-400 text-sm">Rest</span>
                         <span className="font-mono text-2xl font-black text-lime-400">{formatTime(restTime)}</span>
                         <div className="flex gap-2 ml-auto">
-                            <Button variant="secondary" onClick={() => setRestDuration(d => d + 15)}>
+                            <Button variant="secondary" onClick={() => addRestTime(15)}>
                                 +15s
                             </Button>
-                            <Button variant="danger" onClick={() => { setIsRestTimerActive(false); setRestTime(0); }}>
+                            <Button variant="danger" onClick={skipRestTimer}>
                                 Skip
                             </Button>
                         </div>
@@ -447,7 +351,7 @@ export default function CurrentWorkout() {
                                 <button onClick={() => setShowExercisePicker(false)} className="text-zinc-500 hover:text-white">✕</button>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4">
-                                <ExercisePicker onSelect={addExercise} />
+                                <ExercisePicker onSelect={handleAddExercise} />
                             </div>
                         </div>
                     </div>
@@ -494,7 +398,7 @@ export default function CurrentWorkout() {
                                     Save Workout
                                 </button>
                                 <button
-                                    onClick={() => { setShowFinishModal(false); navigate("/"); }}
+                                    onClick={() => { setShowFinishModal(false); resetWorkout(); navigate("/"); }}
                                     className="w-full bg-rose-500/10 text-rose-500 font-bold py-3 rounded-lg border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all"
                                 >
                                     Delete Workout
