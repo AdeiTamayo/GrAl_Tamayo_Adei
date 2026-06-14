@@ -82,7 +82,7 @@ export default function Login() {
                     <div className="flex justify-between items-center mb-2">
                         <label className="block text-sm font-semibold text-zinc-400">Email</label>
                         {email && !isEmailValid(email) && (
-                            <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Format okerra</span>
+                            <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Incorrect format</span>
                         )}
                     </div>
                     <input

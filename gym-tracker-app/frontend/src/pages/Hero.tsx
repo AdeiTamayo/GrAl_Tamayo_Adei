@@ -197,7 +197,7 @@ export default function Hero() {
                                         <Link
                                             key={link.to}
                                             to={link.to}
-                                            className="group bg-zinc-900/30 border border-zinc-800 rounded-xl p-4 hover:border-lime-400/40 hover:bg-zinc-800/40 transition-all hover:shadow-lg hover:shadow-lime-400/5 border-l-2 border-l-zinc-800 hover:border-l-lime-400"
+                                            className="group bg-zinc-900/30 border-2 border-zinc-800 rounded-xl p-4 hover:border-lime-400/40 hover:bg-zinc-800/40 transition-all hover:shadow-lg hover:shadow-lime-400/5"
                                         >
                                             <h3 className="font-display text-sm font-bold text-zinc-200 group-hover:text-lime-400 transition-colors uppercase tracking-wide">
                                                 {link.label}
@@ -226,7 +226,7 @@ export default function Hero() {
                                             <Link
                                                 to="/workouts"
                                                 state={{ preselectedWorkoutId: w.id }}
-                                                className="block bg-zinc-950 border border-zinc-800 rounded-lg p-3 hover:border-lime-400/40 hover:bg-zinc-900 transition-all border-l-2 border-l-transparent hover:border-l-lime-400"
+                                                className="block bg-zinc-950 border-2 border-zinc-800 rounded-lg p-3 hover:border-lime-400/40 hover:bg-zinc-900 transition-all"
                                             >
                                                 <p className="text-sm font-semibold text-zinc-200 truncate">{w.name}</p>
                                                 <div className="flex items-center gap-3 mt-1">
