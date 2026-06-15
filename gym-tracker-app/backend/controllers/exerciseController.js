@@ -4,6 +4,11 @@ let exercisesCache = null;
 let exercisesCacheTime = 0;
 const CACHE_TTL = 5 * 60 * 1000;
 
+const invalidateExercisesCache = () => {
+  exercisesCache = null;
+  exercisesCacheTime = 0;
+};
+
 exports.getExercises = async (req, res) => {
   console.log("Get all exercises request received");
 
@@ -93,6 +98,8 @@ exports.createExercise = async (req, res) => {
       })
     }
 
+    invalidateExercisesCache();
+
     return res.status(200).json({
       success: true,
       data: exercice
@@ -123,6 +130,8 @@ exports.modifyExercise = async (req, res) => {
       })
     }
 
+    invalidateExercisesCache();
+
     return res.status(200).json({
       success: true,
       data: exercice
@@ -142,6 +151,8 @@ exports.deleteExercise = async (req, res) => {
   console.log("Delete exercise request received");
   try {
     await Exercise.deleteExercise(req.params.id);
+
+    invalidateExercisesCache();
 
     return res.status(200).json({
       success: true,
