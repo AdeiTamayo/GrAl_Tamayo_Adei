@@ -20,7 +20,7 @@ export default function TransparentNumericInput({
     max = 999,
     step = 1,
     className = "w-[72px] sm:w-20",
-    inputClassName = "pl-1.5 pr-6 py-1 text-xs font-mono text-lime-400",
+    inputClassName = "pl-1.5 pr-6 py-1 text-xs font-mono text-body",
     disabled = false
 }: NumericInputProps) {
 
