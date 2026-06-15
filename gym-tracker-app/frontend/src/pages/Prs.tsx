@@ -389,7 +389,7 @@ export default function PersonalRecords() {
                             History Timeline
                         </h3>
 
-                        <ul className="relative border-l border-subtle ml-3 md:ml-6 pl-6 pb-2 space-y-8 mt-4">
+                        <ul className="relative border-l border-subtle ml-3 md:ml-6 pl-6 pb-2 space-y-8 mt-4 list-none">
                             {prHistory.map((history) => (
                                 <li key={history.id} className="relative">
                                     <div className="absolute w-3 h-3 bg-lime-400 rounded-full -left-[1.95rem] top-1.5 ring-4 ring-zinc-950"></div>

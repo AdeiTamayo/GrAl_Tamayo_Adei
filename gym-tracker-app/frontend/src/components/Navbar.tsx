@@ -4,7 +4,7 @@ import { useTheme } from './ThemeContext';
 export default function Navbar() {
     const { theme, toggleTheme } = useTheme();
     return (
-        <nav className="px-6 py-4 border-b border-subtle bg-card backdrop-blur-md sticky top-0 z-50">
+        <nav className="px-6 py-4 border-b border-subtle bg-body backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <Link to="/" className="font-display text-xl font-bold tracking-tight text-body uppercase italic hover:text-lime-400 transition-colors">
                     Home

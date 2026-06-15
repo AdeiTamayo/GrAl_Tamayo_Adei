@@ -17,6 +17,7 @@
     --text-muted: #a1a1aa;
     --text-dim: #71717a;
     --border: #27272a;
+    --border-rgb: 39, 39, 42;
     --border-hover: #3f3f46;
     --scrollbar-track: #09090b;
     --scrollbar-thumb: #27272a;
@@ -37,6 +38,7 @@
     --text-muted: #52525b;
     --text-dim: #a1a1aa;
     --border: #e4e4e7;
+    --border-rgb: 228, 228, 231;
     --border-hover: #d4d4d8;
     --scrollbar-track: #f4f4f5;
     --scrollbar-thumb: #d4d4d8;
@@ -85,6 +87,10 @@
     .text-muted { color: var(--text-muted); }
     .text-dim { color: var(--text-dim); }
     .border-subtle { border-color: var(--border); }
+    .border-subtle\/40 { border-color: rgba(var(--border-rgb), 0.4); }
+    .border-subtle\/50 { border-color: rgba(var(--border-rgb), 0.5); }
+    .border-subtle\/60 { border-color: rgba(var(--border-rgb), 0.6); }
+    .border-subtle\/80 { border-color: rgba(var(--border-rgb), 0.8); }
     .border-hover { border-color: var(--border-hover); }
     .hover\:bg-hover:hover { background-color: var(--bg-hover); }
     .hover\:text-body:hover { color: var(--text-body); }

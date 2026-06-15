@@ -332,15 +332,16 @@ export default function RoutinesManagement() {
                                 {routines.map((r) => {
                                     const isCurrent = selectedRoutine?.id === r.id;
                                     return (
-                                        <li key={r.id} className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group ${isCurrent ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}>
+                                        <li
+                                            key={r.id}
+                                            onClick={() => fetchRoutineById(r.id)}
+                                            className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${isCurrent ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
+                                        >
                                             <div className="truncate max-w-[65%]">
                                                 <span className="text-sm font-semibold text-heading block truncate">{r.name}</span>
                                                 <span className="text-dim text-[10px] font-mono tracking-wider uppercase mt-0.5 block">Template Profile</span>
                                             </div>
-                                            <div className="flex gap-2 shrink-0">
-                                                <Button type="button" onClick={() => fetchRoutineById(r.id)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
-                                                    Open
-                                                </Button>
+                                            <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                                                 <Button type="button" onClick={() => setDeleteConfirmId(r.id)} variant="danger" className="px-2.5 py-1.5 text-xs rounded-lg">
                                                     Delete
                                                 </Button>

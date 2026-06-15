@@ -13,9 +13,10 @@ interface SelectProps {
     label?: string;
     className?: string;
     disabled?: boolean;
+    buttonClassName?: string;
 }
 
-export default function Select({ value, onChange, options, placeholder = "Select...", label, className = "", disabled = false }: SelectProps) {
+export default function Select({ value, onChange, options, placeholder = "Select...", label, className = "", disabled = false, buttonClassName = "" }: SelectProps) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
@@ -38,7 +39,7 @@ export default function Select({ value, onChange, options, placeholder = "Select
                 type="button"
                 disabled={disabled}
                 onClick={() => setOpen(!open)}
-                className="w-full bg-surface border border-subtle rounded-lg px-4 py-3 text-left flex justify-between items-center hover:border-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full bg-surface border border-subtle rounded-lg text-left flex justify-between items-center hover:border-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${buttonClassName || 'px-4 py-3'}`}
             >
                 <span className={selected ? "text-body" : "text-dim"}>
                     {selected ? selected.label : placeholder}

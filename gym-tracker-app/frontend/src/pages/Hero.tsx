@@ -213,7 +213,7 @@ export default function Hero() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="bg-card border border-subtle rounded-xl p-5">
+                        <div className="bg-surface/30 border border-subtle rounded-xl p-5">
                             <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim mb-4">
                                 Recent Workouts
                             </h2>
@@ -226,7 +226,7 @@ export default function Hero() {
                                             <Link
                                                 to="/workouts"
                                                 state={{ preselectedWorkoutId: w.id }}
-                                                className="block bg-card border-2 border-subtle rounded-lg p-3 hover:border-lime-400/40 hover:bg-surface transition-all"
+                                                className="block bg-surface/20 border border-subtle rounded-lg p-3 hover:border-lime-400/40 hover:bg-surface/40 transition-all"
                                             >
                                                 <p className="text-sm font-semibold text-heading truncate">{w.name}</p>
                                                 <div className="flex items-center gap-3 mt-1">
@@ -248,7 +248,7 @@ export default function Hero() {
                             </Link>
                         </div>
 
-                        <div className="bg-card border border-subtle rounded-xl p-5">
+                        <div className="bg-surface/30 border border-subtle rounded-xl p-5">
                             <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim mb-3">
                                 Quick Actions
                             </h2>

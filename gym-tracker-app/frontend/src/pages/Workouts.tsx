@@ -536,15 +536,16 @@ export default function WorkoutsManagement() {
                         ) : (
                             <ul className="space-y-2.5 list-none p-0 m-0">
                                 {workouts.map((w) => (
-                                    <li key={w.id} className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group ${selectedWorkout?.id === w.id ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}>
+                                    <li
+                                        key={w.id}
+                                        onClick={() => fetchWorkoutById(w.id)}
+                                        className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${selectedWorkout?.id === w.id ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
+                                    >
                                         <div>
                                             <span className="text-sm stroke-zinc-100 font-semibold text-heading block">{w.name}</span>
                                             <span className="font-mono text-xs text-dim mt-0.5 block">{w.date?.substring(0, 10)}</span>
                                         </div>
-                                        <div className="flex gap-2">
-                                            <Button type="button" onClick={() => fetchWorkoutById(w.id)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
-                                                Open
-                                            </Button>
+                                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                                             <Button type="button" onClick={() => setDeleteWorkoutConfirmId(w.id)} variant="danger" className="px-2.5 py-1.5 text-xs rounded-lg">
                                                 Delete
                                             </Button>

@@ -318,7 +318,7 @@ export default function WeightHistory() {
                             </div>
                             <button
                                 onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}
-                                className="bg-surface border border-subtle rounded px-2 py-1 text-body hover:border-lime-400 transition-colors"
+                                className="bg-surface border border-subtle rounded px-2 py-1 text-xs text-body hover:border-lime-400 transition-colors"
                                 title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
                             >
                                 {sortOrder === 'asc' ? '\u2191' : '\u2193'}
@@ -341,16 +341,16 @@ export default function WeightHistory() {
                                             <strong className="text-xl font-bold text-body">{Number(entry.weight)} kg</strong>
                                             <div className="text-sm text-dim font-medium mt-1">{entry.date?.slice(0, 10)}</div>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 shrink-0">
                                             <button
                                                 onClick={() => handleEdit(entry)}
-                                                className="px-3 py-1.5"
+                                                className="px-4 py-2 md:py-3 bg-lime-500/10 hover:bg-lime-500 text-lime-500 hover:text-black rounded-lg font-medium text-sm border border-lime-500/20 transition-colors shrink-0"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(entry.id)}
-                                                className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-md font-medium text-sm border border-rose-500/20 transition-colors"
+                                                className="px-4 py-2 md:py-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg font-medium text-sm border border-rose-500/20 transition-colors shrink-0"
                                             >
                                                 Delete
                                             </button>
