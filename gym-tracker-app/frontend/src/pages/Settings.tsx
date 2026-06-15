@@ -38,32 +38,6 @@ export default function Settings() {
                         {theme === "dark" ? "Light Mode" : "Dark Mode"}
                     </button>
                 </div>
-
-                <div>
-                    <label className="block text-xs uppercase tracking-wider text-dim font-bold mb-2">Unit System</label>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => handleUnitChange("kg")}
-                            className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                                unitSystem === "kg"
-                                    ? "bg-lime-400 text-black"
-                                    : "bg-elevated text-muted hover:bg-hover"
-                            }`}
-                        >
-                            Kilograms (kg)
-                        </button>
-                        <button
-                            onClick={() => handleUnitChange("lbs")}
-                            className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                                unitSystem === "lbs"
-                                    ? "bg-lime-400 text-black"
-                                    : "bg-elevated text-muted hover:bg-hover"
-                            }`}
-                        >
-                            Pounds (lbs)
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
     );

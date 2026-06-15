@@ -214,7 +214,7 @@ exports.getWeightHistory = async (req, res) => {
             });
         }
 
-        const { startDate, endDate } = req.query;
+        const { startDate, endDate, page, limit, sortBy, sortOrder } = req.query;
 
         if (startDate && isNaN(Date.parse(startDate))) {
             return res.status(400).json({
@@ -237,11 +237,24 @@ exports.getWeightHistory = async (req, res) => {
             });
         }
 
-        const weightHistory = await User.getWeightHistory(userId, startDate, endDate);
+        const validSortBy = ['date', 'weight'].includes(sortBy) ? sortBy : undefined;
+        const validSortOrder = ['asc', 'desc'].includes(sortOrder) ? sortOrder : undefined;
+        const pageNum = page ? parseInt(page, 10) : undefined;
+        const limitNum = limit ? parseInt(limit, 10) : undefined;
+
+        const result = await User.getWeightHistory(userId, {
+            startDate,
+            endDate,
+            page: pageNum,
+            limit: limitNum,
+            sortBy: validSortBy,
+            sortOrder: validSortOrder
+        });
 
         return res.status(200).json({
             success: true,
-            data: weightHistory
+            data: result.rows,
+            total: result.total
         });
     } catch (error) {
         console.error('[Get Weight History Error]:', error.message);

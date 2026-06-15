@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, FormEvent } from "react";
 import { apiFetch } from "../utils/api";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import Calendar from "../components/Calendar";
+import Select from "../components/Select";
 // 1. Import Recharts components
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -11,6 +12,8 @@ interface WeightEntry {
     weight: number | string;
     date: string; // yyyy-mm-dd
 }
+
+const PAGE_SIZE = 10;
 
 export default function WeightHistory() {
     const [entries, setEntries] = useState<WeightEntry[]>([]);
@@ -23,6 +26,11 @@ export default function WeightHistory() {
     const [date, setDate] = useState<string>(new Date().toLocaleDateString('en-CA'));
     const [showCalendar, setShowCalendar] = useState(false);
 
+    // Pagination & sorting state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [sortBy, setSortBy] = useState<'date' | 'weight'>('date');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(
         () => ({
@@ -34,6 +42,7 @@ export default function WeightHistory() {
 
     useEffect(() => {
         fetchWeightHistory().finally(() => setIsLoading(false));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [headers]);
 
     async function fetchWeightHistory() {
@@ -53,6 +62,33 @@ export default function WeightHistory() {
             setError(err.message || "Failed to fetch weight history");
         }
     }
+
+    // Paginated & sorted slice for the list
+    const sortedEntries = useMemo(() => {
+        return [...entries].sort((a, b) => {
+            let cmp: number;
+            if (sortBy === 'date') {
+                cmp = new Date(a.date).getTime() - new Date(b.date).getTime();
+            } else {
+                cmp = Number(a.weight) - Number(b.weight);
+            }
+            return sortOrder === 'asc' ? cmp : -cmp;
+        });
+    }, [entries, sortBy, sortOrder]);
+
+    const totalPages = Math.max(1, Math.ceil(sortedEntries.length / PAGE_SIZE));
+
+    // Clamp page when entries change (e.g. after delete)
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [totalPages, currentPage]);
+
+    const paginatedEntries = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE;
+        return sortedEntries.slice(start, start + PAGE_SIZE);
+    }, [sortedEntries, currentPage]);
 
     // 2. Prepare chart data (Sorted chronologically from oldest to newest)
     const chartData = useMemo(() => {
@@ -118,6 +154,7 @@ export default function WeightHistory() {
             }
 
             await fetchWeightHistory();
+            if (!editingId) setCurrentPage(1);
             resetForm();
         } catch (err: any) {
             setError(err.message || "Failed to save weight");
@@ -150,7 +187,7 @@ export default function WeightHistory() {
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Weight History</h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Weight History</h1>
             </div>
 
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
@@ -264,40 +301,85 @@ export default function WeightHistory() {
 
                 {/* List */}
                 <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
-                    <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">Entries</h2>
+                    <div className="flex items-center justify-between mb-5">
+                        <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Entries</h2>
+                        <div className="flex items-center gap-2 text-xs">
+                            <span className="text-dim">Sort by</span>
+                            <div className="w-28">
+                                <Select
+                                    value={sortBy}
+                                    onChange={v => { setSortBy(v as 'date' | 'weight'); setCurrentPage(1); }}
+                                    options={[
+                                        { value: 'date', label: 'Date' },
+                                        { value: 'weight', label: 'Weight' },
+                                    ]}
+                                    buttonClassName="px-2 py-1 text-xs text-left"
+                                />
+                            </div>
+                            <button
+                                onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}
+                                className="bg-surface border border-subtle rounded px-2 py-1 text-body hover:border-lime-400 transition-colors"
+                                title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                            >
+                                {sortOrder === 'asc' ? '\u2191' : '\u2193'}
+                            </button>
+                        </div>
+                    </div>
                     {entries.length === 0 ? (
                         <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
                             <p className="text-dim font-medium italic">No weight entries yet.</p>
                         </div>
                     ) : (
-                        <ul className="space-y-3">
-                            {entries.map(entry => (
-                                <li
-                                    key={entry.id}
-                                    className="bg-surface/40 border border-subtle/80 rounded-lg p-4 flex justify-between items-center hover:border-hover transition-colors"
-                                // ... rest of list items
-                                >
-                                    <div>
-                                        <strong className="text-xl font-bold text-body">{Number(entry.weight)} kg</strong>
-                                        <div className="text-sm text-dim font-medium mt-1">{entry.date?.slice(0, 10)}</div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleEdit(entry)}
-                                            className="px-3 py-1.5"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(entry.id)}
-                                            className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-md font-medium text-sm border border-rose-500/20 transition-colors"
-                                        >
-                                            Delete
-                                        </button>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                        <>
+                            <ul className="space-y-3">
+                                {paginatedEntries.map(entry => (
+                                    <li
+                                        key={entry.id}
+                                        className="bg-surface/40 border border-subtle/80 rounded-lg p-4 flex justify-between items-center hover:border-hover transition-colors"
+                                    >
+                                        <div>
+                                            <strong className="text-xl font-bold text-body">{Number(entry.weight)} kg</strong>
+                                            <div className="text-sm text-dim font-medium mt-1">{entry.date?.slice(0, 10)}</div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleEdit(entry)}
+                                                className="px-3 py-1.5"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(entry.id)}
+                                                className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-md font-medium text-sm border border-rose-500/20 transition-colors"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-center gap-2 mt-5 pt-4 border-t border-subtle">
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="w-20 px-3 py-1.5 bg-surface border border-subtle rounded text-sm text-body disabled:opacity-40 hover:border-lime-400 transition-colors"
+                                    >
+                                        Prev
+                                    </button>
+                                    <span className="text-sm text-dim font-medium">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="w-20 px-3 py-1.5 bg-surface border border-subtle rounded text-sm text-body disabled:opacity-40 hover:border-lime-400 transition-colors"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

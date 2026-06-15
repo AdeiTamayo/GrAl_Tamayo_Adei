@@ -125,7 +125,7 @@ class User {
     /**
      * Get all weight history entries for a user
      */
-    static async getWeightHistory(userId, startDate, endDate) {
+    static async getWeightHistory(userId, { startDate, endDate, page, limit, sortBy, sortOrder } = {}) {
         try {
             let query = `
                 SELECT id, user_id, weight, date
@@ -145,10 +145,26 @@ class User {
                 params.push(endDate);
             }
 
-            query += ` ORDER BY date DESC, id DESC;`;
+            // Count total matching rows before pagination
+            const countQuery = query.replace(/SELECT .* FROM/, 'SELECT COUNT(*)::int AS total FROM');
+            const countResult = await pool.query(countQuery, params);
+            const total = countResult.rows[0].total;
+
+            // Sorting
+            const allowedSortColumns = ['date', 'weight'];
+            const column = allowedSortColumns.includes(sortBy) ? sortBy : 'date';
+            const dir = sortOrder === 'asc' ? 'ASC' : 'DESC';
+            query += ` ORDER BY ${column} ${dir}, id ${dir}`;
+
+            // Pagination
+            if (page && limit) {
+                const offset = (page - 1) * limit;
+                query += ` LIMIT $${paramIndex++} OFFSET $${paramIndex++}`;
+                params.push(limit, offset);
+            }
 
             const result = await pool.query(query, params);
-            return result.rows;
+            return { rows: result.rows, total };
         } catch (error) {
             console.error('[User Model] Error getting weight history:', error.message);
             throw error;
