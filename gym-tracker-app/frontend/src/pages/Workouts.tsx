@@ -6,6 +6,7 @@ import EditableExerciseCard from '../components/EditableExerciseCard';
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import Calendar from '../components/Calendar';
 import ConfirmModal from '../components/ConfirmModal';
+import DeleteButton from '../components/DeleteButton';
 
 // ---- TYPES & INTERFACES ----
 interface SetEntry {
@@ -546,9 +547,7 @@ export default function WorkoutsManagement() {
                                             <span className="font-mono text-xs text-dim mt-0.5 block">{w.date?.substring(0, 10)}</span>
                                         </div>
                                         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                                            <Button type="button" onClick={() => setDeleteWorkoutConfirmId(w.id)} variant="danger" className="px-2.5 py-1.5 text-xs rounded-lg">
-                                                Delete
-                                            </Button>
+                                            <DeleteButton onClick={() => setDeleteWorkoutConfirmId(w.id)} />
                                         </div>
                                     </li>
                                 ))}

@@ -5,6 +5,8 @@ import TransparentNumericInput from "../components/TransparentNumericInput";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
 import Calendar from "../components/Calendar";
 import ConfirmModal from "../components/ConfirmModal";
+import DeleteButton from "../components/DeleteButton";
+import EditButton from "../components/EditButton";
 
 interface PRSummary {
     id: number;
@@ -312,7 +314,7 @@ export default function PersonalRecords() {
                                 <p className="text-dim font-medium italic">No PRs recorded yet. Go lift something heavy!</p>
                             </div>
                         ) : (
-                            <ul className="space-y-3">
+                            <ul className="space-y-3 list-none">
                                 {prSummary.map(pr => (
                                     <li
                                         key={pr.id}
@@ -325,7 +327,7 @@ export default function PersonalRecords() {
                                                 <div className="text-sm text-dim font-medium mt-1">{pr.date?.substring(0, 10)}</div>
                                             </div>
                                             <div className="text-right">
-                                                <span className="text-2xl font-bold text-body">{pr.weight} kg</span>
+                                                <span className="text-xl font-bold text-body">{pr.weight} kg</span>
                                                 <div className="text-sm text-muted font-medium mt-1">{pr.repetitions} reps</div>
                                             </div>
                                         </div>
@@ -389,11 +391,10 @@ export default function PersonalRecords() {
                             History Timeline
                         </h3>
 
-                        <ul className="relative border-l border-subtle ml-3 md:ml-6 pl-6 pb-2 space-y-8 mt-4 list-none">
+                        <ul className="relative pb-2 space-y-4 mt-4 list-none">
                             {prHistory.map((history) => (
                                 <li key={history.id} className="relative">
-                                    <div className="absolute w-3 h-3 bg-lime-400 rounded-full -left-[1.95rem] top-1.5 ring-4 ring-zinc-950"></div>
-                                    <div className="bg-surface/40 border border-subtle/80 rounded-xl p-4 md:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-hover transition-colors">
+                                    <div className="bg-surface/40 border border-subtle/80 rounded-xl p-2 md:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:border-hover transition-colors">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-sm font-bold text-muted uppercase tracking-wider">{history.date?.substring(0, 10)}</span>
@@ -403,30 +404,20 @@ export default function PersonalRecords() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="text-xl text-body font-medium">
-                                                <strong className="font-bold">{history.weight} kg</strong> for <strong className="font-bold">{history.repetitions} reps</strong>
+                                            <div className="text-xl font-bold text-body">
+                                                {history.weight} kg for {history.repetitions} reps
                                             </div>
                                             {history.note && <div className="mt-3 text-sm text-dim bg-surface p-3 rounded-lg border border-subtle"><span className="text-dim font-medium">Note:</span> {history.note}</div>}
                                         </div>
                                         <div className="flex gap-2 shrink-0">
-                                            <button
-                                                onClick={() => setEditRecord({
-                                                    id: history.id,
-                                                    weight: parseFloat(history.weight) || "",
-                                                    repetitions: history.repetitions || "",
-                                                    date: history.date?.substring(0, 10) || "",
-                                                    note: history.note || ""
-                                                })}
-                                                className="px-4 py-2 md:py-3 bg-lime-500/10 hover:bg-lime-500 text-lime-500 hover:text-black rounded-lg font-medium text-sm border border-lime-500/20 transition-colors shrink-0"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => setDeleteConfirmId(history.id)}
-                                                className="px-4 py-2 md:py-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg font-medium text-sm border border-rose-500/20 transition-colors shrink-0"
-                                            >
-                                                Delete
-                                            </button>
+                                            <EditButton onClick={() => setEditRecord({
+                                                id: history.id,
+                                                weight: parseFloat(history.weight) || "",
+                                                repetitions: history.repetitions || "",
+                                                date: history.date?.substring(0, 10) || "",
+                                                note: history.note || ""
+                                            })} />
+                                            <DeleteButton onClick={() => setDeleteConfirmId(history.id)} />
                                         </div>
                                     </div>
                                 </li>

@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, FormEvent } from "react";
 import { apiFetch } from "../utils/api";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
+import DeleteButton from "../components/DeleteButton";
+import EditButton from "../components/EditButton";
 
 interface Goal {
     id: number;
@@ -203,18 +205,8 @@ export default function Goals() {
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleEditGoal(g)}
-                                            className="px-4 py-2 bg-elevated hover:bg-hover text-muted rounded-md font-medium text-sm transition-colors"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={() => deleteGoal(g.id)}
-                                            className="px-4 py-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-md font-medium text-sm border border-rose-500/20 transition-colors"
-                                        >
-                                            Delete
-                                        </button>
+                                        <EditButton onClick={() => handleEditGoal(g)} />
+                                        <DeleteButton onClick={() => deleteGoal(g.id)} />
                                     </div>
                                 </li>
                             ))}

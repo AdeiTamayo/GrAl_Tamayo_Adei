@@ -3,6 +3,7 @@ import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
 import Select from '../components/Select';
 import ConfirmModal from '../components/ConfirmModal';
+import DeleteButton from '../components/DeleteButton';
 
 type Exercise = {
     id: number;
@@ -539,7 +540,7 @@ export default function Exercises() {
 
                         <div className="flex gap-4 mt-8 pt-4 border-t border-subtle">
                             <Button type="button" variant="secondary" onClick={() => setViewMode('edit')}>Edit Exercise</Button>
-                            <Button type="button" variant="danger" onClick={() => setDeleteConfirmId(selectedExercise.id)}>Delete Exercise</Button>
+                            <DeleteButton onClick={() => setDeleteConfirmId(selectedExercise.id)} />
                         </div>
                     </div>
                 ) : viewMode === 'edit' && selectedExercise ? (

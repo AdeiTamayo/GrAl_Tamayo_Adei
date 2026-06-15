@@ -3,6 +3,8 @@ import { apiFetch } from "../utils/api";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import Calendar from "../components/Calendar";
 import Select from "../components/Select";
+import DeleteButton from "../components/DeleteButton";
+import EditButton from "../components/EditButton";
 // 1. Import Recharts components
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -342,18 +344,8 @@ export default function WeightHistory() {
                                             <div className="text-sm text-dim font-medium mt-1">{entry.date?.slice(0, 10)}</div>
                                         </div>
                                         <div className="flex gap-2 shrink-0">
-                                            <button
-                                                onClick={() => handleEdit(entry)}
-                                                className="px-4 py-2 md:py-3 bg-lime-500/10 hover:bg-lime-500 text-lime-500 hover:text-black rounded-lg font-medium text-sm border border-lime-500/20 transition-colors shrink-0"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(entry.id)}
-                                                className="px-4 py-2 md:py-3 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg font-medium text-sm border border-rose-500/20 transition-colors shrink-0"
-                                            >
-                                                Delete
-                                            </button>
+                                            <EditButton onClick={() => handleEdit(entry)} />
+                                            <DeleteButton onClick={() => handleDelete(entry.id)} />
                                         </div>
                                     </li>
                                 ))}

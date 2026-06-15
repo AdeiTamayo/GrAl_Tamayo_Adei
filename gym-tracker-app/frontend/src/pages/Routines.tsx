@@ -4,6 +4,7 @@ import EditableExerciseCard from '../components/EditableExerciseCard';
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import { apiFetch } from "../utils/api";
 import ConfirmModal from '../components/ConfirmModal';
+import DeleteButton from '../components/DeleteButton';
 
 interface SetTemplate {
     id: number;
@@ -342,9 +343,7 @@ export default function RoutinesManagement() {
                                                 <span className="text-dim text-[10px] font-mono tracking-wider uppercase mt-0.5 block">Template Profile</span>
                                             </div>
                                             <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                                <Button type="button" onClick={() => setDeleteConfirmId(r.id)} variant="danger" className="px-2.5 py-1.5 text-xs rounded-lg">
-                                                    Delete
-                                                </Button>
+                                                <DeleteButton onClick={() => setDeleteConfirmId(r.id)} />
                                             </div>
                                         </li>
                                     );
