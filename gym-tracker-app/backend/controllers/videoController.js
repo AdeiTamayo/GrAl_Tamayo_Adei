@@ -135,7 +135,7 @@ exports.getUserVideos = async (req, res) => {
             return videoExtensions.includes(ext);
         });
 
-        const videos = await Promise.all(videoFiles.map(async (file) => {
+        let videos = await Promise.all(videoFiles.map(async (file) => {
             const filePath = path.join(directoryPath, file);
             const stats = await fs.stat(filePath);
             const isSquat = file.toLowerCase().includes('squat');
@@ -152,6 +152,30 @@ exports.getUserVideos = async (req, res) => {
                 created_at: stats.birthtime
             };
         }));
+
+        // Filter by analysis type
+        const typeFilter = req.query.type;
+        if (typeFilter) {
+            const typeMap = {
+                'pose_estimation': 'Pose Estimation',
+                'squat_analysis': 'Squat Analysis',
+                'barbell_tracking': 'Barbell Tracking',
+            };
+            const targetType = typeMap[typeFilter];
+            if (targetType) {
+                videos = videos.filter(v => v.process_type === targetType);
+            }
+        }
+
+        // Filter by date (YYYY-MM-DD)
+        const dateFilter = req.query.date;
+        if (dateFilter) {
+            videos = videos.filter(v => {
+                const d = new Date(v.created_at);
+                const ds = d.toISOString().slice(0, 10);
+                return ds === dateFilter;
+            });
+        }
 
         const sort = req.query.sort || 'desc';
         videos.sort((a, b) => {
