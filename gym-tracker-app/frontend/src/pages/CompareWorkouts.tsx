@@ -119,6 +119,7 @@ export default function CompareWorkouts() {
             }
         } catch (err) {
             console.error(err);
+            setError("Failed to fetch workouts");
         }
     };
 

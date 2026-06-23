@@ -107,7 +107,7 @@ exports.login = async (req, res) => {
 
         // Validate input
         if (!email || !password) {
-            return res.status(404).json({
+            return res.status(400).json({
                 success: false,
                 error: 'Email and password are required'
             });
@@ -116,7 +116,7 @@ exports.login = async (req, res) => {
         // Find user in database
         const user = await User.findUserByEmail(email);
         if (!user) {
-            return res.status(404).json({
+            return res.status(401).json({
                 success: false,
                 error: 'Invalid email or password'
             });
@@ -125,7 +125,7 @@ exports.login = async (req, res) => {
         // Validate password
         const isValid = await User.validatePassword(password, user.password);
         if (!isValid) {
-            return res.status(404).json({
+            return res.status(401).json({
                 success: false,
                 error: 'Invalid email or password'
             });
@@ -168,7 +168,7 @@ exports.register = async (req, res) => {
 
         // Validate input
         if (!email || !password) {
-            return res.status(404).json({
+            return res.status(400).json({
                 success: false,
                 error: 'Email and password are required'
             });

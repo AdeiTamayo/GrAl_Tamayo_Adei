@@ -178,12 +178,28 @@ class Routine {
 
     static async updateRoutineSet(setId, weight, reps, time) {
         try {
-            const query = `
-            UPDATE routine_sets 
-            SET planned_weight = $1, planned_reps = $2, planned_time = $3
-            WHERE id = $4 RETURNING *;
-        `;
-            const { rows } = await pool.query(query, [weight, reps, time, setId]);
+            const fields = [];
+            const values = [];
+            let idx = 1;
+
+            if (weight !== undefined && weight !== null) {
+                fields.push(`planned_weight = $${idx++}`);
+                values.push(weight);
+            }
+            if (reps !== undefined && reps !== null) {
+                fields.push(`planned_reps = $${idx++}`);
+                values.push(reps);
+            }
+            if (time !== undefined && time !== null) {
+                fields.push(`planned_time = $${idx++}`);
+                values.push(time);
+            }
+
+            if (fields.length === 0) return;
+
+            values.push(setId);
+            const query = `UPDATE routine_sets SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *;`;
+            const { rows } = await pool.query(query, values);
             return rows[0];
         } catch (error) {
             console.error('[Routine Model] Error updating routine set:', error);

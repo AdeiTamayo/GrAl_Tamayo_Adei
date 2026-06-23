@@ -39,9 +39,6 @@ export default function RoutinesManagement() {
     const [editName, setEditName] = useState('');
     const [editNote, setEditNote] = useState('');
 
-    // Staging array prior to final configuration post pipeline
-    const [stagedExercises, setStagedExercises] = useState<any[]>([]);
-
     // Dropdown Flow Controls & Visibility Indicators
     const [showCreateDropdown, setShowCreateDropdown] = useState(false);
     const [showDetailsDropdown, setShowDetailsDropdown] = useState(false);
@@ -104,48 +101,35 @@ export default function RoutinesManagement() {
 
         try {
             setError(null);
-            const baseRes = await apiFetch("/api/routines", {
+            const res = await apiFetch("/api/routines", {
                 method: "POST",
                 headers,
                 body: JSON.stringify({ name: newRoutineName })
             });
-            const baseData = await baseRes.json();
+            const data = await res.json();
 
-            if (!baseData.success || !baseData.data) {
-                setError(baseData.error || "Base configuration template dropped.");
+            if (!data.success || !data.data) {
+                setError(data.error || "Failed to create routine.");
                 return;
             }
 
-            const activeRoutineId = baseData.data.id;
+            const routineId = data.data.id;
 
             if (newRoutineNote.trim()) {
-                await apiFetch(`/api/routines/${activeRoutineId}`, {
+                await apiFetch(`/api/routines/${routineId}`, {
                     method: "PUT",
                     headers,
                     body: JSON.stringify({ name: newRoutineName, note: newRoutineNote })
                 });
             }
 
-            for (let index = 0; index < stagedExercises.length; index++) {
-                const ex = stagedExercises[index];
-                await apiFetch(`/api/routines/${activeRoutineId}/exercises`, {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify({
-                        exercise_id: ex.id,
-                        exercise_order: index + 1
-                    })
-                });
-            }
-
             setNewRoutineName('');
             setNewRoutineNote('');
-            setStagedExercises([]);
             setShowCreateDropdown(false);
             await fetchUserRoutines();
-            await fetchRoutineById(activeRoutineId);
+            setSelectedRoutine({ ...data.data, exercises: [] });
         } catch (err: any) {
-            setError(err.message || "Failed finalizing compilation pipeline.");
+            setError(err.message || "Failed to create routine.");
         }
     }
 
@@ -216,10 +200,6 @@ export default function RoutinesManagement() {
         }
     }
 
-    function stageNewExercise(exercise: ExerciseMeta) {
-        setStagedExercises(prev => [...prev, { ...exercise, tempId: Date.now() + Math.random() }]);
-    }
-
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             {/* Top Toolbar Level */}
@@ -267,45 +247,8 @@ export default function RoutinesManagement() {
                                     />
                                 </div>
 
-                                {/* Staged Matrix Matrix Build Zone */}
-                                <div className="border-t border-subtle/80 pt-4 mt-1">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <label className="text-xs uppercase tracking-wider text-muted font-bold">Staged Exercises</label>
-                                        <span className="text-xs px-2 py-0.5 font-mono font-bold bg-elevated text-muted rounded-full border border-subtle">
-                                            {stagedExercises.length} Added
-                                        </span>
-                                    </div>
-
-                                    {stagedExercises.length > 0 && (
-                                        <div className="mb-3 max-h-32 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                                            {stagedExercises.map((se, i) => (
-                                                <div key={se.tempId || i} className="flex justify-between items-center bg-surface/60 px-3 py-2 rounded-xl border border-subtle/80">
-                                                    <span className="text-xs text-muted font-medium truncate max-w-[75%]">
-                                                        <span className="text-dim font-mono mr-1">{String(i + 1).padStart(2, '0')}</span> {se.name}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setStagedExercises(prev => prev.filter(item => item.tempId !== se.tempId))}
-                                                        className="text-dim hover:text-rose-400 text-xs font-semibold px-1"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    <div className="bg-surface/40 border border-dashed border-subtle rounded-xl p-2">
-                                        <ExercisePicker
-                                            title="Stage Exercise Entry"
-                                            onSelect={stageNewExercise}
-                                            onClose={() => setShowCreateDropdown(false)}
-                                        />
-                                    </div>
-                                </div>
-
                                 <Button type="submit" variant="primary" fullWidth className="font-display rounded-xl py-2.5 text-sm mt-1">
-                                    Confirm & Save Template
+                                    Create Routine
                                 </Button>
                             </form>
                         </div>
@@ -424,20 +367,34 @@ export default function RoutinesManagement() {
                                         }))}
                                         onRemoveExercise={() => removeExercise(ex.item_id)}
                                         onAddSet={async (w, r, t) => {
+                                            try {
                                             const num = (ex.sets?.length || 0) + 1;
                                             await apiFetch(`/api/routines/exercises/${ex.item_id}/sets`, {
                                                 method: "POST", headers, body: JSON.stringify({ set_number: num, planned_weight: w, planned_reps: r, planned_time: t })
                                             });
                                             fetchRoutineById(selectedRoutine.id);
+                                        } catch (err: any) {
+                                                setError(err.message || "Failed to add set");
+                                            }
                                         }}
                                         onRemoveSet={async (id) => {
+                                            try {
                                             await apiFetch(`/api/routines/sets/${id}`, { method: "DELETE", headers });
                                             fetchRoutineById(selectedRoutine.id);
+                                        } catch (err: any) {
+                                                setError(err.message || "Failed to remove set");
+                                            }
                                         }}
                                         onUpdateSet={async (id, f, v) => {
+                                            try {
+                                            const val = v === "" ? null : Number(v);
+                                            if (val === null) return;
                                             const bodyPayload: any = {};
-                                            bodyPayload[`planned_${f}`] = v;
+                                            bodyPayload[`planned_${f}`] = val;
                                             await apiFetch(`/api/routines/sets/${id}`, { method: "PUT", headers, body: JSON.stringify(bodyPayload) });
+                                        } catch (err: any) {
+                                                setError(err.message || "Failed to update set");
+                                            }
                                         }}
                                         onBlurSet={() => fetchRoutineById(selectedRoutine.id)}
                                     />

@@ -45,6 +45,7 @@ export default function Goals() {
             setGoals(data.goals || []);
         } catch (err: any) {
             console.error("Failed to fetch goals", err);
+            setError("Failed to fetch goals");
         }
     }
 

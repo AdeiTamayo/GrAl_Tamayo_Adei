@@ -150,6 +150,12 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                         </button>
                     )}
                 </div>
+                        {error && (
+                <div className="mx-4 mt-2 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm">
+                    {error}
+                </div>
+            )}
+
             </div>
 
             {viewMode === 'list' ? (
@@ -295,3 +301,4 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
         </div>
     );
 }
+

@@ -99,8 +99,9 @@ export default function WorkoutsManagement() {
             }
         } catch (err: any) {
             console.error("Failed to fetch workouts", err);
+            setError("Failed to fetch workouts");
         }
-    }, [headers]);
+    }, []);
 
     const fetchExercises = useCallback(async () => {
         try {
@@ -111,8 +112,9 @@ export default function WorkoutsManagement() {
             }
         } catch (err: any) {
             console.error("Failed to fetch exercises", err);
+            setError("Failed to fetch exercises");
         }
-    }, [headers]);
+    }, []);
 
     const fetchWorkoutById = useCallback(async (id: number) => {
         try {
@@ -196,6 +198,7 @@ export default function WorkoutsManagement() {
                 setWorkouts((prev) =>
                     prev.map((w) => (w.id === tempId ? { ...w, id: data.data.id } : w))
                 );
+                setSelectedWorkout({ ...data.data, exercises: [] });
             } else {
                 await fetchWorkouts();
             }
@@ -230,7 +233,7 @@ export default function WorkoutsManagement() {
             const data = await res.json();
 
             if (res.ok && data.success) {
-                setSelectedWorkout(data.data);
+                setSelectedWorkout({ ...data.data, exercises: selectedWorkout.exercises || [] });
                 setWorkouts((prev) =>
                     prev.map((w) => (w.id === selectedWorkout.id ? data.data : w))
                 );
@@ -254,6 +257,8 @@ export default function WorkoutsManagement() {
             await apiFetch("/api/workouts/" + id, { method: "DELETE", headers });
         } catch (err: any) {
             console.error("Delete workout failed", err);
+            console.error("Delete workout failed", err);
+            setError("Failed to delete workout");
             await fetchWorkouts();
         }
     }
@@ -443,6 +448,7 @@ export default function WorkoutsManagement() {
             });
         } catch (err: any) {
             console.error("Failed to save set update");
+            setError("Failed to save set update");
         }
     }
 
@@ -710,3 +716,4 @@ export default function WorkoutsManagement() {
         </div>
     );
 }
+

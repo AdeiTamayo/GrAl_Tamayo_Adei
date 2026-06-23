@@ -55,6 +55,7 @@ export default function Hero() {
     const [exerciseCount, setExerciseCount] = useState<number | null>(null);
     const [recentWorkouts, setRecentWorkouts] = useState<Workout[]>([]);
     const [loading, setLoading] = useState(true);
+    const [dashboardError, setDashboardError] = useState<string | null>(null);
 
     const token = localStorage.getItem('user_login_token');
 
@@ -86,7 +87,7 @@ export default function Hero() {
                     setExerciseCount(e.length);
                 }
             })
-            .catch(() => { })
+            .catch((err) => { setDashboardError("Failed to load dashboard data."); console.error(err); })
             .finally(() => setLoading(false));
     }, [isLoggedIn, token]);
 
@@ -185,6 +186,12 @@ export default function Hero() {
                     </div>
                 )}
 
+                                {dashboardError && (
+                    <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 font-medium text-sm">
+                        Error: {dashboardError}
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-8">
                         {navItems.map(section => (
@@ -273,3 +280,4 @@ export default function Hero() {
         </div>
     );
 }
+

@@ -72,6 +72,7 @@ export default function CurrentWorkout() {
             }
         } catch (err) {
             console.error("Failed to fetch routines", err);
+            showNotification("Failed to fetch routines", "error");
         }
     };
 
@@ -103,6 +104,7 @@ export default function CurrentWorkout() {
             }
         } catch (err) {
             console.error("Failed to load routine", err);
+            showNotification("Failed to load routine", "error");
         }
     };
 

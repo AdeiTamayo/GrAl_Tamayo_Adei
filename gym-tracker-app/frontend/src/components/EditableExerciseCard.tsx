@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
 import TransparentNumericInput from './TransparentNumericInput';
 
 export interface GenericSet {
@@ -35,6 +34,7 @@ export default function EditableExerciseCard({
 }: EditableExerciseCardProps) {
     const [isAddingSet, setIsAddingSet] = useState(false);
     const [showNoteForm, setShowNoteForm] = useState(false);
+    const [addError, setAddError] = useState("");
 
     const setsExist = sets.length > 0;
     const lastSet = setsExist ? sets[sets.length - 1] : null;
@@ -62,6 +62,11 @@ export default function EditableExerciseCard({
 
     const handleAddSetSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!newWeight && !newReps && !newTime) {
+            setAddError("Fill in at least one field");
+            return;
+        }
+        setAddError("");
         onAddSet(
             newWeight ? Number(newWeight) : null,
             newReps ? Number(newReps) : null,
@@ -171,9 +176,9 @@ export default function EditableExerciseCard({
                                         <button
                                             type="button"
                                             onClick={() => onRemoveSet(set.id)}
-                                            className="w-full md:w-auto text-center bg-rose-950/20 md:bg-transparent hover:bg-rose-900/20 md:hover:bg-transparent border border-rose-900/30 md:border-none rounded-lg py-1.5 md:py-0 text-rose-500/70 hover:text-rose-400 font-bold px-2 text-xs md:text-sm transition-all"
+                                            className="w-full md:w-auto text-center bg-rose-950/20 md:bg-transparent hover:bg-rose-900/20 md:hover:bg-transparent border border-rose-900/30 md:border-none rounded-lg py-1.5 md:py-0 text-rose-500/70 hover:text-rose-400 px-2 text-xs md:text-sm transition-all"
                                         >
-                                            <span className="md:hidden mr-1">Delete Entry</span>✕
+                                            ✕
                                         </button>
                                     </div>
                                 </div>
@@ -184,71 +189,73 @@ export default function EditableExerciseCard({
 
                 {/* Explicit Structural CSS Form Layout Grid */}
                 {!isAddingSet ? (
-                    <Button
+                    <button
                         type="button"
-                        variant="secondary"
-                        className="w-full py-2.5 rounded-xl border border-dashed border-subtle hover:border-hover hover:bg-surface/40 text-xs font-mono text-muted transition-all mt-2"
-                        onClick={() => setIsAddingSet(true)}
+                        onClick={() => { setIsAddingSet(true); setAddError(""); }}
+                        className="mt-3 mx-auto flex items-center justify-center w-10 h-10 rounded-full bg-surface border border-dashed border-subtle hover:border-lime-400 hover:bg-surface/60 text-muted hover:text-lime-400 transition-all"
+                        title="Add Set"
                     >
-                        + Add Set
-                    </Button>
+                        <span className="text-lg font-bold leading-none">+</span>
+                    </button>
                 ) : (
                     <form onSubmit={handleAddSetSubmit} className="grid grid-cols-1 gap-4 bg-card/40 p-4 rounded-xl border border-subtle mt-3 shadow-sm animate-in fade-in zoom-in-95 duration-150">
                         {/* Fields Sub-Grid Row Container */}
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-4 gap-3">
                             <div>
-                                <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-dim mb-1">Weight</label>
-                                <TransparentNumericInput value={newWeight} onChange={setNewWeight} max={999} step={2.5} />
+                                <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-dim mb-1.5">Weight</label>
+                                <TransparentNumericInput value={newWeight} onChange={setNewWeight} max={999} step={2.5} className="w-full" inputClassName="pl-2.5 pr-8 py-2.5 text-sm font-mono text-body" />
                             </div>
                             <div>
-                                <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-dim mb-1">Reps</label>
-                                <TransparentNumericInput value={newReps} onChange={setNewReps} max={100} step={1} />
+                                <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-dim mb-1.5">Reps</label>
+                                <TransparentNumericInput value={newReps} onChange={setNewReps} max={100} step={1} className="w-full" inputClassName="pl-2.5 pr-8 py-2.5 text-sm font-mono text-body" />
                             </div>
                             <div>
-                                <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-dim mb-1">Time (s)</label>
-                                <TransparentNumericInput value={newTime} onChange={setNewTime} max={3600} step={5} />
+                                <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-dim mb-1.5">Time (s)</label>
+                                <TransparentNumericInput value={newTime} onChange={setNewTime} max={3600} step={5} className="w-full" inputClassName="pl-2.5 pr-8 py-2.5 text-sm font-mono text-body" />
                             </div>
-                        </div>
-
-                        {/* Interactive Large Expandable Textarea Field Switcher */}
-                        {showNotesField && (
-                            <div className="w-full border-t border-subtle pt-2">
-                                {!showNoteForm ? (
+                            {showNotesField && (
+                                <div>
+                                    <label className="block text-[10px] font-mono font-bold uppercase tracking-wider text-dim mb-1.5">Note</label>
                                     <button
                                         type="button"
-                                        onClick={() => setShowNoteForm(true)}
-                                        className="text-xs font-mono text-dim hover:text-lime-400 transition-colors flex items-center gap-1.5"
+                                        onClick={() => setShowNoteForm(!showNoteForm)}
+                                        className={`w-full h-[32px] flex items-center justify-center rounded-lg border transition-all ${showNoteForm ? 'bg-lime-500/10 border-lime-500/30 text-lime-400' : 'bg-transparent border border-subtle text-dim hover:text-lime-400 hover:border-lime-400/40'}`}
+                                        title={showNoteForm ? 'Hide note' : 'Add note'}
                                     >
-                                        📝 {newNote ? 'Edit Set Note' : 'Add Set Note'}
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M12 20h9" />
+                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                        </svg>
                                     </button>
-                                ) : (
-                                    <div className="space-y-1 animate-in fade-in slide-in-from-top-1 duration-150">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <label className="block text-[9px] font-mono font-bold uppercase tracking-wider text-dim">Set Note Details</label>
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowNoteForm(false)}
-                                                className="text-[10px] font-mono text-dim hover:text-body"
-                                            >
-                                                Hide Field
-                                            </button>
-                                        </div>
-                                        <textarea
-                                            rows={3}
-                                            value={newNote}
-                                            onChange={e => setNewNote(e.target.value)}
-                                            placeholder="Specify variables (e.g., dropset, partial reps, warm-up pacing...)"
-                                            className="w-full bg-card border border-subtle rounded-xl px-3 py-2 text-xs text-heading font-mono focus:outline-none focus:border-lime-400 transition-colors resize-y shadow-inner"
-                                        />
-                                    </div>
-                                )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Note textarea (shown when toggle is active) */}
+                        {showNotesField && showNoteForm && (
+                            <div className="animate-in fade-in slide-in-from-top-1 duration-150">
+                                <textarea
+                                    rows={3}
+                                    value={newNote}
+                                    onChange={e => setNewNote(e.target.value)}
+                                    placeholder="Specify variables (e.g., dropset, partial reps, warm-up pacing...)"
+                                    className="w-full bg-card border border-subtle rounded-xl px-3 py-2 text-xs text-heading font-mono focus:outline-none focus:border-lime-400 transition-colors resize-y shadow-inner"
+                                />
                             </div>
+                        )}
+
+                        {addError && (
+                            <p className="text-[11px] font-mono text-rose-400 text-center">{addError}</p>
                         )}
 
                         {/* Primary Interaction Buttons Block */}
                         <div className="flex gap-2 w-full justify-end pt-2 border-t border-subtle">
-                            <Button type="button" variant="secondary" className="px-3 py-2 text-xs rounded-xl" onClick={() => { setIsAddingSet(false); setShowNoteForm(false); }}>Cancel</Button>
-                            <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-xl">Add Set</Button>
+                            <button type="button" onClick={() => { setIsAddingSet(false); setShowNoteForm(false); }} className="w-full md:w-auto text-center bg-rose-950/20 md:bg-transparent hover:bg-rose-900/20 md:hover:bg-transparent border border-rose-900/30 md:border-none rounded-lg py-1.5 md:py-0 text-rose-500/70 hover:text-rose-400 px-2 text-xs md:text-sm transition-all" title="Cancel">
+                                <span className="text-sm leading-none">✕</span>
+                            </button>
+                            <button type="submit" className="w-9 h-9 flex items-center justify-center rounded-full bg-lime-500/20 border border-lime-500/40 hover:bg-lime-500/30 text-lime-400 hover:text-lime-300 transition-all" title="Add Set">
+                                <span className="text-lg font-bold leading-none">+</span>
+                            </button>
                         </div>
                     </form>
                 )}
