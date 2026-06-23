@@ -199,7 +199,7 @@ export default function CompareWorkouts() {
 
     return (
         <div className="p-6 font-sans bg-body text-body min-h-screen">
-            <div className="max-w-5xl mx-auto">
+            <div className="mxa-w-5xl mx-auto">
                 <header className="mb-10 text-center">
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">
                         Workout Comparison

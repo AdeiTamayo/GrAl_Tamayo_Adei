@@ -83,7 +83,6 @@ export default function ExerciseHistory() {
                         <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">
                             Progress History
                         </h1>
-                        <p className="text-muted mt-1">Visualize your strength gains over time.</p>
                     </div>
 
                     <div className="w-full md:w-auto">

@@ -454,7 +454,6 @@ export default function WorkoutsManagement() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-subtle pb-5">
                 <div>
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Workouts Management</h1>
-                    <p className="text-muted font-medium text-sm">Log and manage your training sessions.</p>
                 </div>
 
                 {/* Create Workout Dropdown Wrapper */}

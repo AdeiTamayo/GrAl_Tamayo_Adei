@@ -49,7 +49,7 @@ export default function Select({ value, onChange, options, placeholder = "Select
                 </svg>
             </button>
             {open && (
-                <ul className="absolute z-20 w-full mt-1 bg-card border border-subtle rounded-xl shadow-2xl overflow-y-auto max-h-60 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                <ul className="absolute z-20 w-full mt-1 bg-card border border-subtle rounded-xl shadow-2xl overflow-y-auto max-h-90 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
                     {options.map(o => (
                         <li
                             key={o.value}

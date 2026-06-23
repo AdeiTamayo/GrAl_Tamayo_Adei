@@ -86,7 +86,7 @@ export default function Hero() {
                     setExerciseCount(e.length);
                 }
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setLoading(false));
     }, [isLoggedIn, token]);
 
@@ -136,7 +136,7 @@ export default function Hero() {
         <div className="min-h-screen bg-body text-body p-4 md:p-8">
             <div className="max-w-6xl mx-auto space-y-8">
                 <header className="flex items-center justify-between pb-6 border-b border-subtle">
-                    <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-body uppercase italic">
+                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">
                         Dashboard
                     </h1>
                     <div className="flex items-center gap-2">
