@@ -25,6 +25,7 @@ class Routine {
             SELECT
                 re.id AS item_id,
                 re.exercise_order,
+                re.planned_time,
                 re.note,
                 e.id AS exercise_id,
                 e.name AS exercise_name,
@@ -102,7 +103,7 @@ class Routine {
         }
     }
 
-    static async addExerciseToRoutine(routineId, userId, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, note) {
+    static async addExerciseToRoutine(routineId, userId, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note) {
         try {
             // First, ensure the routine belongs to the user
             const routineCheck = await pool.query(`SELECT id FROM routines WHERE id = $1 AND user_id = $2`, [routineId, userId]);
@@ -110,11 +111,11 @@ class Routine {
 
             const query = `
                 INSERT INTO routine_exercises 
-                (routine_id, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, note)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                (routine_id, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                 RETURNING *;
             `;
-            const values = [routineId, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, note];
+            const values = [routineId, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note];
             const result = await pool.query(query, values);
             return result.rows[0];
         } catch (error) {

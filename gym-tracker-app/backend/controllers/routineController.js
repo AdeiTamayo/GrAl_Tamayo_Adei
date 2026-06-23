@@ -128,9 +128,9 @@ exports.addExerciseToRoutine = async (req, res) => {
     try {
         const routineId = req.params.id;
         const userId = req.userId;
-        const { exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, note } = req.body;
+        const { exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note } = req.body;
 
-        const addedExercise = await Routines.addExerciseToRoutine(routineId, userId, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, note);
+        const addedExercise = await Routines.addExerciseToRoutine(routineId, userId, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note);
 
         if (!addedExercise) {
             return res.status(404).json({ success: false, error: 'Failed to add exercise or unauthorized' });
@@ -195,10 +195,17 @@ exports.addSetToRoutineExercise = async (req, res) => {
 exports.updateRoutineSet = async (req, res) => {
     try {
         const { planned_weight, planned_reps, planned_time } = req.body;
+        if ((planned_weight && Math.abs(planned_weight) >= 1000) ||
+            (planned_reps && Math.abs(planned_reps) >= 1000) ||
+            (planned_time && Math.abs(planned_time) >= 1000)) {
+            return res.status(400).json({ success: false, error: 'Value must be less than 1000' });
+        }
         const updated = await Routines.updateRoutineSet(req.params.set_id, planned_weight, planned_reps, planned_time);
         res.json({ success: true, set: updated });
     } catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to update set' });
+        console.error('[Routine Controller] Error updating set:', error);
+        const msg = error?.code === '22003' ? 'Value exceeds maximum allowed (999.99)' : 'Failed to update set';
+        res.status(500).json({ success: false, error: msg });
     }
 };
 

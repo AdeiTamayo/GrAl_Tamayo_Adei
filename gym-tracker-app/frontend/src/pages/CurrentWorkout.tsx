@@ -85,11 +85,18 @@ export default function CurrentWorkout() {
                 setWorkoutName(routine.name);
                 const loadedExercises = routine.exercises.map((ex: any) => {
                     const exerciseRest = parseInt(ex.planned_time) || 60;
+                    const hasSets = ex.sets && ex.sets.length > 0;
                     return {
                         exercise_id: ex.exercise_id || ex.id,
                         name: ex.exercise_name || ex.name,
                         rest_time: exerciseRest,
-                        sets: Array.from({ length: ex.planned_sets || 1 }, (_, i) => ({
+                        sets: hasSets ? ex.sets.map((s: any) => ({
+                            set_number: s.set_number,
+                            weight: s.planned_weight || "",
+                            repetitions: s.planned_reps || "",
+                            note: "",
+                            is_done: false
+                        })) : Array.from({ length: ex.planned_sets || 1 }, (_, i) => ({
                             set_number: i + 1,
                             weight: ex.planned_weight || "",
                             repetitions: ex.planned_reps || "",
@@ -233,7 +240,7 @@ export default function CurrentWorkout() {
                 const weights = ex.sets.map(s => Number(s.weight) || 0).filter(w => w > 0);
                 const avgWeight = weights.length > 0 ? (weights.reduce((a, b) => a + b, 0) / weights.length) : 0;
 
-                await apiFetch(`/api/routines/${routineId}/exercises`, {
+                const exRes = await apiFetch(`/api/routines/${routineId}/exercises`, {
                     method: "POST",
                     headers,
                     body: JSON.stringify({
@@ -244,6 +251,25 @@ export default function CurrentWorkout() {
                         planned_time: ex.rest_time
                     })
                 });
+                const exData = await exRes.json();
+                if (exData.success && exData.data) {
+                    const itemId = exData.data.id || exData.data.item_id;
+                    if (itemId) {
+                        for (let i = 0; i < ex.sets.length; i++) {
+                            const s = ex.sets[i];
+                            await apiFetch(`/api/routines/exercises/${itemId}/sets`, {
+                                method: "POST",
+                                headers,
+                                body: JSON.stringify({
+                                    set_number: i + 1,
+                                    planned_weight: Number(s.weight) || 0,
+                                    planned_reps: Number(s.repetitions) || 0,
+                                    planned_time: 0
+                                })
+                            });
+                        }
+                    }
+                }
                 exCount++;
             }
 

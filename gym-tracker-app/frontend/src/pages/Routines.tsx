@@ -257,8 +257,14 @@ export default function RoutinesManagement() {
             </div>
 
             {error && (
-                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm">
-                    Error: {error}
+                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm flex items-start justify-between gap-3">
+                    <span>Error: {error}</span>
+                    <button type="button" onClick={() => setError(null)} className="shrink-0 mt-0.5 text-rose-400/60 hover:text-rose-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
                 </div>
             )}
 
@@ -386,15 +392,19 @@ export default function RoutinesManagement() {
                                             }
                                         }}
                                         onUpdateSet={async (id, f, v) => {
-                                            try {
                                             const val = v === "" ? null : Number(v);
-                                            if (val === null) return;
-                                            const bodyPayload: any = {};
-                                            bodyPayload[`planned_${f}`] = val;
-                                            await apiFetch(`/api/routines/sets/${id}`, { method: "PUT", headers, body: JSON.stringify(bodyPayload) });
-                                        } catch (err: any) {
-                                                setError(err.message || "Failed to update set");
-                                            }
+                                            if (val !== null && Math.abs(val) >= 1000) { setError("Value must be less than 1000"); return; }
+                                            setSelectedRoutine(prev => {
+                                                if (!prev) return prev;
+                                                return { ...prev, exercises: prev.exercises.map(ex => ({ ...ex, sets: ex.sets.map(s => s.id === id ? { ...s, [f === 'weight' ? 'planned_weight' : f === 'reps' ? 'planned_reps' : 'planned_time']: val } : s) })) };
+                                            });
+                                            try {
+                                                const bodyPayload: any = {};
+                                                bodyPayload[`planned_${f}`] = val;
+                                                const res = await apiFetch(`/api/routines/sets/${id}`, { method: "PUT", headers, body: JSON.stringify(bodyPayload) });
+                                                const data = await res.json();
+                                                if (!data.success) setError(data.error || "Failed to update set");
+                                            } catch (err: any) { setError(err.message || "Failed to update set"); }
                                         }}
                                         onBlurSet={() => fetchRoutineById(selectedRoutine.id)}
                                     />
