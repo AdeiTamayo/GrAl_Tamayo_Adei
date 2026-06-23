@@ -13,14 +13,14 @@ interface CalendarProps {
     className?: string;
 }
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function getDaysInMonth(year: number, month: number): number {
     return new Date(year, month + 1, 0).getDate();
 }
 
 function getFirstDayOfMonth(year: number, month: number): number {
-    return new Date(year, month, 1).getDay();
+    return (new Date(year, month, 1).getDay() + 6) % 7;
 }
 
 function formatDate(year: number, month: number, day: number): string {
