@@ -151,7 +151,7 @@ def draw_landmarks_on_image(rgb_image, detection_result, mode="normal", squat_an
                 # Check for form breakdown warnings if tracking squats
                 if mode == "squat" and squat_analyzer and (start_idx, end_idx) in SPINE_CONNECTIONS:
                     if squat_analyzer.is_back_compromised:
-                        line_color = (0, 0, 255) # Warning Red
+                        line_color = (255, 0, 0)
                         thickness = 4
 
                 cv2.line(annotated_image, start_point, end_point, line_color, thickness)

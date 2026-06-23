@@ -6,7 +6,6 @@ import Workouts from './pages/Workouts';
 import Settings from './pages/Settings';
 import Exercises from './pages/Exercises';
 import Goals from './pages/Goals';
-import Schedule from './pages/Schedule';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Video from './pages/Videos';
@@ -36,7 +35,6 @@ function AppContent() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/exercises" element={<Exercises />} />
           <Route path="/goals" element={<Goals />} />
-          <Route path="/schedule" element={<Schedule />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/videos" element={<Video />} />
