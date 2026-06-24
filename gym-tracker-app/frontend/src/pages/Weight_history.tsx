@@ -65,6 +65,16 @@ export default function WeightHistory() {
         }
     }
 
+    // Map entry id → previous entry's weight (chronologically)
+    const prevWeightMap = useMemo(() => {
+        const sorted = [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const map = new Map<number, number | null>();
+        for (let i = 0; i < sorted.length; i++) {
+            map.set(sorted[i].id, i > 0 ? Number(sorted[i - 1].weight) : null);
+        }
+        return map;
+    }, [entries]);
+
     // Paginated & sorted slice for the list
     const sortedEntries = useMemo(() => {
         return [...entries].sort((a, b) => {
@@ -341,6 +351,17 @@ export default function WeightHistory() {
                                     >
                                         <div>
                                             <strong className="text-xl font-bold text-body">{Number(entry.weight)} kg</strong>
+                                            {(() => {
+                                                const prev = prevWeightMap.get(entry.id);
+                                                if (prev === null || prev === undefined) return null;
+                                                const diff = Number(entry.weight) - prev;
+                                                const sign = diff > 0 ? '+' : '';
+                                                return (
+                                                    <span className={`ml-2 text-sm font-semibold ${diff > 0 ? 'text-green-400' : diff < 0 ? 'text-rose-400' : 'text-dim'}`}>
+                                                        ({sign}{diff.toFixed(1)} kg)
+                                                    </span>
+                                                );
+                                            })()}
                                             <div className="text-sm text-dim font-medium mt-1">{entry.date?.slice(0, 10)}</div>
                                         </div>
                                         <div className="flex gap-2 shrink-0">
