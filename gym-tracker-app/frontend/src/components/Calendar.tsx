@@ -12,6 +12,7 @@ interface CalendarProps {
     events?: Record<string, CalendarEvent>;
     goalDates?: Set<string>;
     className?: string;
+    compact?: boolean;
 }
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -28,7 +29,7 @@ function formatDate(year: number, month: number, day: number): string {
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-export default function Calendar({ selectedDate, onSelect, events = {}, goalDates, className = '' }: CalendarProps) {
+export default function Calendar({ selectedDate, onSelect, events = {}, goalDates, className = '', compact = false }: CalendarProps) {
     const today = useMemo(() => {
         const d = new Date();
         return formatDate(d.getFullYear(), d.getMonth(), d.getDate());
@@ -78,40 +79,32 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
     const monthName = new Date(viewDate.year, viewDate.month).toLocaleString('default', { month: 'long' });
 
     return (
-        <div className={`bg-card border border-subtle rounded-xl p-4 shadow-xl backdrop-blur-md ${className}`}>
-            <div className="flex items-center justify-between mb-4">
-                <button
-                    onClick={prevMonth}
-                    className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors"
-                    aria-label="Previous month"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className={`bg-card border border-subtle rounded-xl shadow-xl backdrop-blur-md ${compact ? 'p-2.5' : 'p-4'} ${className}`}>
+            <div className={`flex items-center justify-between ${compact ? 'mb-2' : 'mb-4'}`}>
+                <button onClick={prevMonth} className={`rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors ${compact ? 'p-1' : 'p-2'}`} aria-label="Previous month">
+                    <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
                     </svg>
                 </button>
-                <h3 className="text-lg font-bold text-body">
+                <h3 className={`font-bold text-body ${compact ? 'text-sm' : 'text-lg'}`}>
                     {monthName} {viewDate.year}
                 </h3>
-                <button
-                    onClick={nextMonth}
-                    className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors"
-                    aria-label="Next month"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button onClick={nextMonth} className={`rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors ${compact ? 'p-1' : 'p-2'}`} aria-label="Next month">
+                    <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </button>
             </div>
 
-            <div className="grid grid-cols-7 mb-1">
+            <div className={`grid grid-cols-7 ${compact ? 'mb-0.5' : 'mb-1'}`}>
                 {WEEKDAYS.map(day => (
-                    <div key={day} className="text-center text-xs font-bold text-dim uppercase py-2">
+                    <div key={day} className={`text-center font-bold text-dim uppercase ${compact ? 'text-[10px] py-1' : 'text-xs py-2'}`}>
                         {day}
                     </div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-1">
+            <div className={`grid grid-cols-7 ${compact ? 'gap-0.5' : 'gap-1'}`}>
                 {days.map((day, index) => {
                     if (day === null) {
                         return <div key={`empty-${index}`} />;
@@ -128,9 +121,10 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                             key={dateStr}
                             onClick={() => onSelect?.(dateStr)}
                             className={`
-                                relative aspect-square rounded-lg text-sm font-semibold transition-all flex items-center justify-center
+                                relative rounded-lg transition-all flex items-center justify-center
+                                ${compact ? 'aspect-[4/3] text-xs' : 'aspect-square text-sm font-semibold'}
                                 ${isSelected
-                                    ? 'bg-lime-400 text-black'
+                                    ? 'bg-lime-400 text-black font-bold'
                                     : isToday
                                         ? 'bg-lime-400/10 text-lime-400 border border-lime-400/30'
                                         : 'text-muted hover:bg-elevated hover:text-body'
@@ -139,9 +133,9 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                         >
                             {day}
                             {!isSelected && (event || hasGoal) && (
-                                <span className="absolute bottom-1 flex gap-[3px] items-center">
+                                <span className={`absolute flex gap-[3px] items-center ${compact ? 'bottom-0.5' : 'bottom-1'}`}>
                                     {event && (
-                                        <span className={`w-1.5 h-1.5 rounded-full ${
+                                        <span className={`rounded-full ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'} ${
                                             event.status === 'completed' ? 'bg-lime-400' :
                                             event.status === 'rest' ? 'bg-blue-400' :
                                             event.status === 'missed' ? 'bg-rose-500' :
@@ -149,7 +143,7 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                                         }`} />
                                     )}
                                     {hasGoal && !event?.status?.startsWith('completed') && (
-                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                                        <span className={`rounded-full bg-blue-400 ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'}`} />
                                     )}
                                 </span>
                             )}

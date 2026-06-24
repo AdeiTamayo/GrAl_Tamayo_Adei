@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS goals (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
+    target_weight DECIMAL(6,2),
+    target_reps INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
