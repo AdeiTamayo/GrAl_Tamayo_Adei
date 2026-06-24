@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { apiFetch } from "../utils/api";
 import TransparentNumericInput from "../components/TransparentNumericInput";
-import Calendar from "../components/Calendar";
+import DatePicker from "../components/DatePicker";
 import Select from "../components/Select";
 import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
@@ -26,7 +26,7 @@ export default function WeightHistory() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [weight, setWeight] = useState<number | "">("");
     const [date, setDate] = useState<string>(new Date().toLocaleDateString('en-CA'));
-    const [showCalendar, setShowCalendar] = useState(false);
+
 
     // Pagination & sorting state
     const [currentPage, setCurrentPage] = useState(1);
@@ -276,23 +276,7 @@ export default function WeightHistory() {
                             min={0}
                             max={500}
                         />
-                        <div className="relative">
-                            <button
-                                type="button"
-                                onClick={() => setShowCalendar(!showCalendar)}
-                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body focus:border-lime-400 focus:outline-none transition-all text-left"
-                            >
-                                {date}
-                            </button>
-                            {showCalendar && (
-                                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                                    <Calendar
-                                        selectedDate={date}
-                                        onSelect={(d) => { setDate(d); setShowCalendar(false); }}
-                                    />
-                                </div>
-                            )}
-                        </div>
+                        <DatePicker value={date} onChange={setDate} />
 
                         <div className="flex gap-3 mt-2">
                             <button type="submit" className="flex-1 bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98]">

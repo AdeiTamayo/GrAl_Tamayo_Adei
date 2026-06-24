@@ -3,7 +3,7 @@ import { apiFetch } from "../utils/api";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
-import Calendar from "../components/Calendar";
+import DatePicker from "../components/DatePicker";
 import ConfirmModal from "../components/ConfirmModal";
 import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
@@ -46,8 +46,7 @@ export default function PersonalRecords() {
     // UX states
     const [showAddForm, setShowAddForm] = useState(false);
     const [showPicker, setShowPicker] = useState(false);
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [showEditDatePicker, setShowEditDatePicker] = useState(false);
+
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
     const [editRecord, setEditRecord] = useState<{ id: number; weight: number | ""; repetitions: number | ""; date: string; note: string } | null>(null);
 
@@ -276,23 +275,7 @@ export default function PersonalRecords() {
                                         max={999}
                                     />
                                 </div>
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowDatePicker(!showDatePicker)}
-                                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body focus:border-lime-400 focus:outline-none transition-all text-left"
-                                    >
-                                        {newDate || <span className="text-dim">Select date</span>}
-                                    </button>
-                                    {showDatePicker && (
-                                        <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                                            <Calendar
-                                                selectedDate={newDate || undefined}
-                                                onSelect={(date) => { setNewDate(date); setShowDatePicker(false); }}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
+                                <DatePicker value={newDate} onChange={setNewDate} placeholder="Select date" />
                                 <input
                                     type="text"
                                     placeholder="Note (optional)"
@@ -457,23 +440,7 @@ export default function PersonalRecords() {
                                 inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                                 step={1} min={0} max={999}
                             />
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowEditDatePicker(!showEditDatePicker)}
-                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body focus:border-lime-400 focus:outline-none transition-all text-left"
-                                >
-                                    {editRecord.date || <span className="text-dim">Select date</span>}
-                                </button>
-                                {showEditDatePicker && (
-                                    <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                                        <Calendar
-                                            selectedDate={editRecord.date || undefined}
-                                            onSelect={(date) => { setEditRecord({ ...editRecord, date }); setShowEditDatePicker(false); }}
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                            <DatePicker value={editRecord.date} onChange={(date) => setEditRecord({ ...editRecord, date })} placeholder="Select date" />
                             <input
                                 type="text"
                                 placeholder="Note (optional)"

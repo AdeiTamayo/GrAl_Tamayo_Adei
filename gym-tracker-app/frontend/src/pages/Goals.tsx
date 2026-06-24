@@ -5,6 +5,7 @@ import ExercisePicker, { Exercise as ExerciseMeta } from "../components/Exercise
 import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
 import Calendar from "../components/Calendar";
+import DatePicker from "../components/DatePicker";
 
 interface Goal {
     id: number;
@@ -27,7 +28,7 @@ export default function Goals() {
     const [expectedDate, setExpectedDate] = useState("");
     const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
     const [showPicker, setShowPicker] = useState(false);
-    const [showDatePicker, setShowDatePicker] = useState(false);
+
 
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -198,47 +199,7 @@ export default function Goals() {
                                 min={0}
                                 max={999}
                             />
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDatePicker(!showDatePicker)}
-                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-left hover:border-hover transition-colors"
-                                >
-                                    {expectedDate ? (
-                                        <span className="text-body">{new Date(expectedDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                                    ) : (
-                                        <span className="text-dim">Set due date (optional)</span>
-                                    )}
-                                </button>
-                                {showDatePicker && (
-                                    <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150 w-full">
-                                        <div className="relative border border-lime-400/30 rounded-xl bg-card shadow-xl backdrop-blur-md">
-                                            <button
-                                                onClick={() => setShowDatePicker(false)}
-                                                className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
-                                            >
-                                                Close
-                                            </button>
-                                            <Calendar
-                                                selectedDate={expectedDate}
-                                                onSelect={(d) => {
-                                                    setExpectedDate(d);
-                                                    setShowDatePicker(false);
-                                                }}
-                                            />
-                                            {expectedDate && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => { setExpectedDate(""); setShowDatePicker(false); }}
-                                                    className="w-full text-xs text-dim hover:text-body font-medium transition-colors pb-3"
-                                                >
-                                                    Clear date
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            <DatePicker value={expectedDate} onChange={setExpectedDate} placeholder="Set due date (optional)" />
 
                             <div className="flex gap-3 mt-2">
                                 <button type="submit" className="flex-1 bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98]">
