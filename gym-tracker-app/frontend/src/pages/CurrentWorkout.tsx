@@ -62,6 +62,19 @@ export default function CurrentWorkout() {
         }
     }, [searchParams, navigate]);
 
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    useEffect(() => {
+        if (showExercisePicker || showRoutinePicker || showFinishModal || showSaveRoutineModal) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [showExercisePicker, showRoutinePicker, showFinishModal, showSaveRoutineModal]);
+
     const fetchRoutines = useCallback(async () => {
         try {
             const res = await apiFetch("/api/routines", { headers });

@@ -100,6 +100,8 @@ export default function CompareWorkouts() {
     const [workoutB, setWorkoutB] = useState<Workout | null>(null);
     const [error, setError] = useState<string | null>(null);
 
+    useEffect(() => { window.scrollTo(0, 0); }, []);
+
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({
         Authorization: `Bearer ${token}`,
