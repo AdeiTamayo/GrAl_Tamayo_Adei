@@ -46,6 +46,9 @@ export default function PersonalRecords() {
     // UX states
     const [showAddForm, setShowAddForm] = useState(false);
     const [showPicker, setShowPicker] = useState(false);
+    const [prsOpen, setPrsOpen] = useState(true);
+    const [prPage, setPrPage] = useState(1);
+    const PRS_PER_PAGE = 5;
 
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
     const [editRecord, setEditRecord] = useState<{ id: number; weight: number | ""; repetitions: number | ""; date: string; note: string } | null>(null);
@@ -291,32 +294,79 @@ export default function PersonalRecords() {
                     </div>
 
                     <div className="bg-card border border-subtle rounded-xl p-6 shadow-xl">
-                        <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">Current Best PRs</h2>
-                        {prSummary.length === 0 ? (
-                            <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
-                                <p className="text-dim font-medium italic">No PRs recorded yet. Go lift something heavy!</p>
-                            </div>
-                        ) : (
-                            <ul className="space-y-3 list-none">
-                                {prSummary.map(pr => (
-                                    <li
-                                        key={pr.id}
-                                        onClick={() => fetchPrHistory(pr.exercise_id, pr.exercise_name)}
-                                        className={`bg-surface/40 border border-subtle/80 rounded-lg p-4 cursor-pointer hover:border-lime-400/50 hover:bg-surface transition-all ${selectedExerciseId === pr.exercise_id ? 'border-lime-400/50 bg-surface shadow-md ring-1 ring-lime-400/20' : ''}`}
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <strong className="text-lg font-bold text-lime-400 capitalize">{pr.exercise_name}</strong>
-                                                <div className="text-sm text-dim font-medium mt-1">{pr.date?.substring(0, 10)}</div>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-xl font-bold text-body">{pr.weight} kg</span>
-                                                <div className="text-sm text-muted font-medium mt-1">{pr.repetitions} reps</div>
-                                            </div>
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Current Best PRs</h2>
+                            <button
+                                onClick={() => setPrsOpen(!prsOpen)}
+                                className="text-xs font-medium text-dim hover:text-body transition-colors px-2 py-1 rounded-lg hover:bg-elevated"
+                            >
+                                {prsOpen ? "Hide" : `Show (${prSummary.length})`}
+                            </button>
+                        </div>
+                        {prsOpen && (
+                            prSummary.length === 0 ? (
+                                <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
+                                    <p className="text-dim font-medium italic">No PRs recorded yet. Go lift something heavy!</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <ul className="space-y-3 list-none">
+                                        {prSummary.slice((prPage - 1) * PRS_PER_PAGE, prPage * PRS_PER_PAGE).map(pr => (
+                                            <li
+                                                key={pr.id}
+                                                className={`bg-surface/40 border border-subtle/80 rounded-lg p-4 hover:border-lime-400/50 hover:bg-surface transition-all ${selectedExerciseId === pr.exercise_id ? 'border-lime-400/50 bg-surface shadow-md ring-1 ring-lime-400/20' : ''}`}
+                                            >
+                                                <div
+                                                    className="flex justify-between items-center cursor-pointer"
+                                                    onClick={() => { setPrPage(1); fetchPrHistory(pr.exercise_id, pr.exercise_name); }}
+                                                >
+                                                    <div>
+                                                        <strong className="text-lg font-bold text-lime-400 capitalize">{pr.exercise_name}</strong>
+                                                        <div className="text-sm text-dim font-medium mt-1">{pr.date?.substring(0, 10)}</div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-xl font-bold text-body">{pr.weight} kg</span>
+                                                        <div className="text-sm text-muted font-medium mt-1">{pr.repetitions} reps</div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setFormExerciseId(pr.exercise_id);
+                                                        setFormExerciseName(pr.exercise_name);
+                                                        setShowAddForm(true);
+                                                    }}
+                                                    className="mt-2 w-full text-xs font-semibold text-lime-400 bg-lime-400/10 border border-lime-400/20 rounded-lg py-1.5 hover:bg-lime-400/20 transition-colors"
+                                                >
+                                                    + Add PR
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    {prSummary.length > PRS_PER_PAGE && (
+                                        <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
+                                            <button
+                                                onClick={() => setPrPage(p => Math.max(1, p - 1))}
+                                                disabled={prPage === 1}
+                                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                            >
+                                                &larr; Prev
+                                            </button>
+                                            <span className="text-xs text-muted font-medium">
+                                                Page {prPage} of {Math.ceil(prSummary.length / PRS_PER_PAGE)}
+                                            </span>
+                                            <button
+                                                onClick={() => setPrPage(p => Math.min(Math.ceil(prSummary.length / PRS_PER_PAGE), p + 1))}
+                                                disabled={prPage === Math.ceil(prSummary.length / PRS_PER_PAGE)}
+                                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                            >
+                                                Next &rarr;
+                                            </button>
                                         </div>
-                                    </li>
-                                ))}
-                            </ul>
+                                    )}
+                                </>
+                            )
                         )}
                     </div>
                 </div>
