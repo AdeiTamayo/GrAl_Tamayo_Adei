@@ -192,12 +192,12 @@ export default function CurrentWorkout() {
                         const setRes = await apiFetch(`/api/workouts/exercises/${workoutExerciseId}/sets`, {
                             method: "POST",
                             headers,
-                            body: JSON.stringify({
-                                weight: set.weight || 0,
-                                reps: set.repetitions || 0,
-                                time: ex.rest_time,
-                                note: set.is_done ? "Completed" : "Skipped"
-                            })
+                                body: JSON.stringify({
+                                    weight: set.weight || 0,
+                                    reps: set.repetitions || 0,
+                                    time: ex.rest_time,
+                                    note: set.note || null
+                                })
                         });
                         const setData = await setRes.json();
                         if (setData.success) {
@@ -404,7 +404,7 @@ export default function CurrentWorkout() {
                                             <th className="py-2 px-2">Weight (kg)</th>
                                             <th className="py-2 px-2">Reps</th>
                                             <th className="py-2 px-2">e1RM</th>
-                                            <th className="py-2 px-2">Goal</th>
+                                            <th className="py-2 px-2 text-center">Goal</th>
                                             <th className="py-2 px-2 text-right"></th>
                                         </tr>
                                     </thead>
@@ -459,7 +459,7 @@ export default function CurrentWorkout() {
                                                         <span className="text-dim text-xs">—</span>
                                                     )}
                                                 </td>
-                                                <td className="py-2 px-2">
+                                                <td className="py-2 px-2 text-center">
                                                     {(() => {
                                                         const goal = goals[ex.exercise_id];
                                                         if (!goal) return <span className="text-dim text-xs">—</span>;
