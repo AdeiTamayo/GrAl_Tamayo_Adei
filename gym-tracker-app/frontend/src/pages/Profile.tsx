@@ -322,7 +322,14 @@ export default function Profile() {
             {/* --- Confirm Account Deletion Modal --- */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-                    <div className="w-full max-w-md bg-card border border-subtle rounded-xl p-6 md:p-8 shadow-2xl">
+                    <div className="relative w-full max-w-md">
+                        <button
+                            onClick={() => { setShowDeleteModal(false); setPasswordConfirm(""); }}
+                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                        >
+                            Close
+                        </button>
+                        <div className="w-full bg-card border border-subtle rounded-xl p-6 md:p-8 shadow-2xl">
                         <h2 className="text-xl font-display text-rose-500 uppercase tracking-tight mb-2">Delete Account Permanently</h2>
                         <p className="text-sm text-muted mb-6 leading-relaxed">
                             This action cannot be undone. Please type your password to confirm you want to delete your profile and wipe all logged application metrics.
@@ -363,6 +370,7 @@ export default function Profile() {
                         </form>
                     </div>
                 </div>
+            </div>
             )}
         </div>
     );

@@ -656,22 +656,29 @@ export default function WorkoutsManagement() {
                             <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase mb-3">Add New Exercise to Workout</h3>
 
                             <div className="flex flex-col gap-4">
-                                {!showPicker ? (
-                                    <Button
-                                        variant="secondary"
-                                        fullWidth
-                                        className="py-4 border-dashed border-subtle hover:border-lime-500/50 hover:bg-lime-500/5 transition-all text-sm font-semibold"
-                                        onClick={() => setShowPicker(true)}
-                                    >
-                                        + Add New Exercise Entry
-                                    </Button>
-                                ) : (
-                                    <div className="animate-in fade-in zoom-in-95 duration-200">
-                                        <ExercisePicker
-                                            title="Add Exercise to Workout"
-                                            onSelect={handleAddExercise}
-                                            onClose={() => setShowPicker(false)}
-                                        />
+                                <Button
+                                    variant="secondary"
+                                    fullWidth
+                                    className="py-4 border-dashed border-subtle hover:border-lime-500/50 hover:bg-lime-500/5 transition-all text-sm font-semibold"
+                                    onClick={() => setShowPicker(true)}
+                                >
+                                    + Add New Exercise Entry
+                                </Button>
+                                {showPicker && (
+                                    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                        <div className="relative w-full max-w-xl">
+                                            <button
+                                                onClick={() => setShowPicker(false)}
+                                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                                            >
+                                                Close
+                                            </button>
+                                            <ExercisePicker
+                                                title="Add Exercise to Workout"
+                                                onSelect={handleAddExercise}
+                                                onClose={() => setShowPicker(false)}
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </div>

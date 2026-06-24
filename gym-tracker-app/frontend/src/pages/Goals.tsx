@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, FormEvent } from "react";
+import { useState, useEffect, useMemo, FormEvent, useCallback } from "react";
 import { apiFetch } from "../utils/api";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
@@ -33,6 +33,10 @@ export default function Goals() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>("");
+    const [prData, setPrData] = useState<Record<number, { weight: number; reps: number }>>({});
+    const [goalsPage, setGoalsPage] = useState(1);
+    const [goalsOpen, setGoalsOpen] = useState(true);
+    const GOALS_PER_PAGE = 5;
 
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({
@@ -40,9 +44,31 @@ export default function Goals() {
         "Content-Type": "application/json",
     }), [token]);
 
-    useEffect(() => {
-        fetchGoals().finally(() => setIsLoading(false));
+    const fetchPRs = useCallback(async () => {
+        try {
+            const res = await apiFetch("/api/prs", { headers });
+            const data = await res.json();
+            if (data.success) {
+                const map: Record<number, { weight: number; reps: number }> = {};
+                for (const pr of data.data || []) {
+                    map[pr.exercise_id] = { weight: Number(pr.weight), reps: pr.repetitions };
+                }
+                setPrData(map);
+            }
+        } catch (err) {
+            console.error("Failed to fetch PRs", err);
+        }
     }, [headers]);
+
+    useEffect(() => {
+        Promise.all([fetchGoals(), fetchPRs()]).finally(() => setIsLoading(false));
+    }, [headers, fetchPRs]);
+
+    function isGoalFulfilled(g: Goal): boolean {
+        const pr = prData[g.exercise_id];
+        if (!pr) return false;
+        return pr.weight >= Number(g.target_weight) && pr.reps >= g.target_reps;
+    }
 
     async function fetchGoals() {
         try {
@@ -134,6 +160,15 @@ export default function Goals() {
         return goals.filter(g => g.expected_date?.substring(0, 10) === selectedCalendarDate);
     }, [goals, selectedCalendarDate]);
 
+    const paginatedGoals = useMemo(() => {
+        const start = (goalsPage - 1) * GOALS_PER_PAGE;
+        return filteredGoals.slice(start, start + GOALS_PER_PAGE);
+    }, [filteredGoals, goalsPage, GOALS_PER_PAGE]);
+
+    useEffect(() => {
+        setGoalsPage(1);
+    }, [filteredGoals.length]);
+
     if (isLoading) return <div className="p-8 text-muted font-medium animate-pulse">Loading goals...</div>;
 
     return (
@@ -161,21 +196,23 @@ export default function Goals() {
                                 {selectedExerciseName || <span className="text-dim">Select Exercise</span>}
                             </button>
                             {showPicker && (
-                                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                                    <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
-                                        <div className="p-4 border-b border-subtle flex justify-between items-center">
-                                            <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
-                                            <button onClick={() => setShowPicker(false)} className="text-dim hover:text-white text-xl leading-none">&times;</button>
-                                        </div>
-                                        <div className="flex-1 overflow-y-auto p-4">
-                                            <ExercisePicker
-                                                onSelect={(ex) => {
-                                                    setSelectedExerciseId(ex.id);
-                                                    setSelectedExerciseName(ex.name);
-                                                    setShowPicker(false);
-                                                }}
-                                            />
-                                        </div>
+                                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                    <div className="relative w-full max-w-xl">
+                                        <button
+                                            onClick={() => setShowPicker(false)}
+                                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                                        >
+                                            Close
+                                        </button>
+                                        <ExercisePicker
+                                            title="Select Exercise"
+                                            onSelect={(ex) => {
+                                                setSelectedExerciseId(ex.id);
+                                                setSelectedExerciseName(ex.name);
+                                                setShowPicker(false);
+                                            }}
+                                            onClose={() => setShowPicker(false)}
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -229,7 +266,15 @@ export default function Goals() {
                 {/* List of goals */}
                 <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Current Goals — {goals.length} goals</h2>
+                        <div className="flex items-center gap-3">
+                            <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Current Goals</h2>
+                            <button
+                                onClick={() => setGoalsOpen(!goalsOpen)}
+                                className="text-xs font-semibold text-dim hover:text-body transition-colors"
+                            >
+                                {goalsOpen ? 'Hide' : `Show (${filteredGoals.length})`}
+                            </button>
+                        </div>
                         {selectedCalendarDate && (
                             <button
                                 onClick={() => setSelectedCalendarDate("")}
@@ -253,26 +298,66 @@ export default function Goals() {
                         <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
                             <p className="text-dim font-medium italic">No goals due on this day.</p>
                         </div>
-                    ) : (
-                        <ul className="space-y-3">
-                            {filteredGoals?.map(g => (
-                                <li key={g.id} className={`bg-surface/40 border ${editingGoalId === g.id ? "border-lime-400/50" : "border-subtle/80"} rounded-lg p-5 flex flex-col sm:flex-row justify-between sm:items-center hover:border-hover transition-colors gap-4`}>
-                                    <div>
-                                        <strong className="text-xl font-bold text-lime-400 capitalize">{g.exercise_name}</strong>
-                                        <div className="text-body font-medium text-lg mt-1">
-                                            {g.target_weight} kg × {g.target_reps} reps
+                    ) : goalsOpen && (
+                        <>
+                            <ul className="space-y-3">
+                                {paginatedGoals?.map(g => (
+                                    <li key={g.id} className={`bg-surface/40 border ${editingGoalId === g.id ? "border-lime-400/50" : "border-subtle/80"} rounded-lg p-5 flex flex-col sm:flex-row justify-between sm:items-center hover:border-hover transition-colors gap-4`}>
+                                        <div>
+                                            <strong className="text-xl font-bold text-lime-400 capitalize">{g.exercise_name}</strong>
+                                            <div className="text-body font-medium text-lg mt-1 flex items-center gap-2">
+                                                {g.target_weight} kg × {g.target_reps} reps
+                                                {(() => {
+                                                    const fulfilled = isGoalFulfilled(g);
+                                                    const pr = prData[g.exercise_id];
+                                                    return fulfilled ? (
+                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-lime-400 bg-lime-400/10 border border-lime-400/20 rounded-full px-2.5 py-0.5">
+                                                            ✓
+                                                        </span>
+                                                    ) : pr ? (
+                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-2.5 py-0.5">
+                                                            {Math.max(0, Number(g.target_weight) - pr.weight).toFixed(1)} kg to go
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-dim bg-elevated border border-subtle rounded-full px-2.5 py-0.5">
+                                                            No PR registered yet
+                                                        </span>
+                                                    );
+                                                })()}
+                                            </div>
+                                            {g.expected_date && (
+                                                <div className="text-xs text-dim font-medium mt-1">Due by: {new Date(g.expected_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                                            )}
                                         </div>
-                                        {g.expected_date && (
-                                            <div className="text-xs text-dim font-medium mt-1">Due by: {new Date(g.expected_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-                                        )}
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <EditButton onClick={() => handleEditGoal(g)} />
-                                        <DeleteButton onClick={() => deleteGoal(g.id)} />
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                                        <div className="flex gap-2">
+                                            <EditButton onClick={() => handleEditGoal(g)} />
+                                            <DeleteButton onClick={() => deleteGoal(g.id)} />
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                            {filteredGoals.length > GOALS_PER_PAGE && (
+                                <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
+                                    <button
+                                        onClick={() => setGoalsPage(p => Math.max(1, p - 1))}
+                                        disabled={goalsPage === 1}
+                                        className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                    >
+                                        &larr; Prev
+                                    </button>
+                                    <span className="text-xs text-muted font-medium">
+                                        Page {goalsPage} of {Math.max(1, Math.ceil(filteredGoals.length / GOALS_PER_PAGE))}
+                                    </span>
+                                    <button
+                                        onClick={() => setGoalsPage(p => Math.min(Math.max(1, Math.ceil(filteredGoals.length / GOALS_PER_PAGE)), p + 1))}
+                                        disabled={goalsPage === Math.max(1, Math.ceil(filteredGoals.length / GOALS_PER_PAGE))}
+                                        className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                    >
+                                        Next &rarr;
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

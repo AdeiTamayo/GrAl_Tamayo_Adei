@@ -125,7 +125,7 @@ export default function EditableExerciseCard({
                             <div className="col-span-2">Reps</div>
                             <div className="col-span-2">Time (s)</div>
                             {goalWeight && <div className="col-span-2">Goal</div>}
-                            <div className={goalWeight ? "col-span-2" : "col-span-4"}>Note</div>
+                            {showNotesField && <div className={goalWeight ? "col-span-2" : "col-span-4"}>Note</div>}
                             <div className="col-span-1 text-right"></div>
                         </div>
 
@@ -198,6 +198,7 @@ export default function EditableExerciseCard({
                                         )}
 
                                         {/* Readable Row Note Toggle Button */}
+                                        {showNotesField && (
                                         <div className={`col-span-2 ${goalWeight ? 'md:col-span-2' : 'md:col-span-4'}`}>
                                             <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Note</span>
                                             {expandedNotes.has(set.id) ? (
@@ -250,13 +251,14 @@ export default function EditableExerciseCard({
                                                 </button>
                                             )}
                                         </div>
+                                        )}
 
                                         {/* Row Destruction Trigger Action */}
                                         <div className="col-span-4 md:col-span-1 text-right mt-2 md:mt-0 pt-2 md:pt-0 border-t border-subtle/40 md:border-0">
                                             <DeleteButton onClick={() => onRemoveSet(set.id)} />
                                         </div>
                                     </div>
-                                    {expandedNotes.has(set.id) && (
+                                    {showNotesField && expandedNotes.has(set.id) && (
                                         <div className="animate-in fade-in slide-in-from-top-1 duration-150 mt-2 space-y-2">
                                             <textarea
                                                 rows={2}

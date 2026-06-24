@@ -238,21 +238,23 @@ export default function PersonalRecords() {
                                     {formExerciseName || <span className="text-dim">Select Exercise</span>}
                                 </button>
                                 {showPicker && (
-                                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
-                                            <div className="p-4 border-b border-subtle flex justify-between items-center">
-                                                <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
-                                                <button onClick={() => setShowPicker(false)} className="text-dim hover:text-white text-xl leading-none">&times;</button>
-                                            </div>
-                                            <div className="flex-1 overflow-y-auto p-4">
-                                                <ExercisePicker
-                                                    onSelect={(ex) => {
-                                                        setFormExerciseId(ex.id);
-                                                        setFormExerciseName(ex.name);
-                                                        setShowPicker(false);
-                                                    }}
-                                                />
-                                            </div>
+                                    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                        <div className="relative w-full max-w-xl">
+                                            <button
+                                                onClick={() => setShowPicker(false)}
+                                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                                            >
+                                                Close
+                                            </button>
+                                            <ExercisePicker
+                                                title="Select Exercise"
+                                                onSelect={(ex) => {
+                                                    setFormExerciseId(ex.id);
+                                                    setFormExerciseName(ex.name);
+                                                    setShowPicker(false);
+                                                }}
+                                                onClose={() => setShowPicker(false)}
+                                            />
                                         </div>
                                     </div>
                                 )}
@@ -337,7 +339,7 @@ export default function PersonalRecords() {
                                                         setFormExerciseName(pr.exercise_name);
                                                         setShowAddForm(true);
                                                     }}
-                                                    className="mt-2 w-full text-xs font-semibold text-lime-400 bg-lime-400/10 border border-lime-400/20 rounded-lg py-1.5 hover:bg-lime-400/20 transition-colors"
+                                                    className="mt-2 text-xs font-semibold text-lime-400 bg-lime-400/10 border border-lime-400/20 rounded-lg px-3 py-1 hover:bg-lime-400/20 transition-colors"
                                                 >
                                                     + Add PR
                                                 </button>
@@ -471,7 +473,14 @@ export default function PersonalRecords() {
 
             {editRecord && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <div className="relative w-full max-w-sm">
+                        <button
+                            onClick={() => setEditRecord(null)}
+                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                        >
+                            Close
+                        </button>
+                        <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                         <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-4">Edit PR</h2>
                         <div className="space-y-4">
                             <TransparentNumericInput
@@ -515,6 +524,7 @@ export default function PersonalRecords() {
                         </div>
                     </div>
                 </div>
+            </div>
             )}
         </div>
     );

@@ -405,6 +405,7 @@ export default function CurrentWorkout() {
                                             <th className="py-2 px-2">Reps</th>
                                             <th className="py-2 px-2">e1RM</th>
                                             <th className="py-2 px-2 text-center">Goal</th>
+                                            <th className="py-2 px-2 min-w-[100px]">Notes</th>
                                             <th className="py-2 px-2 text-right"></th>
                                         </tr>
                                     </thead>
@@ -476,6 +477,16 @@ export default function CurrentWorkout() {
                                                         );
                                                     })()}
                                                 </td>
+                                                <td className="py-2 px-2 min-w-[100px]">
+                                                    <input
+                                                        type="text"
+                                                        value={set.note}
+                                                        onChange={(e) => updateSet(exIdx, setIdx, "note", e.target.value)}
+                                                        disabled={set.is_done}
+                                                        placeholder="Note"
+                                                        className="w-full bg-transparent border-b border-subtle/50 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none py-1 disabled:opacity-50"
+                                                    />
+                                                </td>
                                                 <td className="py-2 px-2 text-right">
                                                     <button onClick={() => removeSet(exIdx, setIdx)} className="text-dim hover:text-red-400 font-bold text-lg">×</button>
                                                 </td>
@@ -502,10 +513,15 @@ export default function CurrentWorkout() {
 
                 {showExercisePicker && (
                     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
-                            <div className="p-4 border-b border-subtle flex justify-between items-center">
+                        <div className="relative w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
+                            <button
+                                onClick={() => setShowExercisePicker(false)}
+                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                            >
+                                Close
+                            </button>
+                            <div className="p-4 border-b border-subtle">
                                 <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
-                                <button onClick={() => setShowExercisePicker(false)} className="text-dim hover:text-white">✕</button>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4">
                                 <ExercisePicker onSelect={handleAddExercise} />
@@ -516,11 +532,14 @@ export default function CurrentWorkout() {
 
                 {showRoutinePicker && (
                     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-lg bg-card border border-subtle rounded-3xl p-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold uppercase italic text-lime-400">Load Routine</h2>
-                                <button onClick={() => setShowRoutinePicker(false)} className="text-dim hover:text-white">✕</button>
-                            </div>
+                        <div className="relative w-full max-w-lg bg-card border border-subtle rounded-3xl p-6">
+                            <button
+                                onClick={() => setShowRoutinePicker(false)}
+                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                            >
+                                Close
+                            </button>
+                            <h2 className="text-xl font-bold uppercase italic text-lime-400 mb-6">Load Routine</h2>
                             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                                 {routines.length === 0 && <p className="text-dim text-center">No routines found.</p>}
                                 {routines.map((r) => (
@@ -540,7 +559,14 @@ export default function CurrentWorkout() {
 
                 {showSaveRoutineModal && (
                     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="relative w-full max-w-sm">
+                            <button
+                                onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }}
+                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                            >
+                                Close
+                            </button>
+                            <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                             <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
                                 Save as Routine
                             </h2>
@@ -572,11 +598,19 @@ export default function CurrentWorkout() {
                             </div>
                         </div>
                     </div>
+                </div>
                 )}
 
                 {showFinishModal && (
                     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="relative w-full max-w-sm">
+                            <button
+                                onClick={() => setShowFinishModal(false)}
+                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                            >
+                                Close
+                            </button>
+                            <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                             <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
                                 Finish Workout
                             </h2>
@@ -611,6 +645,7 @@ export default function CurrentWorkout() {
                             </div>
                         </div>
                     </div>
+                </div>
                 )}
             </div>
         </div>
