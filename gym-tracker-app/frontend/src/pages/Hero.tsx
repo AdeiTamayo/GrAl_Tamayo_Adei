@@ -31,6 +31,7 @@ const navItems = [
             { to: '/prs', label: 'PRs', desc: 'Personal records and achievements' },
             { to: '/Weight_history', label: 'Weight History', desc: 'Track your body weight over time' },
             { to: '/goals', label: 'Goals', desc: 'Set and track your fitness goals' },
+            { to: '/workout-calendar', label: 'Calendar', desc: 'Track the workout history' }
         ]
     },
     {
@@ -186,7 +187,7 @@ export default function Hero() {
                     </div>
                 )}
 
-                                {dashboardError && (
+                {dashboardError && (
                     <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 font-medium text-sm">
                         Error: {dashboardError}
                     </div>

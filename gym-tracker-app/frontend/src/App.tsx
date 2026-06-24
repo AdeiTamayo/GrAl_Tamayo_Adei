@@ -12,6 +12,7 @@ import Video from './pages/Videos';
 import Pr from './pages/Prs'
 import Routine from './pages/Routines';
 import WeightHistory from './pages/Weight_history';
+import WorkoutCalendar from './pages/WorkoutCalendar';
 import CurrentWorkout from './pages/CurrentWorkout';
 import CompareWorkouts from './pages/CompareWorkouts';
 import ExerciseHistory from './pages/ExerciseHistory';
@@ -41,6 +42,7 @@ function AppContent() {
           <Route path="/prs" element={<Pr />} />
           <Route path="/routines" element={<Routine />} />
           <Route path="/Weight_history" element={<WeightHistory />} />
+          <Route path="/workout-calendar" element={<WorkoutCalendar />} />
         </Routes>
       </div>
       <ActiveWorkoutBanner />
