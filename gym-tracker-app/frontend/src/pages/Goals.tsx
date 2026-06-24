@@ -215,7 +215,7 @@ export default function Goals() {
                                         <div className="relative border border-lime-400/30 rounded-xl bg-card shadow-xl backdrop-blur-md">
                                             <button
                                                 onClick={() => setShowDatePicker(false)}
-                                                className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm transition-colors hover:bg-lime-400/10"
+                                                className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
                                             >
                                                 Close
                                             </button>
@@ -253,17 +253,20 @@ export default function Goals() {
                         </form>
                     </div>
 
-                    <Calendar
-                        selectedDate={selectedCalendarDate}
-                        onSelect={(d) => setSelectedCalendarDate(prev => prev === d ? "" : d)}
-                        goalDates={goalDates}
-                    />
+                    <div>
+                        <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3">Goals Calendar</h3>
+                        <Calendar
+                            selectedDate={selectedCalendarDate}
+                            onSelect={(d) => setSelectedCalendarDate(prev => prev === d ? "" : d)}
+                            goalDates={goalDates}
+                        />
+                    </div>
                 </div>
 
                 {/* List of goals */}
                 <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Current Goals</h2>
+                        <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Current Goals — {goals.length} goals</h2>
                         {selectedCalendarDate && (
                             <button
                                 onClick={() => setSelectedCalendarDate("")}
