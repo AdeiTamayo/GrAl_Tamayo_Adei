@@ -128,7 +128,7 @@ export default function Hero() {
             <div className="flex items-center justify-center min-h-screen bg-body text-body p-4">
                 <div className="w-full max-w-md text-center space-y-8">
                     <div className="space-y-3">
-                        <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight text-lime-400 uppercase">Gym Tracker</h1>
+                        <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight text-accent uppercase">Gym Tracker</h1>
                         <p className="text-muted text-lg font-medium max-w-sm mx-auto">Track your workouts, analyze your form, and crush your goals.</p>
                     </div>
                     <div className="bg-card border border-subtle rounded-2xl p-8 shadow-xl space-y-4">
@@ -137,7 +137,7 @@ export default function Hero() {
                             <p className="text-sm text-dim font-medium">Sign in to access your dashboard.</p>
                         </div>
                         <div className="flex flex-col gap-3 pt-2">
-                            <Link to="/login" className="w-full bg-lime-400 text-black font-bold rounded-lg hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98] border border-transparent px-6 py-3 transition-all text-center block">Log In</Link>
+                            <Link to="/login" className="w-full bg-accent text-black font-bold rounded-lg hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98] border border-transparent px-6 py-3 transition-all text-center block">Log In</Link>
                             <Link to="/register" className="w-full px-4 py-3 bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-lg transition-all text-center block">Create an account</Link>
                         </div>
                     </div>
@@ -150,9 +150,9 @@ export default function Hero() {
         <div className="min-h-screen bg-body text-body p-4 md:p-8 pb-24 md:pb-8">
             <div className="max-w-6xl mx-auto space-y-8">
                 <header className="flex items-center justify-between pb-6 border-b border-subtle gap-3">
-                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400 shrink-0">Dashboard</h1>
+                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent shrink-0">Dashboard</h1>
                     <div className="flex items-center gap-2">
-                        <Link to="/active-workout" className="hidden md:inline-flex items-center gap-2 bg-lime-400 text-black font-bold rounded-lg hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98] px-4 py-2 text-sm transition-all">
+                        <Link to="/active-workout" className="hidden md:inline-flex items-center gap-2 bg-accent text-black font-bold rounded-lg hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98] px-4 py-2 text-sm transition-all">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -185,7 +185,7 @@ export default function Hero() {
                         </div>
                         <div className="bg-card border border-subtle rounded-xl p-5">
                             <p className="text-xs font-bold tracking-widest uppercase text-dim">Weekly Volume</p>
-                            <p className="text-3xl font-bold text-lime-400 mt-2 font-mono">{weeklyVolume != null ? `${(weeklyVolume / 1000).toFixed(1)}k` : '—'}</p>
+                            <p className="text-3xl font-bold text-accent mt-2 font-mono">{weeklyVolume != null ? `${(weeklyVolume / 1000).toFixed(1)}k` : '—'}</p>
                             <p className="text-[10px] text-dim mt-0.5">total kg this week</p>
                         </div>
                         <div className="bg-card border border-subtle rounded-xl p-5">
@@ -217,7 +217,7 @@ export default function Hero() {
                                 <p className="text-xs font-bold tracking-widest uppercase text-dim">Current Weight</p>
                                 <p className="text-3xl font-bold text-body mt-2 font-mono">{Number(latestWeight.weight)} <span className="text-lg text-dim font-normal">kg</span></p>
                                 <p className="text-[10px] text-dim mt-0.5">as of {latestWeight.date?.substring(0, 10)}</p>
-                                <Link to="/Weight_history" className="mt-4 block text-center text-xs font-bold text-lime-400 hover:text-lime-300 uppercase tracking-wider transition-colors">Track Weight</Link>
+                                <Link to="/Weight_history" className="mt-4 block text-center text-xs font-bold text-accent hover:text-accent-hover uppercase tracking-wider transition-colors">Track Weight</Link>
                             </div>
                         )}
                         <div className="bg-surface/30 border border-subtle rounded-xl p-5 flex-1">
@@ -228,7 +228,7 @@ export default function Hero() {
                                 <ul className="space-y-3">
                                     {recentWorkouts.slice(0, 3).map(w => (
                                         <li key={w.id}>
-                                            <Link to="/workouts" state={{ preselectedWorkoutId: w.id }} className="block bg-surface/20 border border-subtle rounded-lg p-3 hover:border-lime-400/40 hover:bg-surface/40 transition-all">
+                                            <Link to="/workouts" state={{ preselectedWorkoutId: w.id }} className="block bg-surface/20 border border-subtle rounded-lg p-3 hover:border-accent/40 hover:bg-surface/40 transition-all">
                                                 <p className="text-sm font-semibold text-heading truncate">{w.name}</p>
                                                 <div className="flex items-center gap-3 mt-1">
                                                     <span className="text-xs font-mono text-dim">{w.date?.substring(0, 10)}</span>
@@ -239,7 +239,7 @@ export default function Hero() {
                                     ))}
                                 </ul>
                             )}
-                            <Link to="/workouts" className="mt-4 block text-center text-xs font-bold text-lime-400 hover:text-lime-300 uppercase tracking-wider transition-colors">View All Workouts</Link>
+                            <Link to="/workouts" className="mt-4 block text-center text-xs font-bold text-accent hover:text-accent-hover uppercase tracking-wider transition-colors">View All Workouts</Link>
                         </div>
                     </div>
                 </div>
@@ -247,12 +247,12 @@ export default function Hero() {
                 <div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         {primaryNav.map(link => (
-                            <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 border border-subtle rounded-xl px-4 py-3 hover:border-lime-400/40 hover:bg-elevated/40 transition-all hover:shadow-lg hover:shadow-lime-400/5 group">
-                                <div className="w-9 h-9 rounded-lg bg-lime-400/10 border border-lime-400/20 flex items-center justify-center shrink-0 group-hover:bg-lime-400/20 transition-colors">
+                            <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 border border-subtle rounded-xl px-4 py-3 hover:border-accent/40 hover:bg-elevated/40 transition-all hover:shadow-lg hover:shadow-accent/5 group">
+                                <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
                                     <NavIcon path={link.to} />
                                 </div>
                                 <div>
-                                    <p className="font-display text-sm font-bold text-heading group-hover:text-lime-400 transition-colors uppercase tracking-wide">{link.label}</p>
+                                    <p className="font-display text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">{link.label}</p>
                                     <p className="text-xs text-dim leading-relaxed group-hover:text-muted transition-colors">{link.desc}</p>
                                 </div>
                             </Link>
@@ -265,12 +265,12 @@ export default function Hero() {
                         <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim mb-4">Recent Videos</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {videos.map(video => (
-                                <Link key={video.id} to="/videos" className="group bg-card border border-subtle/80 rounded-xl overflow-hidden hover:border-lime-400/40 transition-all hover:shadow-lg">
+                                <Link key={video.id} to="/videos" className="group bg-card border border-subtle/80 rounded-xl overflow-hidden hover:border-accent/40 transition-all hover:shadow-lg">
                                     <div className="bg-black aspect-video flex items-center justify-center">
                                         <video className="w-full h-full object-contain" src={`http://localhost:8000${video.processed_url}`} preload="metadata" />
                                     </div>
                                     <div className="p-3">
-                                        <p className="text-xs font-bold text-lime-400 uppercase tracking-wider truncate">{video.process_type}</p>
+                                        <p className="text-xs font-bold text-accent uppercase tracking-wider truncate">{video.process_type}</p>
                                         <p className="text-[10px] text-dim mt-0.5 font-mono">{new Date(video.created_at).toLocaleDateString()}</p>
                                     </div>
                                 </Link>
@@ -289,12 +289,12 @@ export default function Hero() {
                     {showMore && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
                             {secondaryNav.map(link => (
-                                <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 border border-subtle rounded-xl px-4 py-3 hover:border-lime-400/40 hover:bg-elevated/40 transition-all hover:shadow-lg hover:shadow-lime-400/5 group">
-                                    <div className="w-9 h-9 rounded-lg bg-lime-400/10 border border-lime-400/20 flex items-center justify-center shrink-0 group-hover:bg-lime-400/20 transition-colors">
+                                <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 border border-subtle rounded-xl px-4 py-3 hover:border-accent/40 hover:bg-elevated/40 transition-all hover:shadow-lg hover:shadow-accent/5 group">
+                                    <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
                                         <NavIcon path={link.to} />
                                     </div>
                                     <div>
-                                        <p className="font-display text-sm font-bold text-heading group-hover:text-lime-400 transition-colors uppercase tracking-wide">{link.label}</p>
+                                        <p className="font-display text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">{link.label}</p>
                                         <p className="text-xs text-dim leading-relaxed group-hover:text-muted transition-colors">{link.desc}</p>
                                     </div>
                                 </Link>
@@ -304,7 +304,7 @@ export default function Hero() {
                 </div>
             </div>
 
-            <Link to="/active-workout" className="fixed bottom-4 left-4 right-4 md:hidden bg-lime-400 text-black font-bold rounded-xl hover:bg-lime-300 active:scale-[0.98] border border-transparent px-6 py-3.5 transition-all text-center shadow-2xl shadow-lime-400/20 z-40 flex items-center justify-center gap-2">
+            <Link to="/active-workout" className="fixed bottom-4 left-4 right-4 md:hidden bg-accent text-black font-bold rounded-xl hover:bg-accent-hover active:scale-[0.98] border border-transparent px-6 py-3.5 transition-all text-center shadow-2xl shadow-accent/20 z-40 flex items-center justify-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />

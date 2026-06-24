@@ -174,7 +174,7 @@ export default function Goals() {
     return (
         <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Goals</h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Goals</h1>
             </div>
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
 
@@ -200,7 +200,7 @@ export default function Goals() {
                                     <div className="relative w-full max-w-xl">
                                         <button
                                             onClick={() => setShowPicker(false)}
-                                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
                                         >
                                             Close
                                         </button>
@@ -222,7 +222,7 @@ export default function Goals() {
                                     value={targetWeight}
                                     onChange={(val) => setTargetWeight(val === "" ? "" : Number(val))}
                                     className="w-full"
-                                    inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                    inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                     step={0.1}
                                     min={0}
                                     max={999}
@@ -232,7 +232,7 @@ export default function Goals() {
                                     value={targetReps}
                                     onChange={(val) => setTargetReps(val === "" ? "" : Number(val))}
                                     className="w-full"
-                                    inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                    inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                     step={1}
                                     min={0}
                                     max={999}
@@ -241,7 +241,7 @@ export default function Goals() {
                             <DatePicker value={expectedDate} onChange={setExpectedDate} placeholder="Set due date (optional)" />
 
                             <div className="flex gap-3 mt-2">
-                                <button type="submit" className="flex-1 bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                                <button type="submit" className="flex-1 bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover transition-all hover:scale-[1.02] active:scale-[0.98]">
                                     {editingGoalId ? "Update Goal" : "Create Goal"}
                                 </button>
                                 {editingGoalId && (
@@ -302,16 +302,16 @@ export default function Goals() {
                         <>
                             <ul className="space-y-3">
                                 {paginatedGoals?.map(g => (
-                                    <li key={g.id} className={`bg-surface/40 border ${editingGoalId === g.id ? "border-lime-400/50" : "border-subtle/80"} rounded-lg p-5 flex flex-col sm:flex-row justify-between sm:items-center hover:border-hover transition-colors gap-4`}>
+                                    <li key={g.id} className={`bg-surface/40 border ${editingGoalId === g.id ? "border-accent/50" : "border-subtle/80"} rounded-lg p-5 flex flex-col sm:flex-row justify-between sm:items-center hover:border-hover transition-colors gap-4`}>
                                         <div>
-                                            <strong className="text-xl font-bold text-lime-400 capitalize">{g.exercise_name}</strong>
+                                            <strong className="text-xl font-bold text-accent capitalize">{g.exercise_name}</strong>
                                             <div className="text-body font-medium text-lg mt-1 flex items-center gap-2">
                                                 {g.target_weight} kg × {g.target_reps} reps
                                                 {(() => {
                                                     const fulfilled = isGoalFulfilled(g);
                                                     const pr = prData[g.exercise_id];
                                                     return fulfilled ? (
-                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-lime-400 bg-lime-400/10 border border-lime-400/20 rounded-full px-2.5 py-0.5">
+                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent bg-accent/10 border border-accent/20 rounded-full px-2.5 py-0.5">
                                                             ✓
                                                         </span>
                                                     ) : pr ? (

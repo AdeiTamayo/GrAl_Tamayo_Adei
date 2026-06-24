@@ -615,7 +615,7 @@ export default function WorkoutsManagement() {
             {/* Top Toolbar Level */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-subtle pb-5">
                 <div>
-                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Workouts Management</h1>
+                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Workouts Management</h1>
                 </div>
 
                 {/* Create Workout Dropdown Wrapper */}
@@ -640,7 +640,7 @@ export default function WorkoutsManagement() {
                                         value={newWorkoutName}
                                         onChange={(e) => setNewWorkoutName(e.target.value)}
                                         required
-                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-lime-400 focus:outline-none transition-all"
+                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all"
                                     />
                                 </div>
                                 <div>
@@ -653,7 +653,7 @@ export default function WorkoutsManagement() {
                                         type="text"
                                         value={newWorkoutNote}
                                         onChange={(e) => setNewWorkoutNote(e.target.value)}
-                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-all"
+                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
                                     />
                                 </div>
                                 <Button type="submit" variant="primary" fullWidth className="font-display rounded-xl py-2.5 text-sm mt-1">
@@ -684,7 +684,7 @@ export default function WorkoutsManagement() {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search by name..."
-                                className="flex-1 border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-all"
+                                className="flex-1 border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
                             />
                             <div className="flex gap-2 items-center">
                                 <span className="text-dim text-xs">From</span>
@@ -735,7 +735,7 @@ export default function WorkoutsManagement() {
                                         <li
                                             key={w.id}
                                             onClick={() => fetchWorkoutById(w.id)}
-                                            className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${selectedWorkout?.id === w.id ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
+                                            className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${selectedWorkout?.id === w.id ? 'bg-surface border-accent/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
                                         >
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
                                                 <input
@@ -749,7 +749,7 @@ export default function WorkoutsManagement() {
                                                         });
                                                     }}
                                                     onClick={(e) => e.stopPropagation()}
-                                                    className="accent-lime-400 cursor-pointer shrink-0"
+                                                    className="accent-accent cursor-pointer shrink-0"
                                                 />
                                                 <div className="min-w-0">
                                                     <span className="text-sm stroke-zinc-100 font-semibold text-heading block truncate">{w.name}</span>
@@ -797,7 +797,7 @@ export default function WorkoutsManagement() {
                         {/* Header Details Wrapper with Dropdown Flow Control */}
                         <div className="flex justify-between items-start mb-6" ref={detailsDropdownRef}>
                             <div className="flex-1 mr-4">
-                                <h2 className="font-display text-2xl font-bold text-lime-400 uppercase tracking-wide flex items-center gap-3">
+                                <h2 className="font-display text-2xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
                                     {selectedWorkout.name}
                                 </h2>
                                 <p className="font-mono text-xs text-dim mt-1">{selectedWorkout.date?.substring(0, 10)}</p>
@@ -832,9 +832,9 @@ export default function WorkoutsManagement() {
                                 {showDetailsDropdown && (
                                     <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-subtle rounded-xl p-4 shadow-xl z-20 flex flex-col gap-3 animate-in fade-in duration-100">
                                         <h4 className="text-xs uppercase tracking-wider text-muted font-bold">Edit Core Metadata</h4>
-                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-lime-400 focus:outline-none" />
+                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-accent focus:outline-none" />
                                         <DatePicker value={editDate} onChange={setEditDate} />
-                                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-lime-400 focus:outline-none" />
+                                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-accent focus:outline-none" />
                                         <div className="flex gap-2 justify-end mt-1">
                                             <button type="button" onClick={() => setShowDetailsDropdown(false)} className="text-muted text-xs font-semibold px-2.5 py-1.5 hover:text-heading">Cancel</button>
                                             <Button type="button" onClick={saveWorkoutEdit} variant="primary" className="px-3 py-1 text-xs rounded-md">Save Changes</Button>
@@ -847,7 +847,7 @@ export default function WorkoutsManagement() {
                         <hr className="border-none border-t border-subtle/60" />
 
                         {/* Exercises List Display Block */}
-                        <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase">Recorded Exercises and Sets</h3>
+                        <h3 className="font-sans text-xs font-bold tracking-widest text-accent uppercase">Recorded Exercises and Sets</h3>
                         {!selectedWorkout.exercises || selectedWorkout.exercises.length === 0 ? (
                             <p className="text-xs text-dim font-sans py-6 text-center border border-dashed border-subtle rounded-xl bg-card/20">
                                 No exercises logged for this workout yet. Search and select from the menu below to start.
@@ -884,13 +884,13 @@ export default function WorkoutsManagement() {
 
                         {/* Search Exercises Dropdown Selection Panel */}
                         <div className="pt-6 border-t border-subtle/60">
-                            <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase mb-3">Add New Exercise to Workout</h3>
+                            <h3 className="font-sans text-xs font-bold tracking-widest text-accent uppercase mb-3">Add New Exercise to Workout</h3>
 
                             <div className="flex flex-col gap-4">
                                 <Button
                                     variant="secondary"
                                     fullWidth
-                                    className="py-4 border-dashed border-subtle hover:border-lime-500/50 hover:bg-lime-500/5 transition-all text-sm font-semibold"
+                                    className="py-4 border-dashed border-subtle hover:border-accent/50 hover:bg-accent/5 transition-all text-sm font-semibold"
                                     onClick={() => setShowPicker(true)}
                                 >
                                     + Add New Exercise Entry
@@ -900,7 +900,7 @@ export default function WorkoutsManagement() {
                                         <div className="relative w-full max-w-xl">
                                             <button
                                                 onClick={() => setShowPicker(false)}
-                                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
                                             >
                                                 Close
                                             </button>
@@ -951,14 +951,14 @@ export default function WorkoutsManagement() {
             {showSaveRoutineModal && (
                 <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-150">
-                        <h3 className="font-display text-lg font-bold text-lime-400 mb-4">Save as Routine</h3>
+                        <h3 className="font-display text-lg font-bold text-accent mb-4">Save as Routine</h3>
                         <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name</label>
                         <input
                             type="text"
                             value={routineName}
                             onChange={(e) => setRoutineName(e.target.value)}
                             placeholder="e.g. Push Day"
-                            className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-lime-400 focus:outline-none transition-all mb-4"
+                            className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all mb-4"
                             autoFocus
                         />
                         <div className="flex gap-3 justify-end">

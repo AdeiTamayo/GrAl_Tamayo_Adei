@@ -207,7 +207,7 @@ export default function PersonalRecords() {
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Personal Records </h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Personal Records </h1>
             </div>
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
 
@@ -222,7 +222,7 @@ export default function PersonalRecords() {
                             <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Log a PR</h3>
                             <button
                                 onClick={() => setShowAddForm(!showAddForm)}
-                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all focus:outline-none ${showAddForm ? 'bg-elevated text-muted hover:bg-hover' : 'bg-lime-400 text-black hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98]'}`}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all focus:outline-none ${showAddForm ? 'bg-elevated text-muted hover:bg-hover' : 'bg-accent text-black hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98]'}`}
                             >
                                 {showAddForm ? "Cancel" : "Add PR"}
                             </button>
@@ -242,7 +242,7 @@ export default function PersonalRecords() {
                                         <div className="relative w-full max-w-xl">
                                             <button
                                                 onClick={() => setShowPicker(false)}
-                                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
                                             >
                                                 Close
                                             </button>
@@ -264,7 +264,7 @@ export default function PersonalRecords() {
                                         value={newWeight}
                                         onChange={(val) => setNewWeight(val === "" ? "" : Number(val))}
                                         className="w-full"
-                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                         step={0.1}
                                         min={0}
                                         max={999}
@@ -274,7 +274,7 @@ export default function PersonalRecords() {
                                         value={newReps}
                                         onChange={(val) => setNewReps(val === "" ? "" : Number(val))}
                                         className="w-full"
-                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                         step={1}
                                         min={0}
                                         max={999}
@@ -286,9 +286,9 @@ export default function PersonalRecords() {
                                     placeholder="Note (optional)"
                                     value={newNote}
                                     onChange={e => setNewNote(e.target.value)}
-                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                 />
-                                <button type="submit" disabled={isCreating || !formExerciseId} className="w-full bg-lime-400 text-black font-bold py-3 mt-2 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button type="submit" disabled={isCreating || !formExerciseId} className="w-full bg-accent text-black font-bold py-3 mt-2 rounded-lg hover:bg-accent-hover transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
                                     {isCreating ? "Adding..." : "Log PR"}
                                 </button>
                             </form>
@@ -316,14 +316,14 @@ export default function PersonalRecords() {
                                         {prSummary.slice((prPage - 1) * PRS_PER_PAGE, prPage * PRS_PER_PAGE).map(pr => (
                                             <li
                                                 key={pr.id}
-                                                className={`bg-surface/40 border border-subtle/80 rounded-lg p-4 hover:border-lime-400/50 hover:bg-surface transition-all ${selectedExerciseId === pr.exercise_id ? 'border-lime-400/50 bg-surface shadow-md ring-1 ring-lime-400/20' : ''}`}
+                                                className={`bg-surface/40 border border-subtle/80 rounded-lg p-4 hover:border-accent/50 hover:bg-surface transition-all ${selectedExerciseId === pr.exercise_id ? 'border-accent/50 bg-surface shadow-md ring-1 ring-accent/20' : ''}`}
                                             >
                                                 <div
                                                     className="flex justify-between items-center cursor-pointer"
                                                     onClick={() => { setPrPage(1); fetchPrHistory(pr.exercise_id, pr.exercise_name); }}
                                                 >
                                                     <div>
-                                                        <strong className="text-lg font-bold text-lime-400 capitalize">{pr.exercise_name}</strong>
+                                                        <strong className="text-lg font-bold text-accent capitalize">{pr.exercise_name}</strong>
                                                         <div className="text-sm text-dim font-medium mt-1">{pr.date?.substring(0, 10)}</div>
                                                     </div>
                                                     <div className="text-right">
@@ -339,7 +339,7 @@ export default function PersonalRecords() {
                                                         setFormExerciseName(pr.exercise_name);
                                                         setShowAddForm(true);
                                                     }}
-                                                    className="mt-2 text-xs font-semibold text-lime-400 bg-lime-400/10 border border-lime-400/20 rounded-lg px-3 py-1 hover:bg-lime-400/20 transition-colors"
+                                                    className="mt-2 text-xs font-semibold text-accent bg-accent/10 border border-accent/20 rounded-lg px-3 py-1 hover:bg-accent/20 transition-colors"
                                                 >
                                                     + Add PR
                                                 </button>
@@ -377,7 +377,7 @@ export default function PersonalRecords() {
                 {selectedExerciseName && (
                     <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 lg:p-8 shadow-xl">
                         <div className="flex justify-between items-start mb-6">
-                            <h2 className="font-display text-2xl font-bold text-lime-400 tracking-wide uppercase">{selectedExerciseName} Progress</h2>
+                            <h2 className="font-display text-2xl font-bold text-accent tracking-wide uppercase">{selectedExerciseName} Progress</h2>
                             <button onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} className="px-4 py-2 bg-surface hover:bg-elevated text-muted rounded-lg font-bold text-sm transition-colors border border-subtle">Close</button>
                         </div>
 
@@ -404,14 +404,14 @@ export default function PersonalRecords() {
                                         />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px', fontSize: '14px' }}
-                                            itemStyle={{ color: '#a3e635' }}
+                                            itemStyle={{ color: 'var(--accent)' }}
                                         />
                                         <Line
                                             type="monotone"
                                             dataKey="weight"
-                                            stroke="#a3e635"
+                                            stroke="var(--accent)"
                                             strokeWidth={3}
-                                            dot={{ fill: '#a3e635', r: 4, strokeWidth: 2, stroke: '#000' }}
+                                            dot={{ fill: 'var(--accent)', r: 4, strokeWidth: 2, stroke: '#000' }}
                                             activeDot={{ r: 6, strokeWidth: 0 }}
                                         />
                                     </LineChart>
@@ -422,7 +422,7 @@ export default function PersonalRecords() {
                         </div>
 
                         <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-6 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full"></span>
+                            <span className="w-1.5 h-1.5 bg-accent rounded-full"></span>
                             History Timeline
                         </h3>
 
@@ -434,7 +434,7 @@ export default function PersonalRecords() {
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-sm font-bold text-muted uppercase tracking-wider">{history.date?.substring(0, 10)}</span>
                                                 {history.id === currentMaxRecordId && (
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest bg-lime-400/10 text-lime-400 border border-lime-400/20 px-2 py-0.5 rounded-full">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded-full">
                                                         All-Time Best
                                                     </span>
                                                 )}
@@ -476,7 +476,7 @@ export default function PersonalRecords() {
                     <div className="relative w-full max-w-sm">
                         <button
                             onClick={() => setEditRecord(null)}
-                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
                         >
                             Close
                         </button>
@@ -488,7 +488,7 @@ export default function PersonalRecords() {
                                 value={editRecord.weight}
                                 onChange={(val) => setEditRecord({ ...editRecord, weight: val === "" ? "" : Number(val) })}
                                 className="w-full"
-                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                 step={0.1} min={0} max={999}
                             />
                             <TransparentNumericInput
@@ -496,7 +496,7 @@ export default function PersonalRecords() {
                                 value={editRecord.repetitions}
                                 onChange={(val) => setEditRecord({ ...editRecord, repetitions: val === "" ? "" : Number(val) })}
                                 className="w-full"
-                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                 step={1} min={0} max={999}
                             />
                             <DatePicker value={editRecord.date} onChange={(date) => setEditRecord({ ...editRecord, date })} placeholder="Select date" />
@@ -505,12 +505,12 @@ export default function PersonalRecords() {
                                 placeholder="Note (optional)"
                                 value={editRecord.note}
                                 onChange={e => setEditRecord({ ...editRecord, note: e.target.value })}
-                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                             />
                             <div className="space-y-3 pt-2">
                                 <button
                                     onClick={updatePR}
-                                    className="w-full bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all"
+                                    className="w-full bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover transition-all"
                                 >
                                     Save Changes
                                 </button>

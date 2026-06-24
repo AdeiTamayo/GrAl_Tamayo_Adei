@@ -21,10 +21,10 @@ export default function ActiveWorkoutBanner() {
             <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center gap-3 sm:gap-4 flex-wrap">
                 <div className="flex items-center gap-2 shrink-0">
                     <span className="relative flex h-2.5 w-2.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-lime-400" />
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent" />
                     </span>
-                    <span className="text-lime-400 font-bold text-xs uppercase tracking-wider hidden sm:inline">
+                    <span className="text-accent font-bold text-xs uppercase tracking-wider hidden sm:inline">
                         Workout
                     </span>
                 </div>

@@ -150,7 +150,7 @@ export default function UploadVideo() {
         <>
             <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Video Analysis</h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Video Analysis</h1>
             </div>
 
             <div className="max-w-xl mx-auto bg-card border border-subtle rounded-xl p-6 shadow-xl space-y-6">
@@ -161,18 +161,19 @@ export default function UploadVideo() {
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     onClick={() => !isProcessing && fileInputRef.current?.click()}
+                    style={{ boxShadow: isDragging ? '0 0 20px rgba(var(--accent-rgb), 0.15)' : undefined }}
                     className={`
                         border-2 border-dashed rounded-xl py-16 px-6 text-center transition-all duration-200 select-none
                         ${isDragging
-                            ? 'border-lime-400 bg-surface/50 text-lime-400 shadow-[0_0_20px_rgba(163,230,53,0.15)]'
-                            : 'border-subtle bg-surface/40 text-muted hover:border-lime-400/50 hover:bg-surface/60'
+                            ? 'border-accent bg-surface/50 text-accent'
+                            : 'border-subtle bg-surface/40 text-muted hover:border-accent/50 hover:bg-surface/60'
                         }
                         ${isProcessing ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}
                     `}
                 >
                     {file ? (
                         <div className="space-y-3">
-                            <div className="text-lime-400 text-4xl mb-2">✓</div>
+                            <div className="text-accent text-4xl mb-2">✓</div>
                             <p className="font-bold text-heading text-sm truncate max-w-full px-2">
                                 {file.name}
                             </p>
@@ -235,7 +236,7 @@ export default function UploadVideo() {
 
                 {progress && !error && (
                     <div className="mt-6 p-4 bg-surface/50 border border-subtle rounded-lg">
-                        <p className="text-sm text-lime-400 font-bold tracking-wide font-mono leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
+                        <p className="text-sm text-accent font-bold tracking-wide font-mono leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
                             {progress}
                         </p>
                     </div>

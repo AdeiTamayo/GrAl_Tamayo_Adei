@@ -21,6 +21,9 @@
     --border-hover: #3f3f46;
     --scrollbar-track: #09090b;
     --scrollbar-thumb: #27272a;
+    --accent: #a3e635;
+    --accent-rgb: 163, 230, 53;
+    --accent-hover: #bef264;
 }
 
 .light {
@@ -42,6 +45,9 @@
     --border-hover: #d4d4d8;
     --scrollbar-track: #f4f4f5;
     --scrollbar-thumb: #d4d4d8;
+    --accent: #65a30d;
+    --accent-rgb: 101, 163, 13;
+    --accent-hover: #4d7c0f;
 }
 
 @layer base {
@@ -109,4 +115,29 @@
     .placeholder\:text-dim::placeholder { color: var(--text-dim); }
     .text-heading { color: var(--text-heading); }
     .hover\:border-hover:hover { border-color: var(--border-hover); }
+
+    .text-accent { color: var(--accent); }
+    .text-accent\/80 { color: rgba(var(--accent-rgb), 0.8); }
+    .border-accent { border-color: rgba(var(--accent-rgb), 1); }
+    .border-accent\/30 { border-color: rgba(var(--accent-rgb), 0.3); }
+    .border-accent\/40 { border-color: rgba(var(--accent-rgb), 0.4); }
+    .border-accent\/50 { border-color: rgba(var(--accent-rgb), 0.5); }
+    .border-accent\/80 { border-color: rgba(var(--accent-rgb), 0.8); }
+    .bg-accent { background-color: var(--accent); }
+    .bg-accent\/10 { background-color: rgba(var(--accent-rgb), 0.1); }
+    .bg-accent\/20 { background-color: rgba(var(--accent-rgb), 0.2); }
+    .bg-accent-hover { background-color: var(--accent-hover); }
+    .hover\:text-accent:hover { color: var(--accent); }
+    .hover\:border-accent:hover { border-color: rgba(var(--accent-rgb), 1); }
+    .hover\:border-accent\/40:hover { border-color: rgba(var(--accent-rgb), 0.4); }
+    .hover\:border-accent\/50:hover { border-color: rgba(var(--accent-rgb), 0.5); }
+    .hover\:bg-accent:hover { background-color: var(--accent); }
+    .hover\:bg-accent-hover:hover { background-color: var(--accent-hover); }
+    .hover\:bg-accent\/20:hover { background-color: rgba(var(--accent-rgb), 0.2); }
+    .hover\:bg-accent\/5:hover { background-color: rgba(var(--accent-rgb), 0.05); }
+    .hover\:text-accent-hover:hover { color: var(--accent-hover); }
+    .focus\:border-accent:focus { border-color: var(--accent); }
+    .shadow-accent\/5 { --tw-shadow-color: rgba(var(--accent-rgb), 0.05); }
+    .shadow-accent\/20 { --tw-shadow-color: rgba(var(--accent-rgb), 0.2); }
+    .hover\:shadow-accent\/5:hover { --tw-shadow-color: rgba(var(--accent-rgb), 0.05); }
 }

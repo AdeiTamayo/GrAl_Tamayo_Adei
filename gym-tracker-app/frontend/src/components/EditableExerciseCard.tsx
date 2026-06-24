@@ -97,7 +97,7 @@ export default function EditableExerciseCard({
                             const diff = goalWeight - bestWeight;
                             const achieved = diff <= 0;
                             return (
-                                <span className={`font-semibold text-center ${achieved ? 'text-lime-400' : 'text-amber-400'}`}>
+                                <span className={`font-semibold text-center ${achieved ? 'text-accent' : 'text-amber-400'}`}>
                                     {achieved ? '✓' : `${diff.toFixed(1)} kg left`}
                                 </span>
                             );
@@ -186,7 +186,7 @@ export default function EditableExerciseCard({
                                                         const diff = goalWeight - set.weight;
                                                         const achieved = diff <= 0;
                                                         return (
-                                                            <span className={`text-xs font-mono font-semibold ${achieved ? 'text-center text-lime-400' : 'text-amber-400'}`}>
+                                                            <span className={`text-xs font-mono font-semibold ${achieved ? 'text-center text-accent' : 'text-amber-400'}`}>
                                                                 {achieved ? '✓' : `-${diff.toFixed(1)} kg`}
                                                             </span>
                                                         );
@@ -209,7 +209,7 @@ export default function EditableExerciseCard({
                                                         next.delete(set.id);
                                                         setExpandedNotes(next);
                                                     }}
-                                                    className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-lime-500/10 border-lime-500/30 text-lime-400"
+                                                    className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-accent/10 border-accent/30 text-accent"
                                                     title="Close note"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -225,7 +225,7 @@ export default function EditableExerciseCard({
                                                         next.add(set.id);
                                                         setExpandedNotes(next);
                                                     }}
-                                                    className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-transparent border-subtle text-dim hover:text-lime-400 hover:border-lime-400/40"
+                                                    className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-transparent border-subtle text-dim hover:text-accent hover:border-accent/40"
                                                     title="Show note"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -241,7 +241,7 @@ export default function EditableExerciseCard({
                                                         next.add(set.id);
                                                         setExpandedNotes(next);
                                                     }}
-                                                    className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-transparent border-subtle text-dim hover:text-lime-400 hover:border-lime-400/40"
+                                                    className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-transparent border-subtle text-dim hover:text-accent hover:border-accent/40"
                                                     title="Add note"
                                                 >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -266,7 +266,7 @@ export default function EditableExerciseCard({
                                                 onChange={e => onUpdateSet(set.id, 'note', e.target.value)}
                                                 onBlur={() => onBlurSet(set.id)}
                                                 placeholder="Add details..."
-                                                className="w-full bg-card border border-subtle focus:border-lime-400/80 rounded-xl px-3 py-2 text-xs font-mono text-heading focus:outline-none transition-all resize-y"
+                                                className="w-full bg-card border border-subtle focus:border-accent/80 rounded-xl px-3 py-2 text-xs font-mono text-heading focus:outline-none transition-all resize-y"
                                             />
                                             <div className="flex gap-2 justify-end">
                                                 <button
@@ -308,7 +308,7 @@ export default function EditableExerciseCard({
                     <button
                         type="button"
                         onClick={() => { setIsAddingSet(true); setAddError(""); }}
-                        className="mt-3 mx-auto flex items-center justify-center w-10 h-10 rounded-full bg-surface border border-dashed border-subtle hover:border-lime-400 hover:bg-surface/60 text-muted hover:text-lime-400 transition-all"
+                        className="mt-3 mx-auto flex items-center justify-center w-10 h-10 rounded-full bg-surface border border-dashed border-subtle hover:border-accent hover:bg-surface/60 text-muted hover:text-accent transition-all"
                         title="Add Set"
                     >
                         <span className="text-lg font-bold leading-none">+</span>
@@ -335,7 +335,7 @@ export default function EditableExerciseCard({
                                     <button
                                         type="button"
                                         onClick={() => setShowNoteForm(!showNoteForm)}
-                                        className={`w-full h-[32px] flex items-center justify-center rounded-lg border transition-all ${showNoteForm ? 'bg-lime-500/10 border-lime-500/30 text-lime-400' : 'bg-transparent border border-subtle text-dim hover:text-lime-400 hover:border-lime-400/40'}`}
+                                        className={`w-full h-[32px] flex items-center justify-center rounded-lg border transition-all ${showNoteForm ? 'bg-accent/10 border-accent/30 text-accent' : 'bg-transparent border border-subtle text-dim hover:text-accent hover:border-accent/40'}`}
                                         title={showNoteForm ? 'Hide note' : 'Add note'}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -355,7 +355,7 @@ export default function EditableExerciseCard({
                                     value={newNote}
                                     onChange={e => setNewNote(e.target.value)}
                                     placeholder="Specify variables (e.g., dropset, partial reps, warm-up pacing...)"
-                                    className="w-full bg-card border border-subtle rounded-xl px-3 py-2 text-xs text-heading font-mono focus:outline-none focus:border-lime-400 transition-colors resize-y shadow-inner"
+                                    className="w-full bg-card border border-subtle rounded-xl px-3 py-2 text-xs text-heading font-mono focus:outline-none focus:border-accent transition-colors resize-y shadow-inner"
                                 />
                             </div>
                         )}
@@ -369,7 +369,7 @@ export default function EditableExerciseCard({
                             <button type="button" onClick={() => { setIsAddingSet(false); setShowNoteForm(false); }} className="w-full md:w-auto text-center bg-rose-950/20 md:bg-transparent hover:bg-rose-900/20 md:hover:bg-transparent border border-rose-900/30 md:border-none rounded-lg py-1.5 md:py-0 text-rose-500/70 hover:text-rose-400 px-2 text-xs md:text-sm transition-all" title="Cancel">
                                 <span className="text-sm leading-none">✕</span>
                             </button>
-                            <button type="submit" className="w-9 h-9 flex items-center justify-center rounded-full bg-lime-500/20 border border-lime-500/40 hover:bg-lime-500/30 text-lime-400 hover:text-lime-300 transition-all" title="Add Set">
+                            <button type="submit" className="w-9 h-9 flex items-center justify-center rounded-full bg-accent/20 border border-accent/40 hover:bg-accent/30 text-accent hover:text-accent-hover transition-all" title="Add Set">
                                 <span className="text-lg font-bold leading-none">+</span>
                             </button>
                         </div>

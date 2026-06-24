@@ -13,7 +13,7 @@ export default function ConfirmModal({ message, onConfirm, onCancel, confirmLabe
             <div className="relative w-full max-w-sm">
                 <button
                     onClick={onCancel}
-                    className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                    className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
                 >
                     Close
                 </button>
@@ -26,7 +26,7 @@ export default function ConfirmModal({ message, onConfirm, onCancel, confirmLabe
                         className={`w-full font-bold py-3 rounded-lg transition-all ${
                             variant === 'danger'
                                 ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white'
-                                : 'bg-lime-400 text-black hover:bg-lime-300'
+                                : 'bg-accent text-black hover:bg-accent-hover'
                         }`}
                     >
                         {confirmLabel}

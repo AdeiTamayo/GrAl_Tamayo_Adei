@@ -90,7 +90,7 @@ export default function Login() {
                         value={email}
                         required
                         onChange={e => setEmail(e.target.value)}
-                        className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors placeholder:text-dim ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-lime-400"
+                        className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors placeholder:text-dim ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-accent"
                             }`}
                         placeholder="your@email.com"
                     />
@@ -103,7 +103,7 @@ export default function Login() {
                         value={password}
                         required
                         onChange={e => setPassword(e.target.value)}
-                        className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors placeholder:text-dim"
+                        className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors placeholder:text-dim"
                         placeholder="••••••••"
                     />
                 </div>
@@ -123,7 +123,7 @@ export default function Login() {
                         <button
                             type="button"
                             onClick={() => navigate("/register")}
-                            className="text-lime-400 hover:text-lime-300 font-bold transition-colors"
+                            className="text-accent hover:text-accent-hover font-bold transition-colors"
                         >
                             Register
                         </button>

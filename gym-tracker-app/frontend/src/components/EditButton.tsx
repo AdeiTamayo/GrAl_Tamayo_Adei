@@ -8,7 +8,7 @@ export default function EditButton({ onClick, className = "" }: EditButtonProps)
         <button
             type="button"
             onClick={onClick}
-            className={`p-2 bg-lime-500/10 hover:bg-lime-500 text-lime-500 hover:text-black rounded-lg border border-lime-500/20 transition-colors shrink-0 ${className}`}
+            className={`p-2 bg-accent/10 hover:bg-accent text-accent hover:text-black rounded-lg border border-accent/20 transition-colors shrink-0 ${className}`}
             title="Edit"
         >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">

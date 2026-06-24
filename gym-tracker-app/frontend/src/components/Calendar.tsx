@@ -124,9 +124,9 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                                 relative rounded-lg transition-all flex items-center justify-center
                                 ${compact ? 'aspect-[4/3] text-xs' : 'aspect-square text-sm font-semibold'}
                                 ${isSelected
-                                    ? 'bg-lime-400 text-black font-bold'
+                                    ? 'bg-accent text-black font-bold'
                                     : isToday
-                                        ? 'bg-lime-400/10 text-lime-400 border border-lime-400/30'
+                                        ? 'bg-accent/10 text-accent border border-accent/30'
                                         : 'text-muted hover:bg-elevated hover:text-body'
                                 }
                             `}
@@ -136,7 +136,7 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                                 <span className={`absolute flex gap-[3px] items-center ${compact ? 'bottom-0.5' : 'bottom-1'}`}>
                                     {event && (
                                         <span className={`rounded-full ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'} ${
-                                            event.status === 'completed' ? 'bg-lime-400' :
+                                            event.status === 'completed' ? 'bg-accent' :
                                             event.status === 'rest' ? 'bg-blue-400' :
                                             event.status === 'missed' ? 'bg-rose-500' :
                                             'bg-elevated'

@@ -175,7 +175,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                             placeholder="Filter by name..."
                             value={filters.search}
                             onChange={e => setFilters({ ...filters, search: e.target.value })}
-                            className="w-full bg-surface border border-subtle rounded-xl px-4 py-2.5 text-sm text-body focus:outline-none focus:border-lime-400 transition-colors"
+                            className="w-full bg-surface border border-subtle rounded-xl px-4 py-2.5 text-sm text-body focus:outline-none focus:border-accent transition-colors"
                         />
                         <div className="grid grid-cols-3 gap-2">
                             <Select
@@ -226,7 +226,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                             onClick={() => onSelect(ex)}
                                             className="w-full text-left p-3 rounded-xl hover:bg-surface group transition-all border border-transparent hover:border-subtle"
                                         >
-                                            <div className="font-bold text-heading group-hover:text-lime-400 transition-colors uppercase tracking-tight text-sm">{ex.name}</div>
+                                            <div className="font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-tight text-sm">{ex.name}</div>
                                             <div className="flex gap-2 mt-1 blur-[0.2px] group-hover:blur-0 transition-all">
                                                 <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.target}</span>
                                                 <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.equipment}</span>
@@ -268,7 +268,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                             value={newName}
                             onChange={e => setNewName(e.target.value)}
                             required
-                            className="w-full bg-surface border border-subtle rounded-xl px-3 py-2 text-xs text-body focus:outline-none focus:border-lime-400 transition-colors"
+                            className="w-full bg-surface border border-subtle rounded-xl px-3 py-2 text-xs text-body focus:outline-none focus:border-accent transition-colors"
                         />
                     </div>
                     <div className="grid grid-cols-2 gap-3">

@@ -411,7 +411,7 @@ export default function Exercises() {
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Exercises</h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Exercises</h1>
                 {viewMode === 'list' && (
                     <Button onClick={() => setViewMode('create')} variant="primary">+ Create Exercise</Button>
                 )}
@@ -423,7 +423,7 @@ export default function Exercises() {
                 {error && viewMode !== 'create' && viewMode !== 'edit' && (
                     <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">{error}</p>
                 )}
-                {success && <p className="text-sm font-semibold text-lime-400 tracking-wide animate-in fade-in duration-300">{success}</p>}
+                {success && <p className="text-sm font-semibold text-accent tracking-wide animate-in fade-in duration-300">{success}</p>}
             </div>
 
             {viewMode !== 'create' && (
@@ -434,7 +434,7 @@ export default function Exercises() {
                         <div className="flex gap-4 w-full flex-col sm:flex-row">
                             <input
                                 type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
-                                className="w-full sm:w-1/5 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                className="w-full sm:w-1/5 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                             />
                             <Select
                                 value={filters.muscles}
@@ -564,7 +564,7 @@ export default function Exercises() {
                                         <li
                                             key={ex.id}
                                             onClick={() => fetchExerciseById(ex.id)}
-                                            className="bg-surface/40 border cursor-pointer border-subtle/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-lime-400/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-lime-400/5"
+                                            className="bg-surface/40 border cursor-pointer border-subtle/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-accent/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/5"
                                         >
                                             <div>
                                                 <h2 className="font-display text-xl font-bold text-body mb-2 truncate">{ex.name}</h2>
@@ -692,7 +692,7 @@ function ExerciseForm({
                     required
                     value={formName}
                     onChange={e => setFormName(e.target.value)}
-                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                 />
             </div>
 
@@ -704,7 +704,7 @@ function ExerciseForm({
                         name="bodyPart"
                         value={formBodyPart}
                         onChange={e => setFormBodyPart(e.target.value)}
-                        className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                     />
                 </div>
 
@@ -728,13 +728,13 @@ function ExerciseForm({
                                     type="text"
                                     name="new_target_muscle"
                                     placeholder="Create new muscle..."
-                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors pr-8"
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
                                     autoFocus
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowNewMuscle(false)}
-                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-lime-400 transition-colors"
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-accent transition-colors"
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
@@ -743,7 +743,7 @@ function ExerciseForm({
                             <button
                                 type="button"
                                 onClick={() => setShowNewMuscle(true)}
-                                className="flex items-center gap-1.5 text-xs text-dim hover:text-lime-400 transition-colors"
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-accent transition-colors"
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
                                 Create new muscle
@@ -772,13 +772,13 @@ function ExerciseForm({
                                     type="text"
                                     name="new_equipment"
                                     placeholder="Create new equipment..."
-                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors pr-8"
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
                                     autoFocus
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowNewEquipment(false)}
-                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-lime-400 transition-colors"
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-accent transition-colors"
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
@@ -787,7 +787,7 @@ function ExerciseForm({
                             <button
                                 type="button"
                                 onClick={() => setShowNewEquipment(true)}
-                                className="flex items-center gap-1.5 text-xs text-dim hover:text-lime-400 transition-colors"
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-accent transition-colors"
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
                                 Create new equipment
@@ -816,13 +816,13 @@ function ExerciseForm({
                                     type="text"
                                     name="new_category"
                                     placeholder="Create new category..."
-                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors pr-8"
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
                                     autoFocus
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowNewCategory(false)}
-                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-lime-400 transition-colors"
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-accent transition-colors"
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
@@ -831,7 +831,7 @@ function ExerciseForm({
                             <button
                                 type="button"
                                 onClick={() => setShowNewCategory(true)}
-                                className="flex items-center gap-1.5 text-xs text-dim hover:text-lime-400 transition-colors"
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-accent transition-colors"
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
                                 Create new category
@@ -879,7 +879,7 @@ function ExerciseForm({
                                 <input
                                     type="text"
                                     placeholder="Create new secondary muscle..."
-                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors pr-8"
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             e.preventDefault();
@@ -895,7 +895,7 @@ function ExerciseForm({
                                 <button
                                     type="button"
                                     onClick={() => setShowNewSecondary(false)}
-                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-lime-400 transition-colors"
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-accent transition-colors"
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
@@ -904,7 +904,7 @@ function ExerciseForm({
                             <button
                                 type="button"
                                 onClick={() => setShowNewSecondary(true)}
-                                className="flex items-center gap-1.5 text-xs text-dim hover:text-lime-400 transition-colors"
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-accent transition-colors"
                             >
                                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
                                 Create new secondary muscle
@@ -929,7 +929,7 @@ function ExerciseForm({
                     name="description"
                     defaultValue={ex?.description || ''}
                     rows={3}
-                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                 />
             </div>
 
@@ -939,7 +939,7 @@ function ExerciseForm({
                     name="instructions"
                     defaultValue={ex?.instructions?.join('\n') || ''}
                     rows={4}
-                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                 />
             </div>
 

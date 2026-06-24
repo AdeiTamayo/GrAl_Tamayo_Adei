@@ -16,6 +16,7 @@ import WorkoutCalendar from './pages/WorkoutCalendar';
 import CurrentWorkout from './pages/CurrentWorkout';
 import CompareWorkouts from './pages/CompareWorkouts';
 import ExerciseHistory from './pages/ExerciseHistory';
+import ThemeTest from './pages/ThemeTest';
 import ActiveWorkoutBanner from './components/ActiveWorkoutBanner';
 import { useWorkout } from './components/WorkoutContext';
 
@@ -43,6 +44,7 @@ function AppContent() {
           <Route path="/routines" element={<Routine />} />
           <Route path="/Weight_history" element={<WeightHistory />} />
           <Route path="/workout-calendar" element={<WorkoutCalendar />} />
+          <Route path="/theme-test" element={<ThemeTest />} />
         </Routes>
       </div>
       <ActiveWorkoutBanner />

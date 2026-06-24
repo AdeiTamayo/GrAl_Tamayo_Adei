@@ -199,7 +199,7 @@ export default function WeightHistory() {
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Weight History</h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Weight History</h1>
             </div>
 
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
@@ -235,16 +235,16 @@ export default function WeightHistory() {
                                         borderRadius: '8px',
                                         color: '#f4f4f5'
                                     }}
-                                    itemStyle={{ color: '#a3e635' }}
+                                    itemStyle={{ color: 'var(--accent)' }}
                                     labelClassName="text-dim text-xs font-semibold"
                                     formatter={(value) => [`${value} kg`, 'Weight']}
                                 />
                                 <Line
                                     type="monotone"
                                     dataKey="weightNum"
-                                    stroke="#a3e635"
+                                    stroke="var(--accent)"
                                     strokeWidth={3}
-                                    dot={{ fill: '#a3e635', strokeWidth: 2, r: 4 }}
+                                    dot={{ fill: 'var(--accent)', strokeWidth: 2, r: 4 }}
                                     activeDot={{ r: 6, strokeWidth: 0 }}
                                 />
                             </LineChart>
@@ -279,7 +279,7 @@ export default function WeightHistory() {
                         <DatePicker value={date} onChange={setDate} />
 
                         <div className="flex gap-3 mt-2">
-                            <button type="submit" className="flex-1 bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                            <button type="submit" className="flex-1 bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover transition-all hover:scale-[1.02] active:scale-[0.98]">
                                 {editingId ? "Update" : "Add Entry"}
                             </button>
                             {editingId && (
@@ -314,7 +314,7 @@ export default function WeightHistory() {
                             </div>
                             <button
                                 onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}
-                                className="bg-surface border border-subtle rounded px-2 py-1 text-xs text-body hover:border-lime-400 transition-colors"
+                                className="bg-surface border border-subtle rounded px-2 py-1 text-xs text-body hover:border-accent transition-colors"
                                 title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
                             >
                                 {sortOrder === 'asc' ? '\u2191' : '\u2193'}
@@ -341,7 +341,7 @@ export default function WeightHistory() {
                                                 const diff = Number(entry.weight) - prev;
                                                 const sign = diff > 0 ? '+' : '';
                                                 return (
-                                                    <span className={`ml-2 text-sm font-semibold ${diff > 0 ? 'text-green-400' : diff < 0 ? 'text-rose-400' : 'text-dim'}`}>
+                                                    <span className={`ml-2 text-sm font-semibold ${diff > 0 ? 'text-accent' : diff < 0 ? 'text-rose-400' : 'text-dim'}`}>
                                                         ({sign}{diff.toFixed(1)} kg)
                                                     </span>
                                                 );
@@ -360,7 +360,7 @@ export default function WeightHistory() {
                                     <button
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                         disabled={currentPage === 1}
-                                        className="w-20 px-3 py-1.5 bg-surface border border-subtle rounded text-sm text-body disabled:opacity-40 hover:border-lime-400 transition-colors"
+                                        className="w-20 px-3 py-1.5 bg-surface border border-subtle rounded text-sm text-body disabled:opacity-40 hover:border-accent transition-colors"
                                     >
                                         Prev
                                     </button>
@@ -370,7 +370,7 @@ export default function WeightHistory() {
                                     <button
                                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                         disabled={currentPage === totalPages}
-                                        className="w-20 px-3 py-1.5 bg-surface border border-subtle rounded text-sm text-body disabled:opacity-40 hover:border-lime-400 transition-colors"
+                                        className="w-20 px-3 py-1.5 bg-surface border border-subtle rounded text-sm text-body disabled:opacity-40 hover:border-accent transition-colors"
                                     >
                                         Next
                                     </button>

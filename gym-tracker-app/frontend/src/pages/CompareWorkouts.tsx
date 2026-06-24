@@ -76,11 +76,11 @@ function WorkoutDropdown({
                         <li
                             key={w.id}
                             onClick={() => { onChange(w.id); setOpen(false); }}
-                            className={`px-4 py-2.5 cursor-pointer transition-colors text-sm flex justify-between items-center ${value === w.id ? "bg-lime-400/10 text-lime-400" : "text-muted hover:bg-surface hover:text-white"}`}
+                            className={`px-4 py-2.5 cursor-pointer transition-colors text-sm flex justify-between items-center ${value === w.id ? "bg-accent/10 text-accent" : "text-muted hover:bg-surface hover:text-white"}`}
                         >
                             <span>{w.date} - {w.name}</span>
                             {value === w.id && (
-                                <svg className="w-4 h-4 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                                 </svg>
                             )}
@@ -214,7 +214,7 @@ export default function CompareWorkouts() {
         <div className="p-6 font-sans bg-body text-body min-h-screen">
             <div className="max-w-6xl mx-auto">
                 <header className="mb-10 text-center">
-                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">
+                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">
                         Workout Comparison
                     </h1>
                     <p className="text-muted mt-2">Select two workouts to see your progress side by side.</p>
@@ -267,7 +267,7 @@ export default function CompareWorkouts() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
                         <div className="bg-card border border-subtle rounded-xl p-5 text-center">
                             <div className="text-xs uppercase tracking-widest text-dim font-bold mb-2">Common Exercises</div>
-                            <div className="text-3xl font-black text-lime-400">{commonExercises.length}</div>
+                            <div className="text-3xl font-black text-accent">{commonExercises.length}</div>
                         </div>
                         <div className="bg-card border border-subtle rounded-xl p-5 text-center">
                             <div className="text-xs uppercase tracking-widest text-dim font-bold mb-2">Total Volume</div>
@@ -278,7 +278,7 @@ export default function CompareWorkouts() {
                                 </div>
                                 <div>
                                     <div className="text-[10px] text-dim uppercase">{workoutB.date}</div>
-                                    <div className="text-sm font-bold font-mono text-lime-400">{summaryStats.totalVolumeB.toFixed(0)}</div>
+                                    <div className="text-sm font-bold font-mono text-accent">{summaryStats.totalVolumeB.toFixed(0)}</div>
                                 </div>
                             </div>
                         </div>
@@ -291,7 +291,7 @@ export default function CompareWorkouts() {
                                 </div>
                                 <div>
                                     <div className="text-[10px] text-dim uppercase">{workoutB.date}</div>
-                                    <div className="text-sm font-bold font-mono text-lime-400">{summaryStats.totalSetsB}</div>
+                                    <div className="text-sm font-bold font-mono text-accent">{summaryStats.totalSetsB}</div>
                                 </div>
                             </div>
                         </div>
@@ -302,7 +302,7 @@ export default function CompareWorkouts() {
                     <div className="space-y-6">
                         {commonExercises.map(ex => (
                             <div key={ex.exId} className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl">
-                                <h3 className="font-display text-lg font-bold text-lime-400 uppercase tracking-wide mb-4">
+                                <h3 className="font-display text-lg font-bold text-accent uppercase tracking-wide mb-4">
                                     {ex.name}
                                 </h3>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Calendar from "./Calendar";
 
 interface DatePickerProps {
@@ -14,6 +14,18 @@ interface DatePickerProps {
 export default function DatePicker({ value, onChange, placeholder = "Select date", buttonClassName = "", open: controlledOpen, onOpenChange, menuAlign = 'left' }: DatePickerProps) {
     const [internalOpen, setInternalOpen] = useState(false);
     const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!open) return;
+        function handleClick(e: MouseEvent) {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, [open]);
 
     const setOpen = (v: boolean) => {
         if (onOpenChange) onOpenChange(v);
@@ -25,7 +37,7 @@ export default function DatePicker({ value, onChange, placeholder = "Select date
         : null;
 
     return (
-        <div className="relative">
+        <div className="relative" ref={containerRef}>
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
@@ -39,16 +51,17 @@ export default function DatePicker({ value, onChange, placeholder = "Select date
             </button>
             {open && (
                 <div className={`absolute ${menuAlign === 'right' ? 'right-0' : 'left-0'} mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150 min-w-[280px]`}>
-                    <div className="relative border border-lime-400/30 rounded-xl bg-card shadow-xl backdrop-blur-md">
+                    <div className="relative border border-accent/50 rounded-xl bg-surface shadow-xl">
                         <button
                             onClick={() => setOpen(false)}
-                            className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                            className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-surface border border-accent/50 rounded-full shadow-sm"
                         >
                             Close
                         </button>
                         <Calendar
                             selectedDate={value || undefined}
                             onSelect={(d) => { onChange(d); setOpen(false); }}
+                            className="!border-0 !shadow-none bg-surface"
                         />
                         {value && (
                             <button

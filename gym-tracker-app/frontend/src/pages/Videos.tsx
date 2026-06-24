@@ -70,7 +70,7 @@ export default function UserVideos() {
             {/* TITLE SECTION */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-subtle pb-5">
                 <div>
-                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Your Videos</h1>
+                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Your Videos</h1>
                 </div>
 
                 {/* FILTER CONTROLS BAR */}
@@ -148,7 +148,7 @@ export default function UserVideos() {
                                 {/* CARD DETAILS FOOTER */}
                                 <div className="pt-2 border-t border-subtle flex items-center justify-between gap-2">
                                     <div className="truncate">
-                                        <strong className="text-xs font-bold text-lime-400 uppercase tracking-wider block truncate">
+                                        <strong className="text-xs font-bold text-accent uppercase tracking-wider block truncate">
                                             {video.process_type}
                                         </strong>
                                         <span className="text-[10px] tracking-tight text-dim font-mono mt-0.5 block">
@@ -208,7 +208,7 @@ function DateFilterButton({ value, onChange }: { value: string; onChange: (val: 
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="w-full bg-surface border border-subtle rounded-lg px-4 py-3 text-left flex items-center justify-between gap-2 text-heading hover:border-hover transition-colors focus:border-lime-400 focus:outline-none"
+                className="w-full bg-surface border border-subtle rounded-lg px-4 py-3 text-left flex items-center justify-between gap-2 text-heading hover:border-hover transition-colors focus:border-accent focus:outline-none"
             >
                 <span>{value || "Any date"}</span>
                 <svg className={`w-3 h-3 text-dim transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,11 +224,14 @@ function DateFilterButton({ value, onChange }: { value: string; onChange: (val: 
                 </button>
             )}
             {open && (
-                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <Calendar
-                        selectedDate={value || undefined}
-                        onSelect={(date) => { onChange(date); setOpen(false); }}
-                    />
+                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150 min-w-[280px]">
+                    <div className="relative border border-accent/50 rounded-xl bg-surface shadow-xl">
+                        <Calendar
+                            selectedDate={value || undefined}
+                            onSelect={(date) => { onChange(date); setOpen(false); }}
+                            className="!border-0 !shadow-none bg-surface"
+                        />
+                    </div>
                 </div>
             )}
         </div>

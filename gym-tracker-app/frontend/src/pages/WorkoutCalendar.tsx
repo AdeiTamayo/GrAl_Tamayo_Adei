@@ -103,7 +103,7 @@ export default function WorkoutCalendar() {
 
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
-            <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Workout Calendar</h1>
+            <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Workout Calendar</h1>
             <p className="text-dim text-sm font-medium -mt-6">Click a day to see workouts and goal deadlines.</p>
 
             <div className="flex gap-6 items-start flex-col lg:flex-row">
@@ -131,19 +131,19 @@ export default function WorkoutCalendar() {
                         <>
                             {selectedWorkouts.length > 0 && (
                                 <>
-                                    <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3 text-lime-400">Logged Workouts</h3>
+                                    <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3 text-accent">Logged Workouts</h3>
                                     <ul className="space-y-3 mb-6">
                                         {selectedWorkouts.map(w => (
                                             <li key={w.id}>
                                                 <button
                                                     onClick={() => navigate('/workouts', { state: { preselectedWorkoutId: w.id } })}
-                                                    className="w-full text-left bg-surface/40 border border-subtle/80 rounded-lg p-4 flex items-center justify-between hover:border-lime-400/50 hover:bg-surface/60 transition-all group"
+                                                    className="w-full text-left bg-surface/40 border border-subtle/80 rounded-lg p-4 flex items-center justify-between hover:border-accent/50 hover:bg-surface/60 transition-all group"
                                                 >
                                                     <div>
-                                                        <strong className="text-lg font-bold text-body group-hover:text-lime-400 transition-colors">{w.name || "Untitled Workout"}</strong>
+                                                        <strong className="text-lg font-bold text-body group-hover:text-accent transition-colors">{w.name || "Untitled Workout"}</strong>
                                                         {w.note && <div className="text-sm text-dim font-medium mt-1">{w.note}</div>}
                                                     </div>
-                                                    <svg className="w-5 h-5 text-dim group-hover:text-lime-400 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg className="w-5 h-5 text-dim group-hover:text-accent transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                                                     </svg>
                                                 </button>
@@ -158,7 +158,7 @@ export default function WorkoutCalendar() {
                                     <ul className="space-y-3">
                                         {selectedGoals.map(g => (
                                             <li key={g.id} className="bg-surface/40 border border-subtle/80 rounded-lg p-4">
-                                                <strong className="text-lg font-bold text-lime-400 capitalize">{g.exercise_name}</strong>
+                                                <strong className="text-lg font-bold text-accent capitalize">{g.exercise_name}</strong>
                                                 <div className="text-sm text-body font-medium mt-1">{g.target_weight} kg × {g.target_reps} reps</div>
                                             </li>
                                         ))}
@@ -169,7 +169,7 @@ export default function WorkoutCalendar() {
                     )}
 
                     <div className="mt-6 pt-4 border-t border-subtle text-xs text-dim space-y-1">
-                        <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-lime-400 mr-1.5 align-middle" />Days with a logged workout.</div>
+                        <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-accent mr-1.5 align-middle" />Days with a logged workout.</div>
                         <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-400 mr-1.5 align-middle" />Days with a goal deadline.</div>
                     </div>
                 </div>
