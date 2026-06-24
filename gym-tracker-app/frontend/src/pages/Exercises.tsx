@@ -80,7 +80,7 @@ export default function Exercises() {
     const [success, setSuccess] = useState<string | null>(null);
 
     const [page, setPage] = useState(1);
-    const [totalExercises, setTotalExercises] = useState(0);
+    const [exercisesOpen, setExercisesOpen] = useState(true);
     const pageSize = 20;
 
     const headers = useMemo(() => ({
@@ -121,27 +121,7 @@ export default function Exercises() {
         return filteredExercises.slice(start, start + pageSize);
     }, [filteredExercises, page, pageSize]);
 
-    const totalPages = Math.max(1, Math.ceil(filteredExercises.length / pageSize));
 
-    const paginationButtons = useMemo(() => {
-        if (filteredExercises.length <= pageSize) return null;
-        const startPage = Math.max(1, Math.min(page - 2, totalPages - 4));
-        const endPage = Math.min(startPage + 4, totalPages);
-        const items: React.ReactNode[] = [];
-        for (let p = startPage; p <= endPage; p++) {
-            const isActive = p === page;
-            items.push(
-                <button
-                    key={p}
-                    onClick={function () { setPage(p); }}
-                    className={'px-3 py-1.5 rounded-lg text-xs font-bold transition-colors' + (isActive ? ' bg-lime-400 text-black' : ' bg-elevated text-muted hover:bg-hover')}
-                >
-                    {p}
-                </button>
-            );
-        }
-        return items;
-    }, [page, totalPages, filteredExercises.length, pageSize]);
 
     // Reset to page 1 when filters change
     useEffect(() => {
@@ -454,7 +434,7 @@ export default function Exercises() {
                         <div className="flex gap-4 w-full flex-col sm:flex-row">
                             <input
                                 type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
-                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                className="w-full sm:w-1/5 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                             />
                             <Select
                                 value={filters.muscles}
@@ -464,6 +444,7 @@ export default function Exercises() {
                                     { value: "", label: "All Muscles" },
                                     ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
                                 ]}
+                                className="flex-1"
                             />
                             <Select
                                 value={filters.equipment}
@@ -473,6 +454,7 @@ export default function Exercises() {
                                     { value: "", label: "All Equipment" },
                                     ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
                                 ]}
+                                className="flex-1"
                             />
                             <Select
                                 value={filters.categoryType}
@@ -482,6 +464,7 @@ export default function Exercises() {
                                     { value: "", label: "All Categories" },
                                     ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
                                 ]}
+                                className="flex-1"
                             />
                         </div>
                     )}
@@ -571,50 +554,51 @@ export default function Exercises() {
                     />
                 ) : (
                     <>
-                        <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            {paginatedExercises.length > 0 ? (
-                                paginatedExercises.map(ex => (
-                                    <li
-                                        key={ex.id}
-                                        onClick={() => fetchExerciseById(ex.id)}
-                                        className="bg-surface/40 border cursor-pointer border-subtle/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-lime-400/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-lime-400/5"
-                                    >
-                                        <div>
-                                            <h2 className="font-display text-xl font-bold text-body mb-2 truncate">{ex.name}</h2>
-                                            <div className="text-sm text-muted space-x-2">
-                                                <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.target}</span>
-                                                <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.equipment}</span>
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-xs font-bold text-muted uppercase tracking-wider">{filteredExercises.length} exercises</span>
+                        </div>
+                        {exercisesOpen && (
+                            <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {paginatedExercises.length > 0 ? (
+                                    paginatedExercises.map(ex => (
+                                        <li
+                                            key={ex.id}
+                                            onClick={() => fetchExerciseById(ex.id)}
+                                            className="bg-surface/40 border cursor-pointer border-subtle/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-lime-400/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-lime-400/5"
+                                        >
+                                            <div>
+                                                <h2 className="font-display text-xl font-bold text-body mb-2 truncate">{ex.name}</h2>
+                                                <div className="text-sm text-muted space-x-2">
+                                                    <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.target}</span>
+                                                    <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.equipment}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </li>
-                                ))
-                            ) : (
-                                !loading && <p className="text-muted col-span-2">No exercises found.</p>
-                            )}
-                        </ul>
-
-                        {filteredExercises.length > pageSize && (
-                            <div className="flex items-center justify-between pt-4 border-t border-subtle/60">
-                                <p className="text-xs text-dim font-mono">
-                                    Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filteredExercises.length)} of {filteredExercises.length}
-                                </p>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                                        disabled={page === 1}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-elevated text-muted hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        Previous
-                                    </button>
-                                    {paginationButtons}
-                                    <button
-                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={page === totalPages}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-elevated text-muted hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        Next
-                                    </button>
-                                </div>
+                                        </li>
+                                    ))
+                                ) : (
+                                    !loading && <p className="text-muted col-span-2">No exercises found.</p>
+                                )}
+                            </ul>
+                        )}
+                        {exercisesOpen && filteredExercises.length > pageSize && (
+                            <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                >
+                                    &larr; Prev
+                                </button>
+                                <span className="text-xs text-muted font-medium">
+                                    Page {page} of {Math.max(1, Math.ceil(filteredExercises.length / pageSize))}
+                                </span>
+                                <button
+                                    onClick={() => setPage(p => Math.min(Math.max(1, Math.ceil(filteredExercises.length / pageSize)), p + 1))}
+                                    disabled={page === Math.max(1, Math.ceil(filteredExercises.length / pageSize))}
+                                    className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                >
+                                    Next &rarr;
+                                </button>
                             </div>
                         )}
                     </>

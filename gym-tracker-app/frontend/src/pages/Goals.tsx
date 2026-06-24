@@ -179,26 +179,28 @@ export default function Goals() {
                                     </div>
                                 </div>
                             )}
-                            <TransparentNumericInput
-                                placeholder="Target Weight (kg)"
-                                value={targetWeight}
-                                onChange={(val) => setTargetWeight(val === "" ? "" : Number(val))}
-                                className="w-full"
-                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                                step={0.1}
-                                min={0}
-                                max={999}
-                            />
-                            <TransparentNumericInput
-                                placeholder="Target Reps"
-                                value={targetReps}
-                                onChange={(val) => setTargetReps(val === "" ? "" : Number(val))}
-                                className="w-full"
-                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                                step={1}
-                                min={0}
-                                max={999}
-                            />
+                            <div className="grid grid-cols-2 gap-4">
+                                <TransparentNumericInput
+                                    placeholder="Weight (kg)"
+                                    value={targetWeight}
+                                    onChange={(val) => setTargetWeight(val === "" ? "" : Number(val))}
+                                    className="w-full"
+                                    inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                    step={0.1}
+                                    min={0}
+                                    max={999}
+                                />
+                                <TransparentNumericInput
+                                    placeholder="Reps"
+                                    value={targetReps}
+                                    onChange={(val) => setTargetReps(val === "" ? "" : Number(val))}
+                                    className="w-full"
+                                    inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                    step={1}
+                                    min={0}
+                                    max={999}
+                                />
+                            </div>
                             <DatePicker value={expectedDate} onChange={setExpectedDate} placeholder="Set due date (optional)" />
 
                             <div className="flex gap-3 mt-2">

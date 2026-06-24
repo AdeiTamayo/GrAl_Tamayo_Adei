@@ -61,6 +61,9 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
     const [newDifficulty, setNewDifficulty] = useState('intermediate');
     const [newCategory, setNewCategory] = useState('');
     const [saving, setSaving] = useState(false);
+    const [exercisesOpen, setExercisesOpen] = useState(true);
+    const [exPage, setExPage] = useState(1);
+    const EXERCISES_PER_PAGE = 5;
 
     useEffect(() => {
         loadData();
@@ -98,6 +101,10 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
             return matchesSearch && matchesEquipment && matchesMuscle && matchesCategory;
         });
     }, [allExercises, filters]);
+
+    useEffect(() => {
+        setExPage(1);
+    }, [filteredExercises.length]);
 
     async function handleCreateExercise(e: React.FormEvent) {
         e.preventDefault();
@@ -150,11 +157,11 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                         </button>
                     )}
                 </div>
-                        {error && (
-                <div className="mx-4 mt-2 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm">
-                    {error}
-                </div>
-            )}
+                {error && (
+                    <div className="mx-4 mt-2 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm">
+                        {error}
+                    </div>
+                )}
 
             </div>
 
@@ -209,22 +216,45 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                             <div className="p-8 text-center text-dim animate-pulse">Loading exercises...</div>
                         ) : filteredExercises.length === 0 ? (
                             <div className="p-8 text-center text-dim">No exercises found</div>
-                        ) : (
-                            <div className="space-y-1">
-                                {filteredExercises.map(ex => (
-                                    <button
-                                        key={ex.id}
-                                        onClick={() => onSelect(ex)}
-                                        className="w-full text-left p-3 rounded-xl hover:bg-surface group transition-all border border-transparent hover:border-subtle"
-                                    >
-                                        <div className="font-bold text-heading group-hover:text-lime-400 transition-colors uppercase tracking-tight text-sm">{ex.name}</div>
-                                        <div className="flex gap-2 mt-1 blur-[0.2px] group-hover:blur-0 transition-all">
-                                            <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.target}</span>
-                                            <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.equipment}</span>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
+                        ) : !exercisesOpen ? null : (
+                            <>
+                                <div className="space-y-1">
+                                    {filteredExercises.slice((exPage - 1) * EXERCISES_PER_PAGE, exPage * EXERCISES_PER_PAGE).map(ex => (
+                                        <button
+                                            key={ex.id}
+                                            onClick={() => onSelect(ex)}
+                                            className="w-full text-left p-3 rounded-xl hover:bg-surface group transition-all border border-transparent hover:border-subtle"
+                                        >
+                                            <div className="font-bold text-heading group-hover:text-lime-400 transition-colors uppercase tracking-tight text-sm">{ex.name}</div>
+                                            <div className="flex gap-2 mt-1 blur-[0.2px] group-hover:blur-0 transition-all">
+                                                <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.target}</span>
+                                                <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.equipment}</span>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                                {filteredExercises.length > EXERCISES_PER_PAGE && (
+                                    <div className="flex items-center justify-center gap-3 mt-3 pb-1">
+                                        <button
+                                            onClick={() => setExPage(p => Math.max(1, p - 1))}
+                                            disabled={exPage === 1}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                        >
+                                            &larr; Prev
+                                        </button>
+                                        <span className="text-xs text-muted font-medium">
+                                            Page {exPage} of {Math.ceil(filteredExercises.length / EXERCISES_PER_PAGE)}
+                                        </span>
+                                        <button
+                                            onClick={() => setExPage(p => Math.min(Math.ceil(filteredExercises.length / EXERCISES_PER_PAGE), p + 1))}
+                                            disabled={exPage === Math.ceil(filteredExercises.length / EXERCISES_PER_PAGE)}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                        >
+                                            Next &rarr;
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </>
