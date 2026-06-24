@@ -47,6 +47,16 @@ export default function RoutinesManagement() {
     const [error, setError] = useState<string | null>(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
+    // Pagination
+    const [routinesPage, setRoutinesPage] = useState(1);
+    const pageSize = 20;
+    const totalPages = Math.max(1, Math.ceil(routines.length / pageSize));
+    const paginatedRoutines = routines.slice((routinesPage - 1) * pageSize, routinesPage * pageSize);
+
+    useEffect(() => {
+        setRoutinesPage(1);
+    }, [routines.length]);
+
     // Layout Reference Focus Wrappers
     const createRoutineRef = useRef<HTMLDivElement>(null);
     const detailsDropdownRef = useRef<HTMLDivElement>(null);
@@ -278,26 +288,50 @@ export default function RoutinesManagement() {
                                 <p className="text-dim text-sm font-medium italic px-4">No templates configured yet.</p>
                             </div>
                         ) : (
-                            <ul className="space-y-2.5 list-none p-0 m-0">
-                                {routines.map((r) => {
-                                    const isCurrent = selectedRoutine?.id === r.id;
-                                    return (
-                                        <li
-                                            key={r.id}
-                                            onClick={() => fetchRoutineById(r.id)}
-                                            className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${isCurrent ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
+                            <>
+                                <ul className="space-y-2.5 list-none p-0 m-0">
+                                    {paginatedRoutines.map((r) => {
+                                        const isCurrent = selectedRoutine?.id === r.id;
+                                        return (
+                                            <li
+                                                key={r.id}
+                                                onClick={() => fetchRoutineById(r.id)}
+                                                className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${isCurrent ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
+                                            >
+                                                <div className="truncate max-w-[65%]">
+                                                    <span className="text-sm font-semibold text-heading block truncate">{r.name}</span>
+                                                    <span className="text-dim text-[10px] font-mono tracking-wider uppercase mt-0.5 block">Template Profile</span>
+                                                </div>
+                                                <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                                    <DeleteButton onClick={() => setDeleteConfirmId(r.id)} />
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
+                                        <button
+                                            onClick={() => setRoutinesPage((p) => Math.max(1, p - 1))}
+                                            disabled={routinesPage === 1}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
                                         >
-                                            <div className="truncate max-w-[65%]">
-                                                <span className="text-sm font-semibold text-heading block truncate">{r.name}</span>
-                                                <span className="text-dim text-[10px] font-mono tracking-wider uppercase mt-0.5 block">Template Profile</span>
-                                            </div>
-                                            <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                                <DeleteButton onClick={() => setDeleteConfirmId(r.id)} />
-                                            </div>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                                            &larr; Prev
+                                        </button>
+                                        <span className="text-xs text-muted font-medium">
+                                            Page {routinesPage} of {totalPages}
+                                        </span>
+                                        <button
+                                            onClick={() => setRoutinesPage((p) => Math.min(totalPages, p + 1))}
+                                            disabled={routinesPage === totalPages}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                        >
+                                            Next &rarr;
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -417,26 +451,35 @@ export default function RoutinesManagement() {
                             <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase mb-3">Add New Exercise to Template</h3>
 
                             <div className="flex flex-col gap-4">
-                                {!showPicker ? (
-                                    <Button
-                                        variant="secondary"
-                                        fullWidth
-                                        className="py-4 border-dashed border-subtle hover:border-lime-500/50 hover:bg-lime-500/5 transition-all text-sm font-semibold"
-                                        onClick={() => setShowPicker(true)}
-                                    >
-                                        Add exercise
-                                    </Button>
-                                ) : (
-                                    <div className="animate-in fade-in zoom-in-95 duration-200">
-                                        <ExercisePicker
-                                            title="Add Exercise to Routine"
-                                            onSelect={handleLiveAddExercise}
-                                            onClose={() => setShowPicker(false)}
-                                        />
-                                    </div>
-                                )}
+                                <Button
+                                    variant="secondary"
+                                    fullWidth
+                                    className="py-4 border-dashed border-subtle hover:border-lime-500/50 hover:bg-lime-500/5 transition-all text-sm font-semibold"
+                                    onClick={() => setShowPicker(true)}
+                                >
+                                    + Add New Exercise Entry
+                                </Button>
                             </div>
                         </div>
+
+                        {/* Exercise Picker Modal */}
+                        {showPicker && (
+                            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                <div className="relative w-full max-w-xl">
+                                    <button
+                                        onClick={() => setShowPicker(false)}
+                                        className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-lime-400 bg-card border border-lime-400/30 rounded-full shadow-sm"
+                                    >
+                                        Close
+                                    </button>
+                                    <ExercisePicker
+                                        title="Add Exercise to Routine"
+                                        onSelect={handleLiveAddExercise}
+                                        onClose={() => setShowPicker(false)}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

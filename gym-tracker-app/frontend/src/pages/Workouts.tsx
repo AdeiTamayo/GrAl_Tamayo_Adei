@@ -765,26 +765,24 @@ export default function WorkoutsManagement() {
 
                                 {/* Pagination */}
                                 {totalPages > 1 && (
-                                    <div className="flex items-center justify-between pt-3 border-t border-subtle/40 mt-3">
-                                        <span className="text-xs text-dim">
-                                            Page {currentPage} of {totalPages} ({filteredWorkouts.length} total)
+                                    <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
+                                        <button
+                                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                            disabled={currentPage === 1}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                        >
+                                            &larr; Prev
+                                        </button>
+                                        <span className="text-xs text-muted font-medium">
+                                            Page {currentPage} of {totalPages}
                                         </span>
-                                        <div className="flex gap-1">
-                                            <button
-                                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                                disabled={currentPage === 1}
-                                                className="px-2.5 py-1 text-xs rounded-lg border border-subtle bg-surface text-muted disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400/50 transition-all"
-                                            >
-                                                Prev
-                                            </button>
-                                            <button
-                                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                                disabled={currentPage === totalPages}
-                                                className="px-2.5 py-1 text-xs rounded-lg border border-subtle bg-surface text-muted disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400/50 transition-all"
-                                            >
-                                                Next
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                        >
+                                            Next &rarr;
+                                        </button>
                                     </div>
                                 )}
                             </>
