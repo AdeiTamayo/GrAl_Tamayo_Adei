@@ -10,6 +10,7 @@ interface CalendarProps {
     selectedDate?: string;
     onSelect?: (date: string) => void;
     events?: Record<string, CalendarEvent>;
+    plannedDates?: Set<string>;
     className?: string;
 }
 
@@ -27,7 +28,7 @@ function formatDate(year: number, month: number, day: number): string {
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-export default function Calendar({ selectedDate, onSelect, events = {}, className = '' }: CalendarProps) {
+export default function Calendar({ selectedDate, onSelect, events = {}, plannedDates, className = '' }: CalendarProps) {
     const today = useMemo(() => {
         const d = new Date();
         return formatDate(d.getFullYear(), d.getMonth(), d.getDate());
@@ -137,12 +138,15 @@ export default function Calendar({ selectedDate, onSelect, events = {}, classNam
                         >
                             {day}
                             {event && !isSelected && (
-                                <span className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${
+                                <span className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full ${
                                     event.status === 'completed' ? 'bg-lime-400' :
                                     event.status === 'rest' ? 'bg-blue-400' :
                                     event.status === 'missed' ? 'bg-rose-500' :
                                     'bg-elevated'
                                 }`} />
+                            )}
+                            {plannedDates?.has(dateStr) && !isSelected && (
+                                <span className={`absolute ${event ? 'bottom-0' : 'bottom-1.5'} w-1.5 h-1.5 rounded-full bg-blue-400/70`} />
                             )}
                         </button>
                     );
