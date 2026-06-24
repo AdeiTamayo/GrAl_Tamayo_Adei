@@ -4,7 +4,7 @@ class Goal {
     static async getUserGoals(userId) {
         try {
             const query = `
-                SELECT g.id, g.target_weight, g.target_reps, g.created_at, e.name AS exercise_name
+                SELECT g.id, g.exercise_id, g.target_weight, g.target_reps, g.created_at, e.name AS exercise_name
                 FROM goals g
                 JOIN exercises e ON g.exercise_id = e.id
                 WHERE g.user_id = $1

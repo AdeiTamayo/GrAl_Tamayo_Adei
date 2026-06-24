@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
@@ -46,6 +46,9 @@ export default function CurrentWorkout() {
     const [showSaveRoutineModal, setShowSaveRoutineModal] = useState(false);
     const [routineName, setRoutineName] = useState("");
 
+    // Goals state
+    const [goals, setGoals] = useState<Record<number, { target_weight: string; target_reps: number }>>({});
+
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({
         Authorization: `Bearer ${token}`,
@@ -59,11 +62,7 @@ export default function CurrentWorkout() {
         }
     }, [searchParams, navigate]);
 
-    useEffect(() => {
-        fetchRoutines();
-    }, [headers]);
-
-    const fetchRoutines = async () => {
+    const fetchRoutines = useCallback(async () => {
         try {
             const res = await apiFetch("/api/routines", { headers });
             const data = await res.json();
@@ -74,7 +73,28 @@ export default function CurrentWorkout() {
             console.error("Failed to fetch routines", err);
             showNotification("Failed to fetch routines", "error");
         }
-    };
+    }, [headers, showNotification]);
+
+    const fetchGoals = useCallback(async () => {
+        try {
+            const res = await apiFetch("/api/goals", { headers });
+            const data = await res.json();
+            if (data.success) {
+                const goalsMap: Record<number, { target_weight: string; target_reps: number }> = {};
+                for (const g of data.goals || []) {
+                    goalsMap[g.exercise_id] = { target_weight: g.target_weight, target_reps: g.target_reps };
+                }
+                setGoals(goalsMap);
+            }
+        } catch (err) {
+            console.error("Failed to fetch goals", err);
+        }
+    }, [headers]);
+
+    useEffect(() => {
+        fetchRoutines();
+        fetchGoals();
+    }, [headers, fetchRoutines, fetchGoals]);
 
     const loadRoutine = async (routineId: number) => {
         try {
@@ -331,6 +351,27 @@ export default function CurrentWorkout() {
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                 <div>
                                     <h3 className="text-xl font-bold text-body">{ex.name}</h3>
+                                    {(() => {
+                                        const goal = goals[ex.exercise_id];
+                                        if (!goal) return null;
+                                        const targetWeight = Number(goal.target_weight);
+                                        if (!targetWeight) return null;
+                                        const bestWeight = Math.max(...ex.sets.map(s => Number(s.weight) || 0));
+                                        const diff = targetWeight - bestWeight;
+                                        const achieved = diff <= 0;
+                                        return (
+                                            <div className="flex items-center gap-2 mt-1 text-sm">
+                                                <span className={`font-semibold ${achieved ? 'text-lime-400' : 'text-dim'}`}>
+                                                    Goal: {targetWeight} kg
+                                                </span>
+                                                {bestWeight > 0 && (
+                                                    <span className={`font-medium ${achieved ? 'text-lime-400' : 'text-amber-400'}`}>
+                                                        ({achieved ? '✓' : `${-diff.toFixed(1)} kg`})
+                                                    </span>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
                                     {/* Inline Exercise rest modification control */}
                                     <div className="flex items-center gap-1 mt-1 text-muted text-sm">
                                         <span>Target Rest:</span>
@@ -363,6 +404,7 @@ export default function CurrentWorkout() {
                                             <th className="py-2 px-2">Weight (kg)</th>
                                             <th className="py-2 px-2">Reps</th>
                                             <th className="py-2 px-2">e1RM</th>
+                                            <th className="py-2 px-2">Goal</th>
                                             <th className="py-2 px-2 text-right"></th>
                                         </tr>
                                     </thead>
@@ -416,6 +458,23 @@ export default function CurrentWorkout() {
                                                     ) : (
                                                         <span className="text-dim text-xs">—</span>
                                                     )}
+                                                </td>
+                                                <td className="py-2 px-2">
+                                                    {(() => {
+                                                        const goal = goals[ex.exercise_id];
+                                                        if (!goal) return <span className="text-dim text-xs">—</span>;
+                                                        const targetWeight = Number(goal.target_weight);
+                                                        if (!targetWeight) return <span className="text-dim text-xs">—</span>;
+                                                        const setWeight = Number(set.weight) || 0;
+                                                        if (!setWeight) return <span className="text-dim text-xs">—</span>;
+                                                        const diff = targetWeight - setWeight;
+                                                        const achieved = diff <= 0;
+                                                        return (
+                                                            <span className={`font-mono text-xs font-semibold ${achieved ? 'text-lime-400' : 'text-amber-400'}`}>
+                                                                {achieved ? '✓' : `-${diff.toFixed(1)} kg`}
+                                                            </span>
+                                                        );
+                                                    })()}
                                                 </td>
                                                 <td className="py-2 px-2 text-right">
                                                     <button onClick={() => removeSet(exIdx, setIdx)} className="text-dim hover:text-red-400 font-bold text-lg">×</button>

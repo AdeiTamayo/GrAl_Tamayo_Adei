@@ -15,6 +15,7 @@ interface EditableExerciseCardProps {
     exerciseOrder?: number;
     sets: GenericSet[];
     showNotesField?: boolean;
+    goalWeight?: number | null;
     onRemoveExercise: () => void;
     onAddSet: (weight: number | null, reps: number | null, time: number | null, note: string | null) => void;
     onRemoveSet: (setId: number) => void;
@@ -26,6 +27,7 @@ export default function EditableExerciseCard({
     exerciseName,
     sets,
     showNotesField = false,
+    goalWeight,
     onRemoveExercise,
     onAddSet,
     onRemoveSet,
@@ -84,6 +86,22 @@ export default function EditableExerciseCard({
                 <h4 className="font-display font-bold text-body uppercase tracking-wide text-base">
                     {exerciseName}
                 </h4>
+                {goalWeight ? (
+                    <div className="flex items-center gap-2 mt-1 text-xs">
+                        <span className="text-dim">Goal: {goalWeight} kg</span>
+                        {(() => {
+                            const bestWeight = Math.max(...sets.map(s => s.weight ?? 0));
+                            if (bestWeight <= 0) return null;
+                            const diff = goalWeight - bestWeight;
+                            const achieved = diff <= 0;
+                            return (
+                                <span className={`font-semibold ${achieved ? 'text-lime-400' : 'text-amber-400'}`}>
+                                    ({achieved ? 'Achieved' : `${diff.toFixed(1)} kg left`})
+                                </span>
+                            );
+                        })()}
+                    </div>
+                ) : null}
                 <button
                     type="button"
                     onClick={onRemoveExercise}
@@ -132,6 +150,19 @@ export default function EditableExerciseCard({
                                             max={999}
                                             step={2.5}
                                         />
+                                        {goalWeight && set.weight ? (
+                                            <div className="mt-1">
+                                                {(() => {
+                                                    const diff = goalWeight - set.weight;
+                                                    const achieved = diff <= 0;
+                                                    return (
+                                                        <span className={`text-[10px] font-mono font-semibold ${achieved ? 'text-lime-400' : 'text-amber-400'}`}>
+                                                            {achieved ? '✓' : `-${diff.toFixed(1)} kg`}
+                                                        </span>
+                                                    );
+                                                })()}
+                                            </div>
+                                        ) : null}
                                     </div>
 
                                     {/* Repeat Executions Wrapper */}

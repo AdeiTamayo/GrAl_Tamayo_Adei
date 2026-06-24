@@ -73,6 +73,9 @@ export default function WorkoutsManagement() {
     // Add exercise search
     const [showPicker, setShowPicker] = useState(false);
 
+    // Goals state
+    const [goals, setGoals] = useState<Record<number, number>>({});
+
     const [deleteWorkoutConfirmId, setDeleteWorkoutConfirmId] = useState<number | null>(null);
     const [deleteExerciseConfirmId, setDeleteExerciseConfirmId] = useState<number | null>(null);
 
@@ -102,6 +105,23 @@ export default function WorkoutsManagement() {
             setError("Failed to fetch workouts");
         }
     }, []);
+
+    const fetchGoalsMap = useCallback(async () => {
+        try {
+            const res = await apiFetch("/api/goals", { headers });
+            const data = await res.json();
+            if (data.success) {
+                const gMap: Record<number, number> = {};
+                for (const g of data.goals || []) {
+                    const w = Number(g.target_weight);
+                    if (w) gMap[g.exercise_id] = w;
+                }
+                setGoals(gMap);
+            }
+        } catch (err: any) {
+            console.error("Failed to fetch goals", err);
+        }
+    }, [headers]);
 
     const fetchExercises = useCallback(async () => {
         try {
@@ -141,12 +161,12 @@ export default function WorkoutsManagement() {
 
     // Initial load
     useEffect(() => {
-        Promise.all([fetchWorkouts(), fetchExercises()])
+        Promise.all([fetchWorkouts(), fetchExercises(), fetchGoalsMap()])
             .then(() => {
                 if (preselectedId) fetchWorkoutById(preselectedId);
             })
             .finally(() => setIsLoadingInit(false));
-    }, [fetchWorkouts, fetchExercises, fetchWorkoutById, preselectedId]);
+    }, [fetchWorkouts, fetchExercises, fetchWorkoutById, fetchGoalsMap, preselectedId]);
 
     // Close dropdowns on click outside
     useEffect(() => {
@@ -643,6 +663,7 @@ export default function WorkoutsManagement() {
                                         exerciseName={ex.name || "Unknown Exercise " + ex.exercise_id}
                                         exerciseOrder={ex.exercise_order}
                                         showNotesField={true}
+                                        goalWeight={goals[ex.exercise_id]}
                                         sets={ex.sets.map((s: SetEntry) => ({
                                             id: s.id,
                                             set_number: s.set_number,
