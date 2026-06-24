@@ -20,12 +20,12 @@ interface Workout {
     exercises: WorkoutExercise[];
 }
 
-interface ComparisonRow {
-    name: string;
-    metric: "Max Weight" | "Total Volume" | "Max Reps";
-    valA: number;
-    valB: number;
-    unit: string;
+interface SetComparison {
+    setNumber: number;
+    weightA: number | null;
+    repsA: number | null;
+    weightB: number | null;
+    repsB: number | null;
 }
 
 function WorkoutDropdown({
@@ -145,62 +145,74 @@ export default function CompareWorkouts() {
         }
     };
 
-    const comparisonData = useMemo(() => {
+    const commonExercises = useMemo(() => {
         if (!workoutA || !workoutB) return [];
-
-        const rows: ComparisonRow[] = [];
         const exercisesA = workoutA.exercises || [];
         const exercisesB = workoutB.exercises || [];
-
-        const commonIds = exercisesA
+        const ids = exercisesA
             .filter(exA => exercisesB.some(exB => exB.exercise_id === exA.exercise_id))
             .map(ex => ex.exercise_id);
 
-        commonIds.forEach(exId => {
+        return ids.map(exId => {
             const exA = exercisesA.find(e => e.exercise_id === exId)!;
             const exB = exercisesB.find(e => e.exercise_id === exId)!;
 
-            const calculateMaxWeight = (ex: WorkoutExercise) => Math.max(...ex.sets.map(s => s.weight || 0), 0);
-            const calculateVolume = (ex: WorkoutExercise) => ex.sets.reduce((sum, s) => sum + (Number(s.weight || 0) * Number(s.repetitions || 0)), 0);
-            const calculateMaxReps = (ex: WorkoutExercise) => Math.max(...ex.sets.map(s => s.repetitions || 0), 0);
+            const volumeA = exA.sets.reduce((sum, s) => sum + (Number(s.weight || 0) * Number(s.repetitions || 0)), 0);
+            const volumeB = exB.sets.reduce((sum, s) => sum + (Number(s.weight || 0) * Number(s.repetitions || 0)), 0);
 
-            rows.push({
-                name: exA.name,
-                metric: "Max Weight",
-                valA: calculateMaxWeight(exA),
-                valB: calculateMaxWeight(exB),
-                unit: "kg"
-            });
-            rows.push({
-                name: exA.name,
-                metric: "Total Volume",
-                valA: calculateVolume(exA),
-                valB: calculateVolume(exB),
-                unit: ""
-            });
-            rows.push({
-                name: exA.name,
-                metric: "Max Reps",
-                valA: calculateMaxReps(exA),
-                valB: calculateMaxReps(exB),
-                unit: ""
-            });
+            const maxLen = Math.max(exA.sets.length, exB.sets.length);
+            const setComparisons: SetComparison[] = [];
+            for (let i = 0; i < maxLen; i++) {
+                const sA = exA.sets[i];
+                const sB = exB.sets[i];
+                setComparisons.push({
+                    setNumber: i + 1,
+                    weightA: sA?.weight ?? null,
+                    repsA: sA?.repetitions ?? null,
+                    weightB: sB?.weight ?? null,
+                    repsB: sB?.repetitions ?? null,
+                });
+            }
+
+            return { exId, name: exA.name, volumeA, volumeB, setComparisons };
         });
-
-        return rows;
     }, [workoutA, workoutB]);
 
-    const renderDiff = (valA: number, valB: number, unit: string) => {
+    const summaryStats = useMemo(() => {
+        if (!workoutA || !workoutB || commonExercises.length === 0) return null;
+
+        const totalVolumeA = commonExercises.reduce((sum, ex) => sum + ex.volumeA, 0);
+        const totalVolumeB = commonExercises.reduce((sum, ex) => sum + ex.volumeB, 0);
+        const totalSetsA = commonExercises.reduce((sum, ex) => {
+            const exA = workoutA.exercises.find(e => e.exercise_id === ex.exId)!;
+            return sum + exA.sets.length;
+        }, 0);
+        const totalSetsB = commonExercises.reduce((sum, ex) => {
+            const exB = workoutB.exercises.find(e => e.exercise_id === ex.exId)!;
+            return sum + exB.sets.length;
+        }, 0);
+
+        return { totalVolumeA, totalVolumeB, totalSetsA, totalSetsB };
+    }, [workoutA, workoutB, commonExercises]);
+
+    const renderDiff = (valA: number, valB: number, decimals = 1) => {
         const diff = valB - valA;
         if (diff === 0) return <span className="text-dim">-</span>;
-        const color = diff > 0 ? "text-lime-400" : "text-red-400";
         const sign = diff > 0 ? "+" : "";
-        return <span className={`${color} font-bold`}>{sign}{diff.toFixed(1)}{unit}</span>;
+        return <span className="text-muted font-mono">{sign}{diff.toFixed(decimals)}</span>;
+    };
+
+    const setComparison = () => {
+        setIdA("");
+        setIdB("");
+        setWorkoutA(null);
+        setWorkoutB(null);
+        setError(null);
     };
 
     return (
         <div className="p-6 font-sans bg-body text-body min-h-screen">
-            <div className="mxa-w-5xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 <header className="mb-10 text-center">
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">
                         Workout Comparison
@@ -223,7 +235,7 @@ export default function CompareWorkouts() {
                     />
                 </div>
 
-                <div className="flex justify-center mb-10">
+                <div className="flex justify-center gap-4 mb-10">
                     <Button
                         variant="primary"
                         disabled={!idA || !idB}
@@ -232,6 +244,11 @@ export default function CompareWorkouts() {
                     >
                         Compare Now
                     </Button>
+                    {(workoutA || workoutB) && (
+                        <Button variant="secondary" onClick={setComparison} className="px-6">
+                            Reset
+                        </Button>
+                    )}
                 </div>
 
                 {error && (
@@ -240,36 +257,119 @@ export default function CompareWorkouts() {
                     </div>
                 )}
 
-                {workoutA && workoutB && comparisonData.length === 0 && (
+                {workoutA && workoutB && commonExercises.length === 0 && (
                     <div className="bg-surface/50 border border-subtle p-8 rounded-2xl text-center text-muted">
                         No common exercises found between these two sessions.
                     </div>
                 )}
 
-                {comparisonData.length > 0 && workoutA && workoutB && (
-                    <div className="overflow-hidden rounded-2xl border border-subtle bg-card shadow-2xl">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-surface/50 text-muted text-xs uppercase tracking-widest border-b border-subtle">
-                                    <th className="py-4 px-6">Exercise</th>
-                                    <th className="py-4 px-6">Metric</th>
-                                    <th className="py-4 px-6">{workoutA.date}</th>
-                                    <th className="py-4 px-6">{workoutB.date}</th>
-                                    <th className="py-4 px-6">Difference</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {comparisonData.map((row, idx) => (
-                                    <tr key={idx} className="border-b border-subtle hover:bg-surface/30 transition-colors">
-                                        <td className="py-4 px-6 font-bold text-body">{row.name}</td>
-                                        <td className="py-4 px-6 text-muted italic text-sm">{row.metric}</td>
-                                        <td className="py-4 px-6 font-mono">{row.valA.toFixed(1)}{row.unit}</td>
-                                        <td className="py-4 px-6 font-mono">{row.valB.toFixed(1)}{row.unit}</td>
-                                        <td className="py-4 px-6 font-mono">{renderDiff(row.valA, row.valB, row.unit)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                {summaryStats && workoutA && workoutB && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+                        <div className="bg-card border border-subtle rounded-xl p-5 text-center">
+                            <div className="text-xs uppercase tracking-widest text-dim font-bold mb-2">Common Exercises</div>
+                            <div className="text-3xl font-black text-lime-400">{commonExercises.length}</div>
+                        </div>
+                        <div className="bg-card border border-subtle rounded-xl p-5 text-center">
+                            <div className="text-xs uppercase tracking-widest text-dim font-bold mb-2">Total Volume</div>
+                            <div className="flex justify-center gap-4 mt-2">
+                                <div>
+                                    <div className="text-[10px] text-dim uppercase">{workoutA.date}</div>
+                                    <div className="text-sm font-bold font-mono text-blue-400">{summaryStats.totalVolumeA.toFixed(0)}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[10px] text-dim uppercase">{workoutB.date}</div>
+                                    <div className="text-sm font-bold font-mono text-lime-400">{summaryStats.totalVolumeB.toFixed(0)}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-card border border-subtle rounded-xl p-5 text-center">
+                            <div className="text-xs uppercase tracking-widest text-dim font-bold mb-2">Total Sets</div>
+                            <div className="flex justify-center gap-4 mt-2">
+                                <div>
+                                    <div className="text-[10px] text-dim uppercase">{workoutA.date}</div>
+                                    <div className="text-sm font-bold font-mono text-blue-400">{summaryStats.totalSetsA}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[10px] text-dim uppercase">{workoutB.date}</div>
+                                    <div className="text-sm font-bold font-mono text-lime-400">{summaryStats.totalSetsB}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {workoutA && workoutB && commonExercises.length > 0 && (
+                    <div className="space-y-6">
+                        {commonExercises.map(ex => (
+                            <div key={ex.exId} className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl">
+                                <h3 className="font-display text-lg font-bold text-lime-400 uppercase tracking-wide mb-4">
+                                    {ex.name}
+                                </h3>
+
+                                <div className="flex items-center gap-3 mb-4 text-sm">
+                                    <span className="text-dim font-medium">Volume:</span>
+                                    <span className="font-mono font-semibold text-body">{ex.volumeA.toFixed(0)}</span>
+                                    <span className="text-dim">→</span>
+                                    <span className="font-mono font-semibold text-body">{ex.volumeB.toFixed(0)}</span>
+                                    <span className="text-xs text-muted">({renderDiff(ex.volumeA, ex.volumeB, 0)})</span>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse text-sm">
+                                        <thead>
+                                            <tr className="text-dim text-xs uppercase tracking-widest border-b border-subtle">
+                                                <th className="py-3 px-3 w-16">Set</th>
+                                                <th className="py-3 px-3 w-1/3">
+                                                    <span className="text-body">{workoutA.date}</span>
+                                                </th>
+                                                <th className="py-3 px-3 w-1/3">
+                                                    <span className="text-body">{workoutB.date}</span>
+                                                </th>
+                                                <th className="py-3 px-3 w-16">Weight</th>
+                                                <th className="py-3 px-3 w-16">Reps</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {ex.setComparisons.map(sc => (
+                                                <tr key={sc.setNumber} className="border-b border-subtle/50 hover:bg-surface/20 transition-colors">
+                                                    <td className="py-3 px-3 font-mono text-muted">{sc.setNumber}</td>
+                                                    <td className="py-3 px-3">
+                                                        {sc.weightA !== null ? (
+                                                            <span className="font-mono font-medium text-body">
+                                                                {sc.weightA} kg × {sc.repsA} reps
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-dim italic">—</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-3 px-3">
+                                                        {sc.weightB !== null ? (
+                                                            <span className="font-mono font-medium text-body">
+                                                                {sc.weightB} kg × {sc.repsB} reps
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-dim italic">—</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-3 px-3 font-mono text-sm">
+                                                        {sc.weightA !== null && sc.weightB !== null
+                                                            ? renderDiff(sc.weightA, sc.weightB)
+                                                            : <span className="text-dim">-</span>
+                                                        }
+                                                    </td>
+                                                    <td className="py-3 px-3 font-mono text-sm">
+                                                        {sc.repsA !== null && sc.repsB !== null
+                                                            ? renderDiff(sc.repsA, sc.repsB, 0)
+                                                            : <span className="text-dim">-</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>
