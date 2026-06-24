@@ -34,9 +34,10 @@ interface ExercisePickerProps {
     onSelect: (exercise: Exercise) => void;
     onClose?: () => void;
     title?: string;
+    className?: string;
 }
 
-export default function ExercisePicker({ onSelect, onClose, title = "Select Exercise" }: ExercisePickerProps) {
+export default function ExercisePicker({ onSelect, onClose, title = "Select Exercise", className = "" }: ExercisePickerProps) {
     const [allExercises, setAllExercises] = useState<Exercise[]>([]);
     const [filterOptions, setFilterOptions] = useState<FilterOptions>({
         equipment: [],
@@ -141,7 +142,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
     }
 
     return (
-        <div className="flex flex-col h-full max-h-[80vh] bg-card border border-subtle rounded-2xl overflow-hidden shadow-2xl">
+        <div className={`flex flex-col h-full max-h-[80vh] bg-card border border-subtle rounded-2xl overflow-hidden shadow-2xl ${className}`}>
             {/* Header */}
             <div className="p-4 border-b border-subtle flex justify-between items-center bg-surface/50">
                 <h3 className="text-lg font-display font-bold text-body uppercase tracking-tight">{viewMode === 'list' ? title : 'New Exercise'}</h3>
