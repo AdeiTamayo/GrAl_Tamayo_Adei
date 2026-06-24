@@ -7,6 +7,7 @@ import ExercisePicker, { Exercise as ExerciseMeta } from '../components/Exercise
 import DatePicker from '../components/DatePicker';
 import ConfirmModal from '../components/ConfirmModal';
 import DeleteButton from '../components/DeleteButton';
+import { useNotification } from "../components/NotificationProvider";
 
 // ---- TYPES & INTERFACES ----
 interface SetEntry {
@@ -46,6 +47,7 @@ type EditableSetField = "weight" | "repetitions" | "time" | "note";
 export default function WorkoutsManagement() {
     const location = useLocation();
     const preselectedId = (location.state as { preselectedWorkoutId?: number })?.preselectedWorkoutId;
+    const { showNotification } = useNotification();
 
     // ---- STATE MANAGEMENT ----
     const [workouts, setWorkouts] = useState<Workout[]>([]);
@@ -76,6 +78,26 @@ export default function WorkoutsManagement() {
     const [deleteWorkoutConfirmId, setDeleteWorkoutConfirmId] = useState<number | null>(null);
     const [deleteExerciseConfirmId, setDeleteExerciseConfirmId] = useState<number | null>(null);
 
+    // Save as routine state
+    const [showSaveRoutineModal, setShowSaveRoutineModal] = useState(false);
+    const [routineName, setRoutineName] = useState("");
+
+    // Search, filter, pagination
+    const [searchQuery, setSearchQuery] = useState("");
+    const [dateFrom, setDateFrom] = useState("");
+    const [dateTo, setDateTo] = useState("");
+
+    // Bulk delete
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+
+    // Calendar control – only one date picker open at a time
+    const [activeDatePicker, setActiveDatePicker] = useState<'from' | 'to' | null>(null);
+
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 20;
+
     const createWorkoutRef = useRef<HTMLDivElement>(null);
     const detailsDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -88,6 +110,24 @@ export default function WorkoutsManagement() {
         }),
         [token]
     );
+
+    // ---- COMPUTED VALUES ----
+    const filteredWorkouts = useMemo(() => {
+        return workouts.filter(w => {
+            if (searchQuery && !w.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+            if (dateFrom && w.date && w.date < dateFrom) return false;
+            if (dateTo && w.date && w.date > dateTo) return false;
+            return true;
+        });
+    }, [workouts, searchQuery, dateFrom, dateTo]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredWorkouts.length / pageSize));
+    const paginatedWorkouts = filteredWorkouts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, dateFrom, dateTo]);
 
     // ---- DATA FETCHING HANDLERS ----
     const fetchWorkouts = useCallback(async () => {
@@ -266,6 +306,7 @@ export default function WorkoutsManagement() {
 
     async function deleteWorkout(id: number) {
         setWorkouts((prev) => prev.filter((w) => w.id !== id));
+        setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
         if (selectedWorkout && selectedWorkout.id === id) {
             setSelectedWorkout(null);
         }
@@ -277,6 +318,34 @@ export default function WorkoutsManagement() {
             console.error("Delete workout failed", err);
             setError("Failed to delete workout");
             await fetchWorkouts();
+        }
+    }
+
+    async function deleteBulkWorkouts() {
+        const ids = Array.from(selectedIds);
+        if (ids.length === 0) return;
+
+        setWorkouts((prev) => prev.filter((w) => !selectedIds.has(w.id)));
+        if (selectedWorkout && selectedIds.has(selectedWorkout.id)) {
+            setSelectedWorkout(null);
+        }
+        setSelectedIds(new Set());
+        setBulkDeleteConfirm(false);
+
+        let failed = 0;
+        for (const id of ids) {
+            try {
+                await apiFetch("/api/workouts/" + id, { method: "DELETE", headers });
+            } catch (err: any) {
+                console.error("Bulk delete failed for id", id, err);
+                failed++;
+            }
+        }
+        if (failed > 0) {
+            setError(`Failed to delete ${failed} workout(s).`);
+            await fetchWorkouts();
+        } else {
+            showNotification(`Deleted ${ids.length} workout(s).`, "success");
         }
     }
 
@@ -469,6 +538,76 @@ export default function WorkoutsManagement() {
         }
     }
 
+    // ---- SAVE AS ROUTINE ----
+    const saveAsRoutine = async () => {
+        if (!routineName.trim()) {
+            showNotification("Please enter a routine name", "error");
+            return;
+        }
+        if (!selectedWorkout || !selectedWorkout.exercises || selectedWorkout.exercises.length === 0) {
+            showNotification("No exercises to save.", "error");
+            return;
+        }
+        try {
+            const res = await apiFetch("/api/routines", {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ name: routineName.trim() })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error("Failed to create routine");
+
+            const routineId = data.data.id;
+            let exCount = 0;
+
+            for (const ex of selectedWorkout.exercises) {
+                const reps = ex.sets.map(s => Number(s.repetitions) || 0).filter(r => r > 0);
+                const avgReps = reps.length > 0 ? Math.round(reps.reduce((a, b) => a + b, 0) / reps.length) : 10;
+                const weights = ex.sets.map(s => Number(s.weight) || 0).filter(w => w > 0);
+                const avgWeight = weights.length > 0 ? (weights.reduce((a, b) => a + b, 0) / weights.length) : 0;
+
+                const exRes = await apiFetch(`/api/routines/${routineId}/exercises`, {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify({
+                        exercise_id: ex.exercise_id,
+                        planned_sets: ex.sets.length,
+                        planned_reps: avgReps,
+                        planned_weight: avgWeight,
+                        planned_time: 0
+                    })
+                });
+                const exData = await exRes.json();
+                if (exData.success && exData.data) {
+                    const itemId = exData.data.id || exData.data.item_id;
+                    if (itemId) {
+                        for (let i = 0; i < ex.sets.length; i++) {
+                            const s = ex.sets[i];
+                            await apiFetch(`/api/routines/exercises/${itemId}/sets`, {
+                                method: "POST",
+                                headers,
+                                body: JSON.stringify({
+                                    set_number: i + 1,
+                                    planned_weight: Number(s.weight) || 0,
+                                    planned_reps: Number(s.repetitions) || 0,
+                                    planned_time: 0
+                                })
+                            });
+                        }
+                    }
+                }
+                exCount++;
+            }
+
+            setShowSaveRoutineModal(false);
+            setRoutineName("");
+            showNotification(`Routine created with ${exCount} exercise(s)!`, "success");
+        } catch (err) {
+            console.error("Failed to save routine", err);
+            showNotification("Error saving routine.", "error");
+        }
+    };
+
     if (isLoadingInit) return <p className="text-muted p-8">Loading...</p>;
 
     return (
@@ -537,28 +676,118 @@ export default function WorkoutsManagement() {
                 <div className="flex-none w-full xl:w-[400px]">
                     <div className="bg-surface/60 border border-subtle rounded-xl p-5 shadow-md">
                         <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase mb-4">Saved Logs List</h2>
-                        {workouts.length === 0 ? (
+
+                        {/* Search & Filter Bar */}
+                        <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search by name..."
+                                className="flex-1 border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-all"
+                            />
+                            <div className="flex gap-2 items-center">
+                                <span className="text-dim text-xs">From</span>
+                                <DatePicker
+                                    value={dateFrom}
+                                    onChange={(d) => { setDateFrom(d); setActiveDatePicker(null); }}
+                                    placeholder="From"
+                                    buttonClassName="w-auto rounded-xl px-3 py-2 text-xs"
+                                    open={activeDatePicker === 'from'}
+                                    onOpenChange={(o) => setActiveDatePicker(o ? 'from' : null)}
+                                />
+                                <span className="text-dim text-xs">To</span>
+                                <DatePicker
+                                    value={dateTo}
+                                    onChange={(d) => { setDateTo(d); setActiveDatePicker(null); }}
+                                    placeholder="To"
+                                    buttonClassName="w-auto rounded-xl px-3 py-2 text-xs"
+                                    open={activeDatePicker === 'to'}
+                                    onOpenChange={(o) => setActiveDatePicker(o ? 'to' : null)}
+                                    menuAlign="right"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Bulk Delete Bar */}
+                        {selectedIds.size > 0 && (
+                            <div className="flex items-center justify-between mb-3 px-2">
+                                <span className="text-xs text-muted font-semibold">{selectedIds.size} selected</span>
+                                <Button
+                                    type="button"
+                                    onClick={() => setBulkDeleteConfirm(true)}
+                                    variant="danger"
+                                    className="px-3 py-1 text-xs rounded-lg"
+                                >
+                                    Delete Selected
+                                </Button>
+                            </div>
+                        )}
+
+                        {filteredWorkouts.length === 0 ? (
                             <div className="text-center py-10 bg-card/40 rounded-xl border border-subtle/60">
-                                <p className="text-dim text-sm font-medium italic px-4">No sessions logged yet.</p>
+                                <p className="text-dim text-sm font-medium italic px-4">{workouts.length === 0 ? "No sessions logged yet." : "No workouts match your filters."}</p>
                             </div>
                         ) : (
-                            <ul className="space-y-2.5 list-none p-0 m-0">
-                                {workouts.map((w) => (
-                                    <li
-                                        key={w.id}
-                                        onClick={() => fetchWorkoutById(w.id)}
-                                        className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${selectedWorkout?.id === w.id ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
-                                    >
-                                        <div>
-                                            <span className="text-sm stroke-zinc-100 font-semibold text-heading block">{w.name}</span>
-                                            <span className="font-mono text-xs text-dim mt-0.5 block">{w.date?.substring(0, 10)}</span>
+                            <>
+                                <ul className="space-y-2.5 list-none p-0 m-0">
+                                    {paginatedWorkouts.map((w) => (
+                                        <li
+                                            key={w.id}
+                                            onClick={() => fetchWorkoutById(w.id)}
+                                            className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${selectedWorkout?.id === w.id ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
+                                        >
+                                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedIds.has(w.id)}
+                                                    onChange={() => {
+                                                        setSelectedIds((prev) => {
+                                                            const next = new Set(prev);
+                                                            if (next.has(w.id)) next.delete(w.id); else next.add(w.id);
+                                                            return next;
+                                                        });
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="accent-lime-400 cursor-pointer shrink-0"
+                                                />
+                                                <div className="min-w-0">
+                                                    <span className="text-sm stroke-zinc-100 font-semibold text-heading block truncate">{w.name}</span>
+                                                    <span className="font-mono text-xs text-dim mt-0.5 block">{w.date?.substring(0, 10)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                                <DeleteButton onClick={() => setDeleteWorkoutConfirmId(w.id)} />
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-between pt-3 border-t border-subtle/40 mt-3">
+                                        <span className="text-xs text-dim">
+                                            Page {currentPage} of {totalPages} ({filteredWorkouts.length} total)
+                                        </span>
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                                className="px-2.5 py-1 text-xs rounded-lg border border-subtle bg-surface text-muted disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400/50 transition-all"
+                                            >
+                                                Prev
+                                            </button>
+                                            <button
+                                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="px-2.5 py-1 text-xs rounded-lg border border-subtle bg-surface text-muted disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400/50 transition-all"
+                                            >
+                                                Next
+                                            </button>
                                         </div>
-                                        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                                            <DeleteButton onClick={() => setDeleteWorkoutConfirmId(w.id)} />
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -592,6 +821,10 @@ export default function WorkoutsManagement() {
                                 >
                                     <span>Modify Details</span>
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                </Button>
+
+                                <Button type="button" onClick={() => { setRoutineName(selectedWorkout.name || ""); setShowSaveRoutineModal(true); }} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
+                                    Save as Routine
                                 </Button>
 
                                 <Button type="button" onClick={() => setSelectedWorkout(null)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
@@ -706,6 +939,50 @@ export default function WorkoutsManagement() {
                     onCancel={() => setDeleteExerciseConfirmId(null)}
                     confirmLabel="Remove"
                 />
+            )}
+
+            {bulkDeleteConfirm && (
+                <ConfirmModal
+                    message={`Are you sure you want to delete ${selectedIds.size} workout(s)?`}
+                    onConfirm={deleteBulkWorkouts}
+                    onCancel={() => setBulkDeleteConfirm(false)}
+                    confirmLabel="Delete All"
+                />
+            )}
+
+            {showSaveRoutineModal && (
+                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-150">
+                        <h3 className="font-display text-lg font-bold text-lime-400 mb-4">Save as Routine</h3>
+                        <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name</label>
+                        <input
+                            type="text"
+                            value={routineName}
+                            onChange={(e) => setRoutineName(e.target.value)}
+                            placeholder="e.g. Push Day"
+                            className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-lime-400 focus:outline-none transition-all mb-4"
+                            autoFocus
+                        />
+                        <div className="flex gap-3 justify-end">
+                            <Button
+                                type="button"
+                                onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }}
+                                variant="secondary"
+                                className="px-4 py-2 text-xs rounded-lg"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={saveAsRoutine}
+                                variant="primary"
+                                className="px-4 py-2 text-xs rounded-lg"
+                            >
+                                Create Routine
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

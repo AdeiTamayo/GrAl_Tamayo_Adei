@@ -6,10 +6,19 @@ interface DatePickerProps {
     onChange: (date: string) => void;
     placeholder?: string;
     buttonClassName?: string;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    menuAlign?: 'left' | 'right';
 }
 
-export default function DatePicker({ value, onChange, placeholder = "Select date", buttonClassName = "" }: DatePickerProps) {
-    const [open, setOpen] = useState(false);
+export default function DatePicker({ value, onChange, placeholder = "Select date", buttonClassName = "", open: controlledOpen, onOpenChange, menuAlign = 'left' }: DatePickerProps) {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+
+    const setOpen = (v: boolean) => {
+        if (onOpenChange) onOpenChange(v);
+        setInternalOpen(v);
+    };
 
     const displayDate = value
         ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
@@ -29,7 +38,7 @@ export default function DatePicker({ value, onChange, placeholder = "Select date
                 )}
             </button>
             {open && (
-                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150 w-full">
+                <div className={`absolute ${menuAlign === 'right' ? 'right-0' : 'left-0'} mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150 min-w-[280px]`}>
                     <div className="relative border border-lime-400/30 rounded-xl bg-card shadow-xl backdrop-blur-md">
                         <button
                             onClick={() => setOpen(false)}

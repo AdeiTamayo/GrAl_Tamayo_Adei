@@ -91,7 +91,6 @@ export default function ExerciseHistory() {
                             className="w-full md:w-64 bg-surface border border-subtle rounded-xl px-4 py-3 text-body hover:border-lime-400 transition-all flex justify-between items-center"
                         >
                             <span className="truncate">{selectedExercise ? selectedExercise.name : "Select Exercise..."}</span>
-                            <span className="text-lime-400">🔍</span>
                         </button>
                     </div>
                 </header>
