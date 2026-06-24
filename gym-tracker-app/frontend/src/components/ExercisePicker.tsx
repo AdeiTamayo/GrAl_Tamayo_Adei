@@ -259,20 +259,20 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                     </div>
                 </>
             ) : (
-                <form onSubmit={handleCreateExercise} className="p-6 space-y-4 overflow-y-auto flex-1">
+                <form onSubmit={handleCreateExercise} className="p-4 space-y-3 overflow-y-auto flex-1">
                     <div>
-                        <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Exercise Name</label>
+                        <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Exercise Name</label>
                         <input
                             type="text"
                             value={newName}
                             onChange={e => setNewName(e.target.value)}
                             required
-                            className="w-full bg-surface border border-subtle rounded-xl px-4 py-2.5 text-body focus:outline-none focus:border-lime-400"
+                            className="w-full bg-surface border border-subtle rounded-xl px-3 py-2 text-xs text-body focus:outline-none focus:border-lime-400 transition-colors"
                         />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Target Muscle</label>
+                            <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Target Muscle</label>
                             <Select
                                 value={newTarget}
                                 onChange={(val) => setNewTarget(val)}
@@ -281,10 +281,11 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                     { value: "", label: "Select" },
                                     ...filterOptions.muscles.map(m => ({ value: m, label: m }))
                                 ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Equipment</label>
+                            <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Equipment</label>
                             <Select
                                 value={newEquipment}
                                 onChange={(val) => setNewEquipment(val)}
@@ -293,12 +294,13 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                     { value: "", label: "Select" },
                                     ...filterOptions.equipment.map(e => ({ value: e, label: e }))
                                 ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                             />
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Category</label>
+                            <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Category</label>
                             <Select
                                 value={newCategory}
                                 onChange={(val) => setNewCategory(val)}
@@ -307,10 +309,11 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                     { value: "", label: "Select" },
                                     ...filterOptions.categoryType.map(c => ({ value: c, label: c }))
                                 ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Difficulty</label>
+                            <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Difficulty</label>
                             <Select
                                 value={newDifficulty}
                                 onChange={(val) => setNewDifficulty(val)}
@@ -320,10 +323,11 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                     { value: "intermediate", label: "Intermediate" },
                                     { value: "expert", label: "Expert" }
                                 ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                             />
                         </div>
                     </div>
-                    <Button type="submit" fullWidth disabled={saving} className="mt-4">
+                    <Button type="submit" variant="secondary" fullWidth disabled={saving} className="mt-2 text-xs py-2">
                         {saving ? 'Creating...' : 'Create and Select'}
                     </Button>
                 </form>

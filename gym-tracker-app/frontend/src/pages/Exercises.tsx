@@ -668,104 +668,180 @@ function ExerciseForm({
     onSubmit,
     onCancel
 }: ExerciseFormProps) {
+    const [showNewMuscle, setShowNewMuscle] = useState(false);
+    const [showNewEquipment, setShowNewEquipment] = useState(false);
+    const [showNewCategory, setShowNewCategory] = useState(false);
+    const [showNewSecondary, setShowNewSecondary] = useState(false);
     return (
-        <form onSubmit={(e) => onSubmit(e, ex?.id)} className="bg-card border border-subtle rounded-xl p-6 shadow-xl space-y-4">
-            <h2 className="font-display text-xl font-bold text-body tracking-wide uppercase mb-4">
+        <form onSubmit={(e) => onSubmit(e, ex?.id)} className="bg-card border border-subtle rounded-xl p-5 shadow-xl space-y-3">
+            <h2 className="font-display text-base font-bold text-body tracking-wide uppercase mb-2">
                 {isEdit ? 'Edit Exercise' : 'Create Custom Exercise'}
             </h2>
 
             {error && (
-                <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">
+                <p className="text-xs font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">
                     {error}
                 </p>
             )}
 
             <div>
-                <label className="block text-sm font-semibold text-muted mb-2">Exercise Name *</label>
+                <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Exercise Name *</label>
                 <input
                     type="text"
                     name="name"
                     required
                     value={formName}
                     onChange={e => setFormName(e.target.value)}
-                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                 />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Body Part</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Body Part</label>
                     <input
                         type="text"
                         name="bodyPart"
                         value={formBodyPart}
                         onChange={e => setFormBodyPart(e.target.value)}
-                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Target Muscle *</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Target Muscle *</label>
                     <Select
                         value={formTarget}
                         onChange={(val) => setFormTarget(val)}
-                        placeholder="Select Target"
+                        placeholder="Select"
                         options={[
-                            { value: "", label: "Select Target" },
+                            { value: "", label: "Select" },
                             ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
                     <input type="hidden" name="target_muscle" value={formTarget} />
-                    <input
-                        type="text"
-                        name="new_target_muscle"
-                        placeholder="Or add new muscle..."
-                        className="w-full mt-2 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                    />
+                    <div className="mt-2">
+                        {showNewMuscle ? (
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="new_target_muscle"
+                                    placeholder="Create new muscle..."
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors pr-8"
+                                    autoFocus
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewMuscle(false)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-lime-400 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setShowNewMuscle(true)}
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-lime-400 transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                Create new muscle
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Equipment *</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Equipment *</label>
                     <Select
                         value={formEquipment}
                         onChange={(val) => setFormEquipment(val)}
-                        placeholder="Select Equipment"
+                        placeholder="Select"
                         options={[
-                            { value: "", label: "Select Equipment" },
+                            { value: "", label: "Select" },
                             ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
                     <input type="hidden" name="equipment" value={formEquipment} />
-                    <input
-                        type="text"
-                        name="new_equipment"
-                        placeholder="Or add new equipment..."
-                        className="w-full mt-2 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                    />
+                    <div className="mt-2">
+                        {showNewEquipment ? (
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="new_equipment"
+                                    placeholder="Create new equipment..."
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors pr-8"
+                                    autoFocus
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewEquipment(false)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-lime-400 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setShowNewEquipment(true)}
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-lime-400 transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                Create new equipment
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Category *</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Category *</label>
                     <Select
                         value={formCategory}
                         onChange={(val) => setFormCategory(val)}
-                        placeholder="Select Category"
+                        placeholder="Select"
                         options={[
-                            { value: "", label: "Select Category" },
+                            { value: "", label: "Select" },
                             ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
                     <input type="hidden" name="category" value={formCategory} />
-                    <input
-                        type="text"
-                        name="new_category"
-                        placeholder="Or add new category..."
-                        className="w-full mt-2 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                    />
+                    <div className="mt-2">
+                        {showNewCategory ? (
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="new_category"
+                                    placeholder="Create new category..."
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors pr-8"
+                                    autoFocus
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewCategory(false)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-lime-400 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setShowNewCategory(true)}
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-lime-400 transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                Create new category
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Difficulty</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Difficulty</label>
                     <Select
                         value={formDifficulty}
                         onChange={(val) => setFormDifficulty(val)}
@@ -775,12 +851,13 @@ function ExerciseForm({
                             { value: "intermediate", label: "Intermediate" },
                             { value: "advanced", label: "Advanced" }
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
                     <input type="hidden" name="difficulty" value={formDifficulty} />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Secondary Muscles</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Secondary Muscles</label>
                     <Select
                         value={formSecondaryPick}
                         onChange={(val) => {
@@ -789,30 +866,54 @@ function ExerciseForm({
                             }
                             setFormSecondaryPick('');
                         }}
-                        placeholder="Select Secondary Muscle"
+                        placeholder="Select"
                         options={[
-                            { value: "", label: "Select Secondary Muscle" },
+                            { value: "", label: "Select" },
                             ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
-                    <input
-                        type="text"
-                        placeholder="Or add new secondary muscle..."
-                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const value = e.currentTarget.value.trim();
-                                if (value && !selectedSecondaryMuscles.includes(value)) {
-                                    setSelectedSecondaryMuscles(prev => [...prev, value]);
-                                }
-                                e.currentTarget.value = '';
-                            }
-                        }}
-                    />
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="mt-2">
+                        {showNewSecondary ? (
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Create new secondary muscle..."
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors pr-8"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const value = e.currentTarget.value.trim();
+                                            if (value && !selectedSecondaryMuscles.includes(value)) {
+                                                setSelectedSecondaryMuscles(prev => [...prev, value]);
+                                            }
+                                            e.currentTarget.value = '';
+                                        }
+                                    }}
+                                    autoFocus
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewSecondary(false)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-lime-400 transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setShowNewSecondary(true)}
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-lime-400 transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                Create new secondary muscle
+                            </button>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
                         {selectedSecondaryMuscles.map(muscle => (
-                            <div key={muscle} className="flex items-center gap-2 bg-elevated px-3 py-1 rounded-full text-heading text-sm">
+                            <div key={muscle} className="flex items-center gap-1 bg-elevated px-2 py-0.5 rounded-full text-heading text-xs">
                                 <span>{muscle}</span>
                                 <input type="hidden" name="secondary_muscles" value={muscle} />
                                 <button type="button" className="text-muted hover:text-rose-500 font-bold" onClick={() => setSelectedSecondaryMuscles(prev => prev.filter(m => m !== muscle))}>✕</button>
@@ -823,32 +924,30 @@ function ExerciseForm({
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-muted mb-2">Description</label>
+                <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Description</label>
                 <textarea
                     name="description"
                     defaultValue={ex?.description || ''}
                     rows={3}
-                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-muted mb-2">Instructions (one per line) *</label>
+                <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Instructions (one per line) *</label>
                 <textarea
                     name="instructions"
                     defaultValue={ex?.instructions?.join('\n') || ''}
                     rows={4}
-                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
                 />
             </div>
 
-            <div className="pt-2">
-                <Button type="submit" variant="primary" fullWidth disabled={saving}>
+            <div className="flex gap-2 pt-1">
+                <Button type="submit" variant="secondary" fullWidth disabled={saving} className="text-xs py-2">
                     {saving ? 'Saving...' : isEdit ? 'Update Exercise' : 'Save Custom Exercise'}
                 </Button>
-            </div>
-            <div className="pt-2 pb-2">
-                <Button type="button" variant="secondary" fullWidth onClick={onCancel}>
+                <Button type="button" variant="secondary" fullWidth onClick={onCancel} className="text-xs py-2">
                     Cancel
                 </Button>
             </div>
