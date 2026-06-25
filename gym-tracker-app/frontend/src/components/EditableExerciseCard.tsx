@@ -195,58 +195,58 @@ export default function EditableExerciseCard({
 
                                         {/* Readable Row Note Toggle Button */}
                                         {showNotesField && (
-                                        <div className={`col-span-2 ${goalWeight ? 'md:col-span-2' : 'md:col-span-4'}`}>
-                                            <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Note</span>
-                                            {expandedNotes.has(set.id) ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const next = new Set(expandedNotes);
-                                                        next.delete(set.id);
-                                                        setExpandedNotes(next);
-                                                    }}
-                                                    className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-accent/10 border-accent/30 text-accent"
-                                                    title="Close note"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M12 20h9" />
-                                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                                                    </svg>
-                                                </button>
-                                            ) : set.note ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const next = new Set(expandedNotes);
-                                                        next.add(set.id);
-                                                        setExpandedNotes(next);
-                                                    }}
-                                                    className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-transparent border-subtle text-dim hover:text-accent hover:border-accent/40"
-                                                    title="Show note"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M12 20h9" />
-                                                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-                                                    </svg>
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const next = new Set(expandedNotes);
-                                                        next.add(set.id);
-                                                        setExpandedNotes(next);
-                                                    }}
-                                                    className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-transparent border-subtle text-dim hover:text-accent hover:border-accent/40"
-                                                    title="Add note"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                        <line x1="12" y1="5" x2="12" y2="19" />
-                                                        <line x1="5" y1="12" x2="19" y2="12" />
-                                                    </svg>
-                                                </button>
-                                            )}
-                                        </div>
+                                            <div className={`col-span-2 ${goalWeight ? 'md:col-span-2' : 'md:col-span-4'}`}>
+                                                <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Note</span>
+                                                {expandedNotes.has(set.id) ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const next = new Set(expandedNotes);
+                                                            next.delete(set.id);
+                                                            setExpandedNotes(next);
+                                                        }}
+                                                        className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-accent/10 border-accent/30 text-accent"
+                                                        title="Close note"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M12 20h9" />
+                                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                        </svg>
+                                                    </button>
+                                                ) : set.note ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const next = new Set(expandedNotes);
+                                                            next.add(set.id);
+                                                            setExpandedNotes(next);
+                                                        }}
+                                                        className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-transparent border-subtle text-dim hover:text-accent hover:border-accent/40"
+                                                        title="Show note"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <path d="M12 20h9" />
+                                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                        </svg>
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const next = new Set(expandedNotes);
+                                                            next.add(set.id);
+                                                            setExpandedNotes(next);
+                                                        }}
+                                                        className="flex items-center gap-1.5 text-xs font-mono transition-all rounded-lg px-2 py-1.5 border bg-transparent border-subtle text-dim hover:text-accent hover:border-accent/40"
+                                                        title="Add note"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <line x1="12" y1="5" x2="12" y2="19" />
+                                                            <line x1="5" y1="12" x2="19" y2="12" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+                                            </div>
                                         )}
 
                                         {/* Row Destruction Trigger Action */}
@@ -262,7 +262,7 @@ export default function EditableExerciseCard({
                                                 onChange={e => onUpdateSet(set.id, 'note', e.target.value)}
                                                 onBlur={() => onBlurSet(set.id)}
                                                 placeholder="Add details..."
-                                                className="w-full bg-card border border-subtle focus:border-accent/80 rounded-xl px-3 py-2 text-xs font-mono text-heading focus:outline-none transition-all resize-y"
+                                                className="mt-4 w-full bg-card border border-subtle focus:border-accent/80 rounded-xl px-3 py-2 text-xs font-mono text-heading focus:outline-none transition-all resize-y"
                                             />
                                             <div className="flex gap-2 justify-end">
                                                 <button
