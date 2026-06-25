@@ -10,6 +10,7 @@ import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
 import Calendar from "../components/Calendar";
 import DatePicker from "../components/DatePicker";
+import ErrorBanner from "../components/ErrorBanner";
 
 interface Goal {
     id: number;
@@ -205,7 +206,7 @@ export default function Goals() {
             <div>
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Goals</h1>
             </div>
-            {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
+            {error && <ErrorBanner message={error} />}
 
             <div className="flex gap-6 flex-col md:flex-row items-start">
 
@@ -270,7 +271,7 @@ export default function Goals() {
                                 <DatePicker value={expectedDate} onChange={setExpectedDate} placeholder="Set due date (optional)" />
 
                                 <div className="flex gap-2 justify-end mt-1">
-                                    <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-lg">
+                                    <Button type="submit" variant="primary" className="px-4 py-2 text-xs">
                                         {editingGoalId ? "Update Goal" : "Create Goal"}
                                     </Button>
                                 </div>

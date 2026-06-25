@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import Pagination from '../components/Pagination';
+import ErrorBanner from '../components/ErrorBanner';
 import EditableExerciseCard from '../components/EditableExerciseCard';
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import { apiFetch } from "../utils/api";
@@ -254,8 +255,8 @@ export default function RoutinesManagement() {
                                 />
                             </div>
                             <div className="flex gap-2 justify-end mt-1">
-                                <Button type="button" onClick={() => setShowCreateModal(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
-                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-lg">Create Routine</Button>
+                                <Button type="button" onClick={() => setShowCreateModal(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
+                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs">Create Routine</Button>
                             </div>
                         </form>
                     </div>
@@ -263,15 +264,7 @@ export default function RoutinesManagement() {
             </div>
 
             {error && (
-                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm flex items-start justify-between gap-3">
-                    <span>Error: {error}</span>
-                    <button type="button" onClick={() => setError(null)} className="shrink-0 mt-0.5 text-rose-400/60 hover:text-rose-400 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
-                </div>
+                <ErrorBanner message={error} onDismiss={() => setError(null)} />
             )}
 
             <div className="flex gap-6 items-start flex-col xl:flex-row">
@@ -337,12 +330,12 @@ export default function RoutinesManagement() {
                                     type="button"
                                     onClick={() => setShowDetailsDropdown(true)}
                                     variant="secondary"
-                                    className="px-3 py-1.5 text-xs rounded-lg font-medium"
+                                    className="px-3 py-1.5 text-xs font-medium"
                                 >
                                     Modify Details
                                 </Button>
 
-                                <Button type="button" onClick={() => setSelectedRoutine(null)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
+                                <Button type="button" onClick={() => setSelectedRoutine(null)} variant="secondary" className="px-3 py-1.5 text-xs font-medium">
                                     Close
                                 </Button>
                             </div>
@@ -453,12 +446,12 @@ export default function RoutinesManagement() {
                 <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     <h3 className="font-display text-lg font-bold text-accent mb-4">Edit Core Metadata</h3>
                     <div className="flex flex-col gap-3">
-                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-sm text-body focus:border-accent focus:outline-none" />
-                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-sm text-body focus:border-accent focus:outline-none" />
+                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all" />
+                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all" />
                     </div>
                     <div className="flex gap-2 justify-end mt-4">
-                        <Button type="button" onClick={() => setShowDetailsDropdown(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
-                        <Button type="button" onClick={saveRoutineEdit} variant="primary" className="px-4 py-2 text-xs rounded-lg">Save Changes</Button>
+                        <Button type="button" onClick={() => setShowDetailsDropdown(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
+                        <Button type="button" onClick={saveRoutineEdit} variant="primary" className="px-4 py-2 text-xs">Save Changes</Button>
                     </div>
                 </div>
             </Modal>

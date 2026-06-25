@@ -134,20 +134,13 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                         >
                             {day}
                             {!isSelected && (event || hasGoal || plannedDates?.has(dateStr)) && (
-                                <span className={`absolute flex gap-[3px] items-center ${compact ? 'bottom-0.5' : 'bottom-1'}`}>
-                                    {event && (
-                                        <span className={`rounded-full ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'} ${event.status === 'completed' ? 'bg-accent' :
-                                                event.status === 'rest' ? 'bg-blue-400' :
-                                                    event.status === 'missed' ? 'bg-rose-500' :
-                                                        'bg-elevated'
-                                            }`} />
-                                    )}
-                                    {hasGoal && !event?.status?.startsWith('completed') && (
-                                        <span className={`rounded-full bg-amber-400 ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'}`} />
-                                    )}
-                                    {plannedDates?.has(dateStr) && (
-                                        <span className={`rounded-full bg-blue-400 ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'}`} />
-                                    )}
+                                <span className={`absolute ${compact ? 'bottom-0.5' : 'bottom-1'}`}>
+                                    <span className={`rounded-full block mx-auto ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'} ${event?.status === 'completed' ? 'bg-accent' :
+                                            event?.status === 'rest' ? 'bg-blue-400' :
+                                                event?.status === 'missed' ? 'bg-rose-500' :
+                                                    hasGoal ? 'bg-amber-400' :
+                                                        'bg-blue-400'
+                                        }`} />
                                 </span>
                             )}
                         </button>

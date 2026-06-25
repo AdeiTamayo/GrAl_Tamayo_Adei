@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import Calendar from '../components/Calendar';
+import ErrorBanner from '../components/ErrorBanner';
 
 type LocationState = {
     user?: { email?: string };
@@ -172,7 +173,12 @@ export default function Hero() {
 
                 {loading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
-                        {[1, 2, 3].map(n => <div key={n} className="bg-surface/60 border border-subtle rounded-xl h-24" />)}
+                        {[1, 2, 3].map(n => (
+                            <div key={n} className="bg-surface/60 border border-subtle rounded-xl p-5 space-y-3">
+                                <div className="h-3 w-20 bg-elevated rounded" />
+                                <div className="h-8 w-16 bg-elevated rounded" />
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -182,7 +188,7 @@ export default function Hero() {
                         </div>
                         <div className="bg-card border border-subtle rounded-xl p-5">
                             <p className="text-xs font-bold tracking-widest uppercase text-dim">Weekly Volume</p>
-                            <p className="text-3xl font-bold text-accent mt-2 font-mono">{weeklyVolume != null ? `${(weeklyVolume / 1000).toFixed(1)}k` : '—'}</p>
+                            <p className="text-3xl font-bold mt-2 font-mono">{weeklyVolume != null ? `${(weeklyVolume / 1000).toFixed(1)}k` : '—'}</p>
                             <p className="text-[10px] text-dim mt-0.5">total kg this week</p>
                         </div>
                         <div className="bg-card border border-subtle rounded-xl p-5">
@@ -196,9 +202,7 @@ export default function Hero() {
                 )}
 
                 {dashboardError && (
-                    <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl p-4 font-medium text-sm">
-                        Error: {dashboardError}
-                    </div>
+                    <ErrorBanner message={dashboardError} />
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
@@ -214,13 +218,15 @@ export default function Hero() {
                                 <p className="text-xs font-bold tracking-widest uppercase text-dim">Current Weight</p>
                                 <p className="text-3xl font-bold text-body mt-2 font-mono">{Number(latestWeight.weight)} <span className="text-lg text-dim font-normal">kg</span></p>
                                 <p className="text-[10px] text-dim mt-0.5">as of {latestWeight.date?.substring(0, 10)}</p>
-                                <Link to="/Weight_history" className="mt-4 block text-center text-xs font-bold text-accent hover:text-accent-hover uppercase tracking-wider transition-colors">Track Weight</Link>
+                                <Link to="/Weight_history" className="mt-4 w-full block text-center bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-xl px-4 py-2.5 transition-all">Track Weight</Link>
                             </div>
                         )}
                         <div className="bg-surface/30 border border-subtle rounded-xl p-5 flex-1">
                             <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim mb-4">Recent Workouts</h2>
                             {recentWorkouts.length === 0 ? (
-                                <p className="text-xs text-dim italic">No workouts logged yet.</p>
+                                <div className="text-center py-10 bg-card/40 rounded-xl border border-dashed border-subtle/60">
+                                    <p className="text-xs text-dim italic">No workouts logged yet.</p>
+                                </div>
                             ) : (
                                 <ul className="space-y-3">
                                     {recentWorkouts.slice(0, 3).map(w => (
@@ -236,7 +242,7 @@ export default function Hero() {
                                     ))}
                                 </ul>
                             )}
-                            <Link to="/workouts" className="mt-4 block text-center text-xs font-bold text-accent hover:text-accent-hover uppercase tracking-wider transition-colors">View All Workouts</Link>
+                            <Link to="/workouts" className="mt-4 w-full block text-center bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-xl px-4 py-2.5 transition-all">View All Workouts</Link>
                         </div>
                     </div>
                 </div>
@@ -272,38 +278,56 @@ export default function Hero() {
 
             <div className="fixed left-0 top-[57px] bottom-0 z-40 flex">
                 {showActions && (
-                    <div className="w-[22vw] bg-card border-r border-subtle shadow-2xl overflow-y-auto animate-in fade-in slide-in-from-left-1 duration-150">
+                    <div className="w-[25vw] max-w-[calc(50vw_-_36rem)] min-w-[280px] bg-card border-r border-subtle shadow-2xl overflow-y-auto animate-slide-in-left">
                         <div className="p-5 space-y-5">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-bold tracking-[0.15em] uppercase text-heading">Modules</h3>
                                 <button
                                     onClick={() => setShowActions(false)}
-                                    className="p-1.5 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors"
+                                    className="p-1.5 rounded-lg hover:bg-rose-500/10 text-muted hover:text-rose-400 transition-colors"
                                 >
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <Link to="/settings" className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors" aria-label="Settings">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center gap-2">
+                                <Link to="/settings" className="flex items-center gap-2 flex-1 bg-surface/30 border border-subtle rounded-lg px-3 py-2 hover:border-accent/40 hover:bg-elevated/40 transition-all group">
+                                    <svg className="w-4 h-4 text-muted group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
+                                    <span className="text-xs font-bold text-muted group-hover:text-body uppercase tracking-wider transition-colors">Settings</span>
                                 </Link>
-                                <Link to="/profile" className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors" aria-label="Profile">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <Link to="/profile" className="flex items-center gap-2 flex-1 bg-surface/30 border border-subtle rounded-lg px-3 py-2 hover:border-accent/40 hover:bg-elevated/40 transition-all group">
+                                    <svg className="w-4 h-4 text-muted group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                     </svg>
+                                    <span className="text-xs font-bold text-muted group-hover:text-body uppercase tracking-wider transition-colors">Profile</span>
                                 </Link>
                             </div>
                             <div className="space-y-1.5">
-                                {[...primaryNav, ...secondaryNav].map(link => (
-                                    <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 border border-subtle rounded-lg px-4 py-3 hover:border-accent/40 hover:bg-elevated/40 transition-all group">
+                                {primaryNav.map(link => (
+                                    <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 rounded-lg px-4 py-3 border-l-2 border-l-transparent hover:bg-elevated/40 hover:border-l-accent transition-all group">
                                         <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={(primaryNav.find(n => n.to === link.to) || secondaryNav.find(n => n.to === link.to))?.icon || ''} />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={link.icon} />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">{link.label}</p>
+                                            <p className="text-xs text-dim leading-relaxed">{link.desc}</p>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                            <hr className="border-subtle/40" />
+                            <div className="space-y-1.5 opacity-70">
+                                {secondaryNav.map(link => (
+                                    <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 rounded-lg px-4 py-3 border-l-2 border-l-transparent hover:bg-elevated/40 hover:border-l-accent transition-all group hover:opacity-100">
+                                        <div className="w-8 h-8 rounded-lg bg-accent/5 border border-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
+                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={link.icon} />
                                             </svg>
                                         </div>
                                         <div>
@@ -318,13 +342,15 @@ export default function Hero() {
                 )}
                 <button
                     onClick={() => setShowActions(!showActions)}
-                    className="self-start mt-20 bg-accent border border-l-0 border-accent rounded-r-xl shadow-lg px-2 py-4 text-xs font-bold tracking-[0.15em] uppercase text-black hover:bg-accent/90 transition-colors flex items-center gap-2"
-                    style={{ writingMode: 'vertical-rl' }}
+                    className="self-start mt-[57px] bg-accent border border-l-0 border-accent rounded-r-xl shadow-lg px-2 py-4 text-xs font-bold tracking-[0.15em] uppercase text-black hover:bg-accent/90 transition-colors flex flex-col items-center gap-2"
                 >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={showActions ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'} />
                     </svg>
-                    {showActions ? 'Close' : 'Modules'}
+
+                    <span className="[writing-mode:vertical-rl] rotate-180">
+                        {showActions ? 'Close' : 'Modules'}
+                    </span>
                 </button>
             </div>
         </div>

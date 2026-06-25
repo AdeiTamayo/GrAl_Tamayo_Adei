@@ -10,6 +10,7 @@ import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
 // 1. Import Recharts components
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import ErrorBanner from "../components/ErrorBanner";
 
 interface WeightEntry {
     id: number;
@@ -209,7 +210,7 @@ export default function WeightHistory() {
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Weight History</h1>
             </div>
 
-            {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
+            {error && <ErrorBanner message={error} />}
 
             <div className="w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
                 <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-4">
@@ -298,8 +299,8 @@ export default function WeightHistory() {
                             <DatePicker value={date} onChange={setDate} />
 
                             <div className="flex gap-2 justify-end mt-1">
-                                <Button type="button" onClick={resetForm} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
-                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-lg">
+                                <Button type="button" onClick={resetForm} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
+                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs">
                                     {editingId ? "Update" : "Add Entry"}
                                 </Button>
                             </div>

@@ -9,6 +9,7 @@ import ExercisePicker, { Exercise as ExerciseMeta } from '../components/Exercise
 import DatePicker from '../components/DatePicker';
 import ConfirmModal from '../components/ConfirmModal';
 import DeleteButton from '../components/DeleteButton';
+import ErrorBanner from '../components/ErrorBanner';
 import { useNotification } from "../components/NotificationProvider";
 
 // ---- TYPES & INTERFACES ----
@@ -298,7 +299,6 @@ export default function WorkoutsManagement() {
         try {
             await apiFetch("/api/workouts/" + id, { method: "DELETE", headers });
         } catch (err: any) {
-            console.error("Delete workout failed", err);
             console.error("Delete workout failed", err);
             setError("Failed to delete workout");
             await fetchWorkouts();
@@ -611,8 +611,8 @@ export default function WorkoutsManagement() {
                                 />
                             </div>
                             <div className="flex gap-2 justify-end mt-1">
-                                <Button type="button" onClick={() => setShowCreateModal(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
-                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-lg">Confirm & Save</Button>
+                                <Button type="button" onClick={() => setShowCreateModal(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
+                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs">Confirm & Save</Button>
                             </div>
                         </form>
                     </div>
@@ -620,9 +620,7 @@ export default function WorkoutsManagement() {
             </div>
 
             {error && (
-                <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm">
-                    Error: {error}
-                </div>
+                <ErrorBanner message={error} />
             )}
 
             <div className="flex gap-6 items-start flex-col xl:flex-row">
@@ -718,18 +716,18 @@ export default function WorkoutsManagement() {
                                     type="button"
                                     onClick={() => { openEditWorkout(); setShowDetailsDropdown(true); }}
                                     variant="secondary"
-                                    className="px-3 py-1.5 text-xs rounded-lg font-medium"
+                                    className="px-3 py-1.5 text-xs font-medium"
                                 >
                                     Modify Details
                                 </Button>
 
-                                <Button type="button" onClick={() => { setRoutineName(selectedWorkout.name || ""); setShowSaveRoutineModal(true); }} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
+                                <Button type="button" onClick={() => { setRoutineName(selectedWorkout.name || ""); setShowSaveRoutineModal(true); }} variant="secondary" className="px-3 py-1.5 text-xs font-medium">
                                     Save as Routine
                                 </Button>
 
-                                <Button type="button" onClick={() => setSelectedWorkout(null)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
+                                <button type="button" onClick={() => setSelectedWorkout(null)} className="px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm hover:bg-accent hover:text-black transition-colors">
                                     Close
-                                </Button>
+                                </button>
                             </div>
                         </div>
 
@@ -822,13 +820,13 @@ export default function WorkoutsManagement() {
                 <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     <h3 className="font-display text-lg font-bold text-accent mb-4">Edit Core Metadata</h3>
                     <div className="flex flex-col gap-3">
-                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-sm text-body focus:border-accent focus:outline-none" />
+                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all" />
                         <DatePicker value={editDate} onChange={setEditDate} />
-                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-sm text-body focus:border-accent focus:outline-none" />
+                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all" />
                     </div>
                     <div className="flex gap-2 justify-end mt-4">
-                        <Button type="button" onClick={() => setShowDetailsDropdown(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
-                        <Button type="button" onClick={saveWorkoutEdit} variant="primary" className="px-4 py-2 text-xs rounded-lg">Save Changes</Button>
+                        <Button type="button" onClick={() => setShowDetailsDropdown(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
+                        <Button type="button" onClick={saveWorkoutEdit} variant="primary" className="px-4 py-2 text-xs">Save Changes</Button>
                     </div>
                 </div>
             </Modal>
@@ -850,7 +848,7 @@ export default function WorkoutsManagement() {
                             type="button"
                             onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }}
                             variant="secondary"
-                            className="px-4 py-2 text-xs rounded-lg"
+                            className="px-4 py-2 text-xs"
                         >
                             Cancel
                         </Button>
@@ -858,7 +856,7 @@ export default function WorkoutsManagement() {
                             type="button"
                             onClick={saveAsRoutine}
                             variant="primary"
-                            className="px-4 py-2 text-xs rounded-lg"
+                            className="px-4 py-2 text-xs"
                         >
                             Create Routine
                         </Button>

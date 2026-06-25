@@ -36,7 +36,7 @@ export default function Modal({
             <div className={`relative w-full ${maxWidthClasses[maxWidth] || maxWidthClasses.md} ${containerClassName}`}>
                 <button
                     onClick={onClose}
-                    className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                    className="absolute top-2 right-2 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm hover:bg-accent hover:text-black transition-colors"
                 >
                     Close
                 </button>

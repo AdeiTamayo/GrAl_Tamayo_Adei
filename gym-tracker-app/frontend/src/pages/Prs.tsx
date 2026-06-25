@@ -10,6 +10,7 @@ import DatePicker from "../components/DatePicker";
 import ConfirmModal from "../components/ConfirmModal";
 import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
+import ErrorBanner from "../components/ErrorBanner";
 
 interface PRSummary {
     id: number;
@@ -208,7 +209,7 @@ export default function PersonalRecords() {
             <div>
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Personal Records</h1>
             </div>
-            {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
+            {error && <ErrorBanner message={error} />}
 
             <div className="flex gap-6 items-start flex-col lg:flex-row">
                 <div className="flex-none w-full lg:w-[450px] space-y-6">
@@ -282,8 +283,8 @@ export default function PersonalRecords() {
                                     className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                 />
                                 <div className="flex gap-2 justify-end mt-1">
-                                    <Button type="button" onClick={() => setShowAddForm(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
-                                    <Button type="submit" disabled={isCreating || !formExerciseId} variant="primary" className="px-4 py-2 text-xs rounded-lg">
+                                    <Button type="button" onClick={() => setShowAddForm(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
+                                    <Button type="submit" disabled={isCreating || !formExerciseId} variant="primary" className="px-4 py-2 text-xs">
                                         {isCreating ? "Adding..." : "Log PR"}
                                     </Button>
                                 </div>

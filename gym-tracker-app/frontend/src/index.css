@@ -54,6 +54,7 @@
     body {
         color-scheme: var(--color-scheme);
         @apply bg-body text-body;
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     ::-webkit-scrollbar {
@@ -140,4 +141,13 @@
     .shadow-accent\/5 { --tw-shadow-color: rgba(var(--accent-rgb), 0.05); }
     .shadow-accent\/20 { --tw-shadow-color: rgba(var(--accent-rgb), 0.2); }
     .hover\:shadow-accent\/5:hover { --tw-shadow-color: rgba(var(--accent-rgb), 0.05); }
+}
+
+@keyframes slide-in-left {
+    from { transform: translateX(-100%); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in-left {
+    animation: slide-in-left 0.2s ease-out;
 }
