@@ -366,7 +366,7 @@ export default function WorkoutCalendar() {
                                 value={planName}
                                 onChange={(e) => setPlanName(e.target.value)}
                                 placeholder="e.g. Push Day"
-                                className="w-full bg-surface border border-subtle rounded-lg px-3 py-2 text-sm text-body placeholder:text-dim focus:border-lime-400 focus:outline-none"
+                                className="w-full bg-surface border border-subtle rounded-lg px-3 py-2 text-sm text-body placeholder:text-dim focus:border-accent focus:outline-none"
                             />
                         </div>
                     </div>

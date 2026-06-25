@@ -236,7 +236,7 @@ export default function CompareWorkouts() {
                 </div>
 
                 {error && (
-                    <div className="bg-red-900/20 border border-red-500/50 text-red-100 p-4 rounded-xl text-center mb-10">
+                    <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-center mb-10">
                         {error}
                     </div>
                 )}

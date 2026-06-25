@@ -119,8 +119,8 @@ export default function ExerciseHistory() {
                 )}
 
                 {fetchError && (
-                    <div className="text-center py-8 bg-red-900/20 rounded-3xl border border-red-900 mb-6">
-                        <p className="text-red-400 text-lg font-medium">{fetchError}</p>
+                    <div className="text-center py-8 bg-rose-500/10 rounded-3xl border border-rose-500/20 mb-6">
+                        <p className="text-rose-400 text-lg font-medium">{fetchError}</p>
                         {fetchError.includes("Cannot connect") && (
                             <p className="text-dim text-sm mt-2">Start the backend with <code className="text-accent">cd backend && node server.js</code></p>
                         )}

@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import CloseButton from "./CloseButton";
 
 interface ModalProps {
@@ -28,6 +28,15 @@ export default function Modal({
     className = "",
     containerClassName = "",
 }: ModalProps) {
+    useEffect(() => {
+        if (open) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [open]);
+
     if (!open) return null;
 
     return (

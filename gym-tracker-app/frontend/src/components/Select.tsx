@@ -39,6 +39,9 @@ export default function Select({ value, onChange, options, placeholder = "Select
                 type="button"
                 disabled={disabled}
                 onClick={() => setOpen(!open)}
+                onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}
+                aria-haspopup="listbox"
+                aria-expanded={open}
                 className={`w-full bg-surface border border-subtle rounded-lg text-left flex justify-between items-center hover:border-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${buttonClassName || 'px-4 py-3'}`}
             >
                 <span className={selected ? "text-body" : "text-dim"}>
@@ -49,11 +52,18 @@ export default function Select({ value, onChange, options, placeholder = "Select
                 </svg>
             </button>
             {open && (
-                <ul className="absolute z-20 w-full mt-1 bg-card border border-subtle rounded-xl shadow-2xl overflow-y-auto max-h-60 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                <ul
+                    role="listbox"
+                    onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}
+                    className="absolute z-20 w-full mt-1 bg-card border border-subtle rounded-xl shadow-2xl overflow-y-auto max-h-60 py-2 animate-in fade-in slide-in-from-top-1 duration-150"
+                >
                     {options.map(o => (
                         <li
                             key={o.value}
+                            role="option"
+                            aria-selected={value === o.value}
                             onClick={() => { onChange(o.value); setOpen(false); }}
+                            tabIndex={-1}
                             className={`px-4 py-2.5 cursor-pointer transition-colors text-sm flex justify-between items-center ${value === o.value ? "bg-accent/10 text-accent" : "text-muted hover:bg-surface hover:text-white"}`}
                         >
                             <span>{o.label}</span>

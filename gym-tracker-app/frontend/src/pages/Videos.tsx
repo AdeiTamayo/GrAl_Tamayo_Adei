@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Video } from "../../types";
-import { apiFetch } from "../utils/api";
+import { apiFetch, apiBaseUrl } from "../utils/api";
 import Pagination from "../components/Pagination";
 import Select from "../components/Select";
 import DatePicker from "../components/DatePicker";
@@ -149,7 +149,7 @@ export default function UserVideos() {
                                         preload="metadata"
                                     >
                                         <source
-                                            src={`http://localhost:8000${video.processed_url}`}
+                                            src={`${apiBaseUrl}${video.processed_url}`}
                                             type="video/mp4"
                                         />
                                     </video>
@@ -184,4 +184,5 @@ export default function UserVideos() {
         </div>
     );
 }
+
 

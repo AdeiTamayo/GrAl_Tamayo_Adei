@@ -43,6 +43,11 @@ export default function EditableExerciseCard({
     const setsExist = sets.length > 0;
     const lastSet = setsExist ? sets[sets.length - 1] : null;
 
+    const gridSpacerCols = (() => {
+        const taken = 1 + 2 + 2 + 2 + (goalWeight ? 2 : 0) + (showNotesField ? (goalWeight ? 2 : 4) : 0) + 1;
+        return 12 - taken;
+    })();
+
     // Local addition form element inputs
     const [newWeight, setNewWeight] = useState<string>("");
     const [newReps, setNewReps] = useState<string>("");
@@ -122,6 +127,7 @@ export default function EditableExerciseCard({
                             <div className="col-span-2">Time (s)</div>
                             {goalWeight && <div className="col-span-2">Goal</div>}
                             {showNotesField && <div className={goalWeight ? "col-span-2" : "col-span-4"}>Note</div>}
+                            {gridSpacerCols > 0 && <div className={`col-span-${gridSpacerCols}`} />}
                             <div className="col-span-1 text-right"></div>
                         </div>
 
@@ -249,6 +255,7 @@ export default function EditableExerciseCard({
                                             </div>
                                         )}
 
+                                        {gridSpacerCols > 0 && <div className={`hidden md:block col-span-${gridSpacerCols}`} />}
                                         {/* Row Destruction Trigger Action */}
                                         <div className="col-span-4 md:col-span-1 text-right mt-2 md:mt-0 pt-2 md:pt-0 border-t border-subtle/40 md:border-0">
                                             <DeleteButton onClick={() => onRemoveSet(set.id)} />

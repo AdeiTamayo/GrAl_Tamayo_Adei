@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { apiFetch } from '../utils/api';
+import { apiFetch, apiBaseUrl } from '../utils/api';
 import Calendar from '../components/Calendar';
 import ErrorBanner from '../components/ErrorBanner';
 
@@ -161,7 +161,7 @@ export default function Hero() {
                 <header className="flex items-center justify-between pb-6 border-b border-subtle gap-3">
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent shrink-0">Dashboard</h1>
                     <div className="flex items-center gap-2">
-                        <Link to="/active-workout" className="hidden md:inline-flex items-center gap-2 bg-accent text-black font-bold rounded-lg hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98] px-4 py-2 text-sm transition-all">
+                        <Link to="/active-workout" className="inline-flex items-center gap-2 bg-accent text-black font-bold rounded-lg hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98] px-4 py-2 text-sm transition-all">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -261,7 +261,7 @@ export default function Hero() {
                             {videos.map(video => (
                                 <Link key={video.id} to="/videos" className="group bg-card border border-subtle/80 rounded-xl overflow-hidden hover:border-accent/40 transition-all hover:shadow-lg">
                                     <div className="bg-black aspect-video flex items-center justify-center">
-                                        <video className="w-full h-full object-contain" src={`http://localhost:8000${video.processed_url}`} preload="metadata" />
+                                        <video className="w-full h-full object-contain" src={`${apiBaseUrl}${video.processed_url}`} preload="metadata" />
                                     </div>
                                     <div className="p-3">
                                         <p className="text-xs font-bold text-accent uppercase tracking-wider truncate">{video.process_type}</p>
@@ -278,7 +278,7 @@ export default function Hero() {
 
             {/* Fixed Sidebar wrapper */}
             <div
-                className={`fixed left-0 top-[57px] bottom-0 z-40 flex items-start pointer-events-none transition-transform duration-300 ease-in-out transform ${showActions ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed left-0 top-16 bottom-0 z-40 flex items-start pointer-events-none transition-transform duration-300 ease-in-out transform ${showActions ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
                 {/* SIDEBAR CONTAINER */}
@@ -356,7 +356,7 @@ export default function Hero() {
                 */}
                 <button
                     onClick={() => setShowActions(!showActions)}
-                    className={`bg-accent border border-l-0 border-accent rounded-r-xl shadow-lg px-2 py-4 text-xs font-bold tracking-[0.15em] uppercase text-black hover:bg-accent/90 pointer-events-auto flex flex-col items-center gap-2 transition-transform duration-300 ease-in-out ${showActions ? '' : 'translate-x-full'
+                    className={`bg-accent border border-l-0 border-accent rounded-r-xl shadow-lg px-2 py-4 mt-16 text-xs font-bold tracking-[0.15em] uppercase text-black hover:bg-accent/90 pointer-events-auto flex flex-col items-center gap-2 transition-transform duration-300 ease-in-out ${showActions ? '' : 'translate-x-full'
                         }`}
                 >
                     <svg className={`w-4 h-4 transition-transform duration-300 ${showActions ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
