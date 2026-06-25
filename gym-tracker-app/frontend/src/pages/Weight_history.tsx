@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import DatePicker from "../components/DatePicker";
@@ -26,6 +27,7 @@ export default function WeightHistory() {
 
     // Form state
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [showAddModal, setShowAddModal] = useState(false);
     const [weight, setWeight] = useState<number | "">("");
     const [date, setDate] = useState<string>(new Date().toLocaleDateString('en-CA'));
 
@@ -120,6 +122,7 @@ export default function WeightHistory() {
         setWeight("");
         setDate(new Date().toLocaleDateString('en-CA'));
         setError(null);
+        setShowAddModal(false);
     }
 
     function handleEdit(entry: WeightEntry) {
@@ -127,6 +130,7 @@ export default function WeightHistory() {
         setWeight(Number(entry.weight));
         setDate(entry.date?.slice(0, 10));
         setError(null);
+        setShowAddModal(true);
     }
 
     async function handleSubmit(e: FormEvent) {
@@ -263,35 +267,44 @@ export default function WeightHistory() {
 
             <div className="flex gap-6 items-start flex-col md:flex-row">
                 {/* Form */}
-                <div className="flex-none w-full md:w-[350px] bg-card border border-subtle rounded-xl p-6 shadow-xl">
-                    <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">
-                        {editingId ? "Edit Weight Entry" : "Add Weight Entry"}
-                    </h3>
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                        <TransparentNumericInput
-                            placeholder="Weight (kg)"
-                            value={weight}
-                            onChange={(val) => setWeight(val === "" ? "" : Number(val))}
-                            className="w-full"
-                            inputClassName="px-4 py-3 text-body placeholder:text-dim bg-surface border-subtle"
-                            step={0.1}
-                            min={0}
-                            max={500}
-                        />
-                        <DatePicker value={date} onChange={setDate} />
-
-                        <div className="flex gap-3 mt-2">
-                            <Button type="submit" variant="primary" className="flex-1">
-                                {editingId ? "Update" : "Add Entry"}
-                            </Button>
-                            {editingId && (
-                                <Button onClick={resetForm} variant="secondary" className="flex-1">
-                                    Cancel
-                                </Button>
-                            )}
-                        </div>
-                    </form>
+                <div className="flex-none w-full md:w-[350px]">
+                    <Button
+                        onClick={() => { resetForm(); setShowAddModal(true); }}
+                        variant="primary"
+                        fullWidth
+                        className="!py-3"
+                    >
+                        Add Weight Entry
+                    </Button>
                 </div>
+
+                <Modal open={showAddModal} onClose={() => { resetForm(); }} maxWidth="sm">
+                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <h3 className="font-display text-lg font-bold text-accent mb-4">
+                            {editingId ? "Edit Weight Entry" : "Add Weight Entry"}
+                        </h3>
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                            <TransparentNumericInput
+                                placeholder="Weight (kg)"
+                                value={weight}
+                                onChange={(val) => setWeight(val === "" ? "" : Number(val))}
+                                className="w-full"
+                                inputClassName="px-4 py-3 text-body placeholder:text-dim bg-surface border-subtle"
+                                step={0.1}
+                                min={0}
+                                max={500}
+                            />
+                            <DatePicker value={date} onChange={setDate} />
+
+                            <div className="flex gap-2 justify-end mt-1">
+                                <Button type="button" onClick={resetForm} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
+                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-lg">
+                                    {editingId ? "Update" : "Add Entry"}
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </Modal>
 
                 {/* List */}
                 <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">

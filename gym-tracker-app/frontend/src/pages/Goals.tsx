@@ -33,6 +33,7 @@ export default function Goals() {
     const [expectedDate, setExpectedDate] = useState(searchParams.get('date') || "");
     const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
     const [showPicker, setShowPicker] = useState(false);
+    const [showGoalModal, setShowGoalModal] = useState(false);
 
 
     const [isLoading, setIsLoading] = useState(true);
@@ -138,6 +139,7 @@ export default function Goals() {
         setTargetReps(goal.target_reps);
         setExpectedDate(goal.expected_date || "");
         setError(null);
+        setShowGoalModal(true);
     }
 
     function resetForm() {
@@ -147,6 +149,7 @@ export default function Goals() {
         setTargetWeight("");
         setTargetReps("");
         setExpectedDate("");
+        setShowGoalModal(false);
     }
 
     async function deleteGoal(id: number) {
@@ -208,66 +211,73 @@ export default function Goals() {
 
                 {/* Form to add/edit goal */}
                 <div className="flex-none w-full md:w-[380px] space-y-6">
-                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-xl">
-                        <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">
-                            {editingGoalId ? "Edit Goal" : "Add New Goal"}
-                        </h3>
-                        <form onSubmit={handleAddGoal} className="flex flex-col gap-4">
-                            <button
-                                type="button"
-                                onClick={() => setShowPicker(true)}
-                                disabled={!!editingGoalId}
-                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-left text-body hover:border-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {selectedExerciseName || <span className="text-dim">Select Exercise</span>}
-                            </button>
-                            <Modal open={showPicker} onClose={() => setShowPicker(false)} maxWidth="xl">
-                                <ExercisePicker
-                                    title="Select Exercise"
-                                    onSelect={(ex) => {
-                                        setSelectedExerciseId(ex.id);
-                                        setSelectedExerciseName(ex.name);
-                                        setShowPicker(false);
-                                    }}
-                                    onClose={() => setShowPicker(false)}
-                                />
-                            </Modal>
-                            <div className="grid grid-cols-2 gap-4">
-                                <TransparentNumericInput
-                                    placeholder="Weight (kg)"
-                                    value={targetWeight}
-                                    onChange={(val) => setTargetWeight(val === "" ? "" : Number(val))}
-                                    className="w-full"
-                                    inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
-                                    step={0.1}
-                                    min={0}
-                                    max={999}
-                                />
-                                <TransparentNumericInput
-                                    placeholder="Reps"
-                                    value={targetReps}
-                                    onChange={(val) => setTargetReps(val === "" ? "" : Number(val))}
-                                    className="w-full"
-                                    inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
-                                    step={1}
-                                    min={0}
-                                    max={999}
-                                />
-                            </div>
-                            <DatePicker value={expectedDate} onChange={setExpectedDate} placeholder="Set due date (optional)" />
+                    <Button
+                        onClick={() => { resetForm(); setShowGoalModal(true); }}
+                        variant="primary"
+                        fullWidth
+                        className="!py-3"
+                    >
+                        Add New Goal
+                    </Button>
 
-                            <div className="flex gap-3 mt-2">
-                                <Button type="submit" variant="primary" className="flex-1">
-                                    {editingGoalId ? "Update Goal" : "Create Goal"}
-                                </Button>
-                                {editingGoalId && (
-                                    <Button onClick={resetForm} variant="secondary" className="flex-1">
-                                        Cancel
+                    <Modal open={showGoalModal || editingGoalId !== null} onClose={() => { setShowGoalModal(false); if (!editingGoalId) resetForm(); }} maxWidth="sm">
+                        <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                            <h3 className="font-display text-lg font-bold text-accent mb-4">
+                                {editingGoalId ? "Edit Goal" : "Add New Goal"}
+                            </h3>
+                            <form onSubmit={handleAddGoal} className="flex flex-col gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPicker(true)}
+                                    disabled={!!editingGoalId}
+                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-left text-body hover:border-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {selectedExerciseName || <span className="text-dim">Select Exercise</span>}
+                                </button>
+                                <Modal open={showPicker} onClose={() => setShowPicker(false)} maxWidth="xl">
+                                    <ExercisePicker
+                                        title="Select Exercise"
+                                        onSelect={(ex) => {
+                                            setSelectedExerciseId(ex.id);
+                                            setSelectedExerciseName(ex.name);
+                                            setShowPicker(false);
+                                        }}
+                                        onClose={() => setShowPicker(false)}
+                                    />
+                                </Modal>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <TransparentNumericInput
+                                        placeholder="Weight (kg)"
+                                        value={targetWeight}
+                                        onChange={(val) => setTargetWeight(val === "" ? "" : Number(val))}
+                                        className="w-full"
+                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                                        step={0.1}
+                                        min={0}
+                                        max={999}
+                                    />
+                                    <TransparentNumericInput
+                                        placeholder="Reps"
+                                        value={targetReps}
+                                        onChange={(val) => setTargetReps(val === "" ? "" : Number(val))}
+                                        className="w-full"
+                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                                        step={1}
+                                        min={0}
+                                        max={999}
+                                    />
+                                </div>
+                                <DatePicker value={expectedDate} onChange={setExpectedDate} placeholder="Set due date (optional)" />
+
+                                <div className="flex gap-2 justify-end mt-1">
+                                    <Button type="button" onClick={() => { setShowGoalModal(false); if (editingGoalId) resetForm(); }} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
+                                    <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-lg">
+                                        {editingGoalId ? "Update Goal" : "Create Goal"}
                                     </Button>
-                                )}
-                            </div>
-                        </form>
-                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </Modal>
 
                     <div>
                         <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3">Goals Calendar</h3>

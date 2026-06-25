@@ -224,16 +224,27 @@ export default function PersonalRecords() {
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Log a PR</h3>
                             <Button
-                                onClick={() => setShowAddForm(!showAddForm)}
-                                variant={showAddForm ? "secondary" : "primary"}
+                                onClick={() => {
+                                    setFormExerciseId("");
+                                    setFormExerciseName("");
+                                    setNewWeight("");
+                                    setNewReps("");
+                                    setNewDate("");
+                                    setNewNote("");
+                                    setShowAddForm(true);
+                                }}
+                                variant="primary"
                                 className="!px-4 !py-2"
                             >
-                                {showAddForm ? "Cancel" : "Add PR"}
+                                Add PR
                             </Button>
                         </div>
+                    </div>
 
-                        {showAddForm && (
-                            <form onSubmit={createPR} className="flex flex-col gap-4 mt-6 border-t border-subtle/80 pt-6">
+                    <Modal open={showAddForm} onClose={() => setShowAddForm(false)} maxWidth="sm">
+                        <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                            <h3 className="font-display text-lg font-bold text-accent mb-4">Log a PR</h3>
+                            <form onSubmit={createPR} className="flex flex-col gap-4">
                                 <button
                                     type="button"
                                     onClick={() => setShowPicker(true)}
@@ -282,12 +293,15 @@ export default function PersonalRecords() {
                                     onChange={e => setNewNote(e.target.value)}
                                     className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                 />
-                                <Button type="submit" disabled={isCreating || !formExerciseId} variant="primary" fullWidth className="mt-2">
-                                    {isCreating ? "Adding..." : "Log PR"}
-                                </Button>
+                                <div className="flex gap-2 justify-end mt-1">
+                                    <Button type="button" onClick={() => setShowAddForm(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
+                                    <Button type="submit" disabled={isCreating || !formExerciseId} variant="primary" className="px-4 py-2 text-xs rounded-lg">
+                                        {isCreating ? "Adding..." : "Log PR"}
+                                    </Button>
+                                </div>
                             </form>
-                        )}
-                    </div>
+                        </div>
+                    </Modal>
 
                     <div className="bg-card border border-subtle rounded-xl p-6 shadow-xl">
                         <div className="flex items-center justify-between mb-5">

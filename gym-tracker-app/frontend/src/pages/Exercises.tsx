@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
+import Modal from '../components/Modal';
 import Pagination from '../components/Pagination';
 import Select from '../components/Select';
 import ConfirmModal from '../components/ConfirmModal';
@@ -46,7 +47,7 @@ type Filters = {
     categoryType: string;
 };
 
-type ViewMode = 'list' | 'details' | 'create' | 'edit';
+type ViewMode = 'list' | 'details' | 'edit';
 
 export default function Exercises() {
     const navigate = useNavigate();
@@ -76,6 +77,7 @@ export default function Exercises() {
     const [formDifficulty, setFormDifficulty] = useState('beginner');
 
     const [viewMode, setViewMode] = useState<ViewMode>('list');
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -146,7 +148,11 @@ export default function Exercises() {
             setFormDifficulty(selectedExercise.difficulty || 'beginner');
         }
 
-        if (viewMode === 'create') {
+    }, [viewMode, selectedExercise]);
+
+    // Reset create form when modal opens
+    useEffect(() => {
+        if (showCreateModal) {
             setSelectedSecondaryMuscles([]);
             setFormName('');
             setFormBodyPart('');
@@ -154,8 +160,10 @@ export default function Exercises() {
             setFormEquipment('');
             setFormCategory('');
             setFormDifficulty('beginner');
+            setError('');
+            setSuccess(null);
         }
-    }, [viewMode, selectedExercise]);
+    }, [showCreateModal]);
 
     async function apiRequest<T>(url: string, options: RequestInit): Promise<T> {
         const response = await apiFetch(url, options);
@@ -277,7 +285,7 @@ export default function Exercises() {
             });
 
             setAllExercises(prev => [...prev, createdExercise]);
-            setViewMode('list');
+            setShowCreateModal(false);
             setSuccess('Exercise created successfully.');
         } catch (err: any) {
             setError('Could not create exercise. ' + err.message);
@@ -416,91 +424,64 @@ export default function Exercises() {
             <div className="flex justify-between items-center">
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Exercises</h1>
                 {viewMode === 'list' && (
-                    <Button onClick={() => setViewMode('create')} variant="primary">+ Create Exercise</Button>
+                    <Button onClick={() => setShowCreateModal(true)} variant="primary">+ Create Exercise</Button>
                 )}
             </div>
 
             {/* Clean Status Messages without Box Borders */}
             <div className="flex flex-col gap-1.5">
                 {loading && <p className="text-sm text-muted font-medium">Loading...</p>}
-                {error && viewMode !== 'create' && viewMode !== 'edit' && (
+                {error && viewMode !== 'edit' && (
                     <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">{error}</p>
                 )}
                 {success && <p className="text-sm font-semibold text-accent tracking-wide animate-in fade-in duration-300">{success}</p>}
             </div>
 
-            {viewMode !== 'create' && (
-                <div className="flex flex-col sm:flex-row gap-4">
-                    {viewMode === 'details' || viewMode === 'edit' ? (
-                        <Button type="button" variant="secondary" onClick={backToList}>&larr; Back to List</Button>
-                    ) : (
-                        <div className="flex gap-4 w-full flex-col sm:flex-row">
-                            <input
-                                type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
-                                className="w-full sm:w-1/5 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
-                            />
-                            <Select
-                                value={filters.muscles}
-                                onChange={(val) => setFilters({ ...filters, muscles: val })}
-                                placeholder="All Muscles"
-                                options={[
-                                    { value: "", label: "All Muscles" },
-                                    ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
-                                ]}
-                                className="flex-1"
-                            />
-                            <Select
-                                value={filters.equipment}
-                                onChange={(val) => setFilters({ ...filters, equipment: val })}
-                                placeholder="All Equipment"
-                                options={[
-                                    { value: "", label: "All Equipment" },
-                                    ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
-                                ]}
-                                className="flex-1"
-                            />
-                            <Select
-                                value={filters.categoryType}
-                                onChange={(val) => setFilters({ ...filters, categoryType: val })}
-                                placeholder="All Categories"
-                                options={[
-                                    { value: "", label: "All Categories" },
-                                    ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
-                                ]}
-                                className="flex-1"
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
+            <div className="flex flex-col sm:flex-row gap-4">
+                {viewMode === 'details' || viewMode === 'edit' ? (
+                    <Button type="button" variant="secondary" onClick={backToList}>&larr; Back to List</Button>
+                ) : (
+                    <div className="flex gap-4 w-full flex-col sm:flex-row">
+                        <input
+                            type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
+                            className="w-full sm:w-1/5 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                        />
+                        <Select
+                            value={filters.muscles}
+                            onChange={(val) => setFilters({ ...filters, muscles: val })}
+                            placeholder="All Muscles"
+                            options={[
+                                { value: "", label: "All Muscles" },
+                                ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
+                            ]}
+                            className="flex-1"
+                        />
+                        <Select
+                            value={filters.equipment}
+                            onChange={(val) => setFilters({ ...filters, equipment: val })}
+                            placeholder="All Equipment"
+                            options={[
+                                { value: "", label: "All Equipment" },
+                                ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
+                            ]}
+                            className="flex-1"
+                        />
+                        <Select
+                            value={filters.categoryType}
+                            onChange={(val) => setFilters({ ...filters, categoryType: val })}
+                            placeholder="All Categories"
+                            options={[
+                                { value: "", label: "All Categories" },
+                                ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
+                            ]}
+                            className="flex-1"
+                        />
+                    </div>
+                )}
+            </div>
 
             <div>
-                {viewMode === 'create' ? (
-                    <ExerciseForm
-                        isEdit={false}
-                        formName={formName}
-                        setFormName={setFormName}
-                        formBodyPart={formBodyPart}
-                        setFormBodyPart={setFormBodyPart}
-                        formTarget={formTarget}
-                        setFormTarget={setFormTarget}
-                        formEquipment={formEquipment}
-                        setFormEquipment={setFormEquipment}
-                        formCategory={formCategory}
-                        setFormCategory={setFormCategory}
-                        formDifficulty={formDifficulty}
-                        setFormDifficulty={setFormDifficulty}
-                        formSecondaryPick={formSecondaryPick}
-                        setFormSecondaryPick={setFormSecondaryPick}
-                        selectedSecondaryMuscles={selectedSecondaryMuscles}
-                        setSelectedSecondaryMuscles={setSelectedSecondaryMuscles}
-                        filterOptions={filterOptions}
-                        error={error}
-                        saving={saving}
-                        onSubmit={handleFormSubmit}
-                        onCancel={backToList}
-                    />
-                ) : viewMode === 'details' && selectedExercise ? (
+                {viewMode === 'details' && selectedExercise ? (
                     <div className="bg-card border border-subtle rounded-xl p-6 shadow-xl space-y-4">
                         <h2 className="font-display text-2xl font-bold text-body tracking-wide uppercase">{selectedExercise.name}</h2>
                         <div className="flex flex-wrap gap-4 text-muted mb-6 bg-surface/50 p-4 rounded-lg">
@@ -603,6 +584,33 @@ export default function Exercises() {
                     </>
                 )}
             </div>
+
+            <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="xl">
+                <ExerciseForm
+                    isEdit={false}
+                    formName={formName}
+                    setFormName={setFormName}
+                    formBodyPart={formBodyPart}
+                    setFormBodyPart={setFormBodyPart}
+                    formTarget={formTarget}
+                    setFormTarget={setFormTarget}
+                    formEquipment={formEquipment}
+                    setFormEquipment={setFormEquipment}
+                    formCategory={formCategory}
+                    setFormCategory={setFormCategory}
+                    formDifficulty={formDifficulty}
+                    setFormDifficulty={setFormDifficulty}
+                    formSecondaryPick={formSecondaryPick}
+                    setFormSecondaryPick={setFormSecondaryPick}
+                    selectedSecondaryMuscles={selectedSecondaryMuscles}
+                    setSelectedSecondaryMuscles={setSelectedSecondaryMuscles}
+                    filterOptions={filterOptions}
+                    error={error}
+                    saving={saving}
+                    onSubmit={handleFormSubmit}
+                    onCancel={() => setShowCreateModal(false)}
+                />
+            </Modal>
 
             {deleteConfirmId !== null && (
                 <ConfirmModal

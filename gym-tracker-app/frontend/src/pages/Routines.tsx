@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import Pagination from '../components/Pagination';
@@ -42,7 +42,7 @@ export default function RoutinesManagement() {
     const [editNote, setEditNote] = useState('');
 
     // Dropdown Flow Controls & Visibility Indicators
-    const [showCreateDropdown, setShowCreateDropdown] = useState(false);
+    const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDetailsDropdown, setShowDetailsDropdown] = useState(false);
     const [showPicker, setShowPicker] = useState(false);
 
@@ -60,7 +60,7 @@ export default function RoutinesManagement() {
     }, [routines.length]);
 
     // Layout Reference Focus Wrappers
-    const createRoutineRef = useRef<HTMLDivElement>(null);
+
 
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({
@@ -136,7 +136,7 @@ export default function RoutinesManagement() {
 
             setNewRoutineName('');
             setNewRoutineNote('');
-            setShowCreateDropdown(false);
+            setShowCreateModal(false);
             await fetchUserRoutines();
             setSelectedRoutine({ ...data.data, exercises: [] });
         } catch (err: any) {
@@ -219,52 +219,47 @@ export default function RoutinesManagement() {
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Routines Management</h1>
                 </div>
 
-                {/* Create Routine Dropdown Wrapper */}
-                <div className="relative" ref={createRoutineRef}>
-                    <Button
-                        type="button"
-                        variant="primary"
-                        onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-                        className="font-display rounded-xl py-3 px-5 flex items-center gap-2"
-                    >
-                        <span>Create New Routine</span>
-                        <svg className={`w-4 h-4 transition-transform ${showCreateDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </Button>
+                <Button
+                    type="button"
+                    variant="primary"
+                    onClick={() => setShowCreateModal(true)}
+                    className="font-display rounded-xl py-3 px-5"
+                >
+                    Create New Routine
+                </Button>
 
-                    {showCreateDropdown && (
-                        <div className="absolute right-0 mt-2 w-80 md:w-96 bg-card border border-subtle rounded-xl p-5 shadow-2xl z-30 animate-in fade-in slide-in-from-top-2 duration-150 max-h-[80vh] overflow-y-auto custom-scrollbar">
-                            <form onSubmit={handleCreateRoutine} className="flex flex-col gap-4">
-                                <div>
-                                    <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name *</label>
-                                    <input
-                                        type="text"
-                                        value={newRoutineName}
-                                        onChange={(e) => setNewRoutineName(e.target.value)}
-                                        required
-                                        placeholder="e.g., Heavy Push Day"
-                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Notes (Optional)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Focus on progressive overload mechanics"
-                                        value={newRoutineNote}
-                                        onChange={(e) => setNewRoutineNote(e.target.value)}
-                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
-                                    />
-                                </div>
-
-                                <Button type="submit" variant="primary" fullWidth className="font-display rounded-xl py-2.5 text-sm mt-1">
-                                    Create Routine
-                                </Button>
-                            </form>
-                        </div>
-                    )}
-                </div>
+                <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="sm">
+                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <h3 className="font-display text-lg font-bold text-accent mb-4">Create New Routine</h3>
+                        <form onSubmit={handleCreateRoutine} className="flex flex-col gap-4">
+                            <div>
+                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name *</label>
+                                <input
+                                    type="text"
+                                    value={newRoutineName}
+                                    onChange={(e) => setNewRoutineName(e.target.value)}
+                                    required
+                                    placeholder="e.g., Heavy Push Day"
+                                    className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Notes (Optional)</label>
+                                <input
+                                    type="text"
+                                    placeholder="Focus on progressive overload mechanics"
+                                    value={newRoutineNote}
+                                    onChange={(e) => setNewRoutineNote(e.target.value)}
+                                    className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
+                                />
+                            </div>
+                            <div className="flex gap-2 justify-end mt-1">
+                                <Button type="button" onClick={() => setShowCreateModal(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
+                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-lg">Create Routine</Button>
+                            </div>
+                        </form>
+                    </div>
+                </Modal>
             </div>
 
             {error && (

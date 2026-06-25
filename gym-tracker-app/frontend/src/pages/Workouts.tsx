@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef, FormEvent } from "react";
+import React, { useState, useEffect, useCallback, useMemo, FormEvent } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
@@ -60,7 +60,6 @@ export default function WorkoutsManagement() {
     const [error, setError] = useState<string | null>(null);
 
     // Toggle Dropdowns UI States
-    const [showCreateDropdown, setShowCreateDropdown] = useState(false);
     const [showDetailsDropdown, setShowDetailsDropdown] = useState(false);
 
     // Create new workout form
@@ -98,7 +97,7 @@ export default function WorkoutsManagement() {
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 20;
 
-    const createWorkoutRef = useRef<HTMLDivElement>(null);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     // ---- API HEADERS MEMO ----
     const token = localStorage.getItem("user_login_token");
@@ -204,17 +203,7 @@ export default function WorkoutsManagement() {
             .finally(() => setIsLoadingInit(false));
     }, [fetchWorkouts, fetchExercises, fetchWorkoutById, fetchGoalsMap, preselectedId]);
 
-    // Close dropdowns on click outside
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            const target = event.target as Node;
-            if (createWorkoutRef.current && !createWorkoutRef.current.contains(target)) {
-                setShowCreateDropdown(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+
 
     // ---- WORKOUT OPERATIONS ----
     async function createWorkout(e: FormEvent) {
@@ -233,7 +222,7 @@ export default function WorkoutsManagement() {
         setWorkouts((prev) => [tempWorkout, ...prev]);
         setNewWorkoutName("");
         setNewWorkoutNote("");
-        setShowCreateDropdown(false);
+        setShowCreateModal(false);
 
         try {
             const res = await apiFetch("/api/workouts", {
@@ -585,51 +574,49 @@ export default function WorkoutsManagement() {
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Workouts Management</h1>
                 </div>
 
-                {/* Create Workout Dropdown Wrapper */}
-                <div className="relative" ref={createWorkoutRef}>
-                    <Button
-                        type="button"
-                        variant="primary"
-                        onClick={() => setShowCreateDropdown(!showCreateDropdown)}
-                        className="font-display rounded-xl py-3 px-5 flex items-center gap-2"
-                    >
-                        <span>Create New Workout</span>
-                        <svg className={`w-4 h-4 transition-transform ${showCreateDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
-                    </Button>
+                <Button
+                    type="button"
+                    variant="primary"
+                    onClick={() => setShowCreateModal(true)}
+                    className="font-display rounded-xl py-3 px-5"
+                >
+                    Create New Workout
+                </Button>
 
-                    {showCreateDropdown && (
-                        <div className="absolute right-0 mt-2 w-80 md:w-96 bg-card border border-subtle rounded-xl p-5 shadow-2xl z-30 animate-in fade-in slide-in-from-top-2 duration-150">
-                            <form onSubmit={createWorkout} className="flex flex-col gap-4">
-                                <div>
-                                    <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Workout Name</label>
-                                    <input
-                                        type="text"
-                                        value={newWorkoutName}
-                                        onChange={(e) => setNewWorkoutName(e.target.value)}
-                                        required
-                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Session Date</label>
-                                    <DatePicker value={newWorkoutDate} onChange={setNewWorkoutDate} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Notes (Optional)</label>
-                                    <input
-                                        type="text"
-                                        value={newWorkoutNote}
-                                        onChange={(e) => setNewWorkoutNote(e.target.value)}
-                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
-                                    />
-                                </div>
-                                <Button type="submit" variant="primary" fullWidth className="font-display rounded-xl py-2.5 text-sm mt-1">
-                                    Confirm & Save
-                                </Button>
-                            </form>
-                        </div>
-                    )}
-                </div>
+                <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="sm">
+                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <h3 className="font-display text-lg font-bold text-accent mb-4">Create New Workout</h3>
+                        <form onSubmit={createWorkout} className="flex flex-col gap-4">
+                            <div>
+                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Workout Name</label>
+                                <input
+                                    type="text"
+                                    value={newWorkoutName}
+                                    onChange={(e) => setNewWorkoutName(e.target.value)}
+                                    required
+                                    className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Session Date</label>
+                                <DatePicker value={newWorkoutDate} onChange={setNewWorkoutDate} />
+                            </div>
+                            <div>
+                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Notes (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={newWorkoutNote}
+                                    onChange={(e) => setNewWorkoutNote(e.target.value)}
+                                    className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
+                                />
+                            </div>
+                            <div className="flex gap-2 justify-end mt-1">
+                                <Button type="button" onClick={() => setShowCreateModal(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
+                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-lg">Confirm & Save</Button>
+                            </div>
+                        </form>
+                    </div>
+                </Modal>
             </div>
 
             {error && (
