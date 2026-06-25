@@ -152,6 +152,19 @@ export default function CurrentWorkout() {
         }
     };
 
+    useEffect(() => {
+        const loadRoutineId = searchParams.get('loadRoutine');
+        if (loadRoutineId) {
+            const id = parseInt(loadRoutineId);
+            if (!isNaN(id)) {
+                const name = searchParams.get('name');
+                if (name) setWorkoutName(name);
+                loadRoutine(id);
+                navigate('/active-workout', { replace: true });
+            }
+        }
+    }, [searchParams, navigate]);
+
     const handleAddExercise = (exercise: ExerciseMeta) => {
         addExercise(exercise);
         setShowExercisePicker(false);

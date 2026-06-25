@@ -10,6 +10,7 @@ interface CalendarProps {
     selectedDate?: string;
     onSelect?: (date: string) => void;
     events?: Record<string, CalendarEvent>;
+    plannedDates?: Set<string>;
     goalDates?: Set<string>;
     className?: string;
     compact?: boolean;
@@ -146,6 +147,9 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                                         <span className={`rounded-full bg-blue-400 ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'}`} />
                                     )}
                                 </span>
+                            )}
+                            {plannedDates?.has(dateStr) && !isSelected && (
+                                <span className={`absolute ${event ? 'bottom-0' : 'bottom-1.5'} w-1.5 h-1.5 rounded-full bg-blue-400/70`} />
                             )}
                         </button>
                     );
