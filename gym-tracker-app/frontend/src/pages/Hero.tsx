@@ -272,7 +272,7 @@ export default function Hero() {
 
             <div className="fixed left-0 top-[57px] bottom-0 z-40 flex">
                 {showActions && (
-                    <div className="w-80 bg-card border-r border-subtle shadow-2xl overflow-y-auto animate-in fade-in slide-in-from-left-1 duration-150">
+                    <div className="w-[22vw] bg-card border-r border-subtle shadow-2xl overflow-y-auto animate-in fade-in slide-in-from-left-1 duration-150">
                         <div className="p-5 space-y-5">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-bold tracking-[0.15em] uppercase text-heading">Modules</h3>
@@ -318,9 +318,12 @@ export default function Hero() {
                 )}
                 <button
                     onClick={() => setShowActions(!showActions)}
-                    className="self-start mt-20 bg-card border border-l-0 border-subtle rounded-r-xl shadow-lg px-2 py-6 text-xs font-bold tracking-[0.15em] uppercase text-dim hover:text-body hover:bg-elevated transition-colors"
+                    className="self-start mt-20 bg-accent border border-l-0 border-accent rounded-r-xl shadow-lg px-2 py-4 text-xs font-bold tracking-[0.15em] uppercase text-black hover:bg-accent/90 transition-colors flex items-center gap-2"
                     style={{ writingMode: 'vertical-rl' }}
                 >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={showActions ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'} />
+                    </svg>
                     {showActions ? 'Close' : 'Modules'}
                 </button>
             </div>
