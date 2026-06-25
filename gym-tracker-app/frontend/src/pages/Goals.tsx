@@ -37,6 +37,7 @@ export default function Goals() {
     const [goalsPage, setGoalsPage] = useState(1);
     const [goalsOpen, setGoalsOpen] = useState(true);
     const GOALS_PER_PAGE = 5;
+    const [planned, setPlanned] = useState<any[]>([]);
 
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({
@@ -60,8 +61,18 @@ export default function Goals() {
         }
     }, [headers]);
 
+    async function fetchPlanned() {
+        try {
+            const res = await apiFetch("/api/planned", { headers });
+            const data = await res.json();
+            setPlanned(data.data || []);
+        } catch (err) {
+            console.error("Failed to fetch planned workouts", err);
+        }
+    }
+
     useEffect(() => {
-        Promise.all([fetchGoals(), fetchPRs()]).finally(() => setIsLoading(false));
+        Promise.all([fetchGoals(), fetchPRs(), fetchPlanned()]).finally(() => setIsLoading(false));
     }, [headers, fetchPRs]);
 
     function isGoalFulfilled(g: Goal): boolean {
@@ -154,6 +165,16 @@ export default function Goals() {
         }
         return set;
     }, [goals]);
+
+    const plannedDates = useMemo(() => {
+        const set = new Set<string>();
+        for (const p of planned) {
+            if (p.scheduled_date) {
+                set.add(p.scheduled_date.substring(0, 10));
+            }
+        }
+        return set;
+    }, [planned]);
 
     const filteredGoals = useMemo(() => {
         if (!selectedCalendarDate) return goals;
@@ -259,6 +280,7 @@ export default function Goals() {
                             selectedDate={selectedCalendarDate}
                             onSelect={(d) => setSelectedCalendarDate(prev => prev === d ? "" : d)}
                             goalDates={goalDates}
+                            plannedDates={plannedDates}
                         />
                     </div>
                 </div>

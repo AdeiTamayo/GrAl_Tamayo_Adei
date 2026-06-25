@@ -30,7 +30,7 @@ function formatDate(year: number, month: number, day: number): string {
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-export default function Calendar({ selectedDate, onSelect, events = {}, goalDates, className = '', compact = false }: CalendarProps) {
+export default function Calendar({ selectedDate, onSelect, events = {}, goalDates, plannedDates, className = '', compact = false }: CalendarProps) {
     const today = useMemo(() => {
         const d = new Date();
         return formatDate(d.getFullYear(), d.getMonth(), d.getDate());
@@ -133,7 +133,7 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                             `}
                         >
                             {day}
-                            {!isSelected && (event || hasGoal) && (
+                            {!isSelected && (event || hasGoal || plannedDates?.has(dateStr)) && (
                                 <span className={`absolute flex gap-[3px] items-center ${compact ? 'bottom-0.5' : 'bottom-1'}`}>
                                     {event && (
                                         <span className={`rounded-full ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'} ${
@@ -144,12 +144,12 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                                         }`} />
                                     )}
                                     {hasGoal && !event?.status?.startsWith('completed') && (
+                                        <span className={`rounded-full bg-amber-400 ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'}`} />
+                                    )}
+                                    {plannedDates?.has(dateStr) && (
                                         <span className={`rounded-full bg-blue-400 ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'}`} />
                                     )}
                                 </span>
-                            )}
-                            {plannedDates?.has(dateStr) && !isSelected && (
-                                <span className={`absolute ${event ? 'bottom-0' : 'bottom-1.5'} w-1.5 h-1.5 rounded-full bg-blue-400/70`} />
                             )}
                         </button>
                     );

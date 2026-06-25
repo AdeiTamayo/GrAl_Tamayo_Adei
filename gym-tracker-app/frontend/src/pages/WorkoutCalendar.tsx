@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Calendar from "../components/Calendar";
+import Button from "../components/Button";
+import Select from "../components/Select";
+import DatePicker from "../components/DatePicker";
 
 interface Workout {
     id: number;
@@ -54,7 +57,7 @@ export default function WorkoutCalendar() {
     }), [token]);
 
     useEffect(() => {
-        Promise.all([fetchWorkouts(), fetchPlanned(), fetchRoutines()])
+        Promise.all([fetchWorkouts(), fetchPlanned(), fetchRoutines(), fetchGoals()])
             .finally(() => setIsLoading(false));
     }, [headers]);
 
@@ -225,9 +228,9 @@ export default function WorkoutCalendar() {
                         )}
                     </div>
 
-                    {selectedWorkouts.length === 0 && selectedGoals.length === 0 ? (
+                    {selectedWorkouts.length === 0 && selectedGoals.length === 0 && selectedPlanned.length === 0 ? (
                         <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
-                            <p className="text-dim font-medium italic">No workouts or goals on this day.</p>
+                            <p className="text-dim font-medium italic">No workouts, goals, or scheduled sessions on this day.</p>
                         </div>
                     ) : (
                         <>
@@ -256,8 +259,8 @@ export default function WorkoutCalendar() {
                             )}
                             {selectedGoals.length > 0 && (
                                 <>
-                                    <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3 text-blue-400">Goal Deadlines</h3>
-                                    <ul className="space-y-3">
+                                    <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3 text-amber-400">Goal Deadlines</h3>
+                                    <ul className="space-y-3 mb-6">
                                         {selectedGoals.map(g => (
                                             <li key={g.id} className="bg-surface/40 border border-subtle/80 rounded-lg p-4">
                                                 <strong className="text-lg font-bold text-accent capitalize">{g.exercise_name}</strong>
@@ -267,51 +270,73 @@ export default function WorkoutCalendar() {
                                     </ul>
                                 </>
                             )}
+                            {selectedPlanned.length > 0 && (
+                                <>
+                                    <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3 text-blue-400">Scheduled Workouts</h3>
+                                    <ul className="space-y-3">
+                                        {selectedPlanned.map(p => (
+                                            <li key={p.id} className="bg-surface/40 border border-subtle/80 rounded-lg p-4 flex items-center justify-between group">
+                                                <div>
+                                                    <strong className="text-lg font-bold text-body capitalize">{p.name}</strong>
+                                                    {p.routine_name && <div className="text-sm text-dim font-medium mt-1">Routine: {p.routine_name}</div>}
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDeletePlanned(p.id)}
+                                                    className="text-xs font-semibold text-dim hover:text-rose-400 transition-colors"
+                                                >
+                                                    Remove
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </>
+                            )}
                         </>
                     )}
 
                     <div className="mt-6 pt-4 border-t border-subtle text-xs text-dim space-y-1">
-                        <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-accent mr-1.5 align-middle" />Days with a logged workout.</div>
-                        <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-400 mr-1.5 align-middle" />Days with a goal deadline.</div>
+                        <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-accent mr-1.5 align-middle" />Logged workout</div>
+                        <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 mr-1.5 align-middle" />Goal deadline</div>
+                        <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-400 mr-1.5 align-middle" />Scheduled workout</div>
                     </div>
                 </div>
             </div>
 
             {showPlanModal && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <div className="relative w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <button
+                            onClick={() => setShowPlanModal(false)}
+                            className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                        >
+                            Close
+                        </button>
+
                         <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">Schedule Workout</h2>
                         <p className="text-sm text-muted mb-5">Assign a routine to {planDate}.</p>
 
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Date</label>
-                                <input
-                                    type="date"
-                                    value={planDate}
-                                    onChange={(e) => setPlanDate(e.target.value)}
-                                    className="w-full bg-surface border border-subtle rounded-lg px-3 py-2 text-sm text-body focus:border-lime-400 focus:outline-none"
-                                />
-                            </div>
+                            <DatePicker
+                                value={planDate}
+                                onChange={(d) => setPlanDate(d)}
+                                placeholder="Select date"
+                                buttonClassName="!px-3 !py-2 text-sm"
+                            />
 
-                            <div>
-                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine (optional)</label>
-                                <select
-                                    value={planRoutineId}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        setPlanRoutineId(val ? Number(val) : "");
-                                        const routine = routines.find(r => r.id === Number(val));
-                                        if (routine) setPlanName(routine.name);
-                                    }}
-                                    className="w-full bg-surface border border-subtle rounded-lg px-3 py-2 text-sm text-body focus:border-lime-400 focus:outline-none"
-                                >
-                                    <option value="">-- No routine --</option>
-                                    {routines.map(r => (
-                                        <option key={r.id} value={r.id}>{r.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <Select
+                                value={String(planRoutineId)}
+                                onChange={(val) => {
+                                    setPlanRoutineId(val ? Number(val) : "");
+                                    const routine = routines.find(r => r.id === Number(val));
+                                    if (routine) setPlanName(routine.name);
+                                }}
+                                options={[
+                                    { value: "", label: "-- No routine --" },
+                                    ...routines.map(r => ({ value: String(r.id), label: r.name }))
+                                ]}
+                                placeholder="Select routine"
+                                buttonClassName="px-3 py-2 text-sm"
+                            />
 
                             <div>
                                 <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Workout Name</label>
@@ -325,20 +350,15 @@ export default function WorkoutCalendar() {
                             </div>
                         </div>
 
-                        <div className="flex gap-3 mt-6">
-                            <button
+                        <div className="mt-6">
+                            <Button
                                 onClick={handleAddPlanned}
                                 disabled={!planDate || !planName.trim()}
-                                className="flex-1 bg-lime-400 text-black font-bold py-2.5 rounded-lg hover:bg-lime-300 transition-all disabled:opacity-40"
+                                variant="primary"
+                                fullWidth
                             >
                                 Schedule
-                            </button>
-                            <button
-                                onClick={() => setShowPlanModal(false)}
-                                className="flex-1 bg-elevated text-muted font-bold py-2.5 rounded-lg hover:bg-hover transition-all"
-                            >
-                                Cancel
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
