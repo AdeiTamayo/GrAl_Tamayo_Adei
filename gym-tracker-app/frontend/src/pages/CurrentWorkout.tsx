@@ -385,22 +385,25 @@ export default function CurrentWorkout() {
                                             </div>
                                         );
                                     })()}
-                                    {/* Inline Exercise rest modification control */}
-                                    <div className="flex items-center gap-1 mt-1 text-muted text-sm">
+                                    {/* Inline Exercise rest presets */}
+                                    <div className="flex items-center gap-2 mt-1 text-muted text-sm flex-wrap">
                                         <span>Target Rest:</span>
-                                        <button
-                                            onClick={() => updateExerciseRest(exIdx, ex.rest_time - 5)}
-                                            className="px-1.5 py-0.5 bg-elevated rounded hover:bg-hover font-bold"
-                                        >
-                                            -
-                                        </button>
-                                        <span className="font-mono font-bold text-accent mx-1">{ex.rest_time}s</span>
-                                        <button
-                                            onClick={() => updateExerciseRest(exIdx, ex.rest_time + 5)}
-                                            className="px-1.5 py-0.5 bg-elevated rounded hover:bg-hover font-bold"
-                                        >
-                                            +
-                                        </button>
+                                        <span className="font-mono font-bold text-accent">{ex.rest_time}s</span>
+                                        <div className="flex gap-1">
+                                            {[60, 90, 120].map(preset => (
+                                                <button
+                                                    key={preset}
+                                                    onClick={() => updateExerciseRest(exIdx, preset)}
+                                                    className={`px-2 py-0.5 rounded font-bold text-xs transition-colors ${
+                                                        ex.rest_time === preset
+                                                            ? 'bg-accent text-white'
+                                                            : 'bg-elevated hover:bg-hover text-muted'
+                                                    }`}
+                                                >
+                                                    {preset}s
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                                 <button onClick={() => removeExercise(exIdx)} className="text-dim hover:text-red-400 transition-colors self-start sm:self-center">

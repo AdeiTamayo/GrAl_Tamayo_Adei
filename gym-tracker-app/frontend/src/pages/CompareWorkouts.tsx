@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import WorkoutPicker from "../components/WorkoutPicker";
 
 interface SetEntry {
     weight: number;
@@ -20,6 +21,12 @@ interface Workout {
     exercises: WorkoutExercise[];
 }
 
+interface PickedWorkout {
+    id: number;
+    name: string;
+    date: string;
+}
+
 interface SetComparison {
     setNumber: number;
     weightA: number | null;
@@ -28,77 +35,14 @@ interface SetComparison {
     repsB: number | null;
 }
 
-function WorkoutDropdown({
-    label, workouts, value, onChange
-}: {
-    label: string;
-    workouts: { id: number; name: string; date: string }[];
-    value: number | "";
-    onChange: (v: number | "") => void;
-}) {
-    const [open, setOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        function handleClick(e: MouseEvent) {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-        }
-        document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
-    }, []);
-
-    const selected = workouts.find(w => w.id === value);
-
-    return (
-        <div className="space-y-2 relative" ref={ref}>
-            <label className="text-xs uppercase font-bold text-dim tracking-widest pl-1">{label}</label>
-            <button
-                type="button"
-                onClick={() => setOpen(!open)}
-                className="w-full bg-card border border-subtle rounded-xl px-4 py-3 text-left flex justify-between items-center hover:border-hover transition-colors"
-            >
-                <span className={selected ? "text-body" : "text-dim"}>
-                    {selected ? `${selected.date} - ${selected.name}` : "Select a workout..."}
-                </span>
-                <svg className={`w-4 h-4 text-dim transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-            {open && (
-                <ul className="absolute z-20 w-full mt-1 bg-card border border-subtle rounded-xl shadow-2xl overflow-y-auto max-h-60 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <li
-                        onClick={() => { onChange(""); setOpen(false); }}
-                        className="px-4 py-2.5 text-dim hover:bg-surface hover:text-body cursor-pointer transition-colors text-sm"
-                    >
-                        Select a workout...
-                    </li>
-                    {workouts.map(w => (
-                        <li
-                            key={w.id}
-                            onClick={() => { onChange(w.id); setOpen(false); }}
-                            className={`px-4 py-2.5 cursor-pointer transition-colors text-sm flex justify-between items-center ${value === w.id ? "bg-accent/10 text-accent" : "text-muted hover:bg-surface hover:text-white"}`}
-                        >
-                            <span>{w.date} - {w.name}</span>
-                            {value === w.id && (
-                                <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                                </svg>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    );
-}
-
 export default function CompareWorkouts() {
-    const [workoutsList, setWorkoutsList] = useState<{ id: number; name: string; date: string }[]>([]);
-    const [idA, setIdA] = useState<number | "">("");
-    const [idB, setIdB] = useState<number | "">("");
     const [workoutA, setWorkoutA] = useState<Workout | null>(null);
     const [workoutB, setWorkoutB] = useState<Workout | null>(null);
+    const [pickedA, setPickedA] = useState<PickedWorkout | null>(null);
+    const [pickedB, setPickedB] = useState<PickedWorkout | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [showPickerA, setShowPickerA] = useState(false);
+    const [showPickerB, setShowPickerB] = useState(false);
 
     useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -108,30 +52,13 @@ export default function CompareWorkouts() {
         "Content-Type": "application/json",
     }), [token]);
 
-    useEffect(() => {
-        fetchWorkouts();
-    }, []);
-
-    const fetchWorkouts = async () => {
-        try {
-            const res = await apiFetch("/api/workouts", { headers });
-            const data = await res.json();
-            if (data.success) {
-                setWorkoutsList(data.data || []);
-            }
-        } catch (err) {
-            console.error(err);
-            setError("Failed to fetch workouts");
-        }
-    };
-
     const fetchComparison = async () => {
-        if (!idA || !idB) return;
+        if (!pickedA || !pickedB) return;
         setError(null);
         try {
             const [resA, resB] = await Promise.all([
-                apiFetch(`/api/workouts/${idA}`, { headers }),
-                apiFetch(`/api/workouts/${idB}`, { headers })
+                apiFetch(`/api/workouts/${pickedA.id}`, { headers }),
+                apiFetch(`/api/workouts/${pickedB.id}`, { headers })
             ]);
             const dataA = await resA.json();
             const dataB = await resB.json();
@@ -204,9 +131,9 @@ export default function CompareWorkouts() {
         return <span className="text-muted font-mono">{sign}{diff.toFixed(decimals)}</span>;
     };
 
-    const setComparison = () => {
-        setIdA("");
-        setIdB("");
+    const resetComparison = () => {
+        setPickedA(null);
+        setPickedB(null);
         setWorkoutA(null);
         setWorkoutB(null);
         setError(null);
@@ -223,31 +150,101 @@ export default function CompareWorkouts() {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-                    <WorkoutDropdown
-                        label="Workout A"
-                        workouts={workoutsList}
-                        value={idA}
-                        onChange={setIdA}
-                    />
-                    <WorkoutDropdown
-                        label="Workout B (More Recent)"
-                        workouts={workoutsList}
-                        value={idB}
-                        onChange={setIdB}
-                    />
+                    {/* Workout A Picker */}
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-dim tracking-widest pl-1">Workout A</label>
+                        <button
+                            type="button"
+                            onClick={() => setShowPickerA(true)}
+                            className="w-full bg-card border border-subtle rounded-xl px-4 py-3 text-left flex justify-between items-center hover:border-hover transition-colors"
+                        >
+                            <span className={pickedA ? "text-body" : "text-dim"}>
+                                {pickedA ? `${pickedA.date} - ${pickedA.name}` : "Select a workout..."}
+                            </span>
+                            <svg className="w-4 h-4 text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Workout B Picker */}
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase font-bold text-dim tracking-widest pl-1">Workout B (More Recent)</label>
+                        <button
+                            type="button"
+                            onClick={() => setShowPickerB(true)}
+                            className="w-full bg-card border border-subtle rounded-xl px-4 py-3 text-left flex justify-between items-center hover:border-hover transition-colors"
+                        >
+                            <span className={pickedB ? "text-body" : "text-dim"}>
+                                {pickedB ? `${pickedB.date} - ${pickedB.name}` : "Select a workout..."}
+                            </span>
+                            <svg className="w-4 h-4 text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
+
+                {/* Picker Modals */}
+                {showPickerA && (
+                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="relative w-full max-w-lg max-h-[80vh]">
+                            <div className="border border-accent/30 rounded-xl bg-card shadow-xl overflow-hidden">
+                                <button
+                                    onClick={() => setShowPickerA(false)}
+                                    className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                                >
+                                    Close
+                                </button>
+                                <WorkoutPicker
+                                    onSelect={(w) => {
+                                        setPickedA(w);
+                                        setShowPickerA(false);
+                                    }}
+                                    title="Select Workout A"
+                                    excludeId={pickedB?.id}
+                                    className="!border-0 !rounded-none !shadow-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {showPickerB && (
+                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="relative w-full max-w-lg max-h-[80vh]">
+                            <div className="border border-accent/30 rounded-xl bg-card shadow-xl overflow-hidden">
+                                <button
+                                    onClick={() => setShowPickerB(false)}
+                                    className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                                >
+                                    Close
+                                </button>
+                                <WorkoutPicker
+                                    onSelect={(w) => {
+                                        setPickedB(w);
+                                        setShowPickerB(false);
+                                    }}
+                                    title="Select Workout B"
+                                    excludeId={pickedA?.id}
+                                    className="!border-0 !rounded-none !shadow-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex justify-center gap-4 mb-10">
                     <Button
                         variant="primary"
-                        disabled={!idA || !idB}
+                        disabled={!pickedA || !pickedB}
                         onClick={fetchComparison}
                         className="px-10"
                     >
                         Compare Now
                     </Button>
                     {(workoutA || workoutB) && (
-                        <Button variant="secondary" onClick={setComparison} className="px-6">
+                        <Button variant="secondary" onClick={resetComparison} className="px-6">
                             Reset
                         </Button>
                     )}
