@@ -1,33 +1,53 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../components/ThemeContext";
-
-type UnitSystem = "kg" | "lbs";
+import { useSettings } from "../components/SettingsContext";
+import TransparentNumericInput from "../components/TransparentNumericInput";
 
 export default function Settings() {
+    const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
-    const [unitSystem, setUnitSystem] = useState<UnitSystem>(
-        () => (localStorage.getItem("unit_system") as UnitSystem) || "kg"
-    );
+    const { settings, loading, updateSettings } = useSettings();
+    const [saving, setSaving] = useState(false);
 
-    function handleUnitChange(system: UnitSystem) {
-        setUnitSystem(system);
-        localStorage.setItem("unit_system", system);
+    async function handleToggle(field: 'show_rpe' | 'show_1rm', value: boolean) {
+        setSaving(true);
+        try {
+            await updateSettings({ [field]: value });
+        } catch {
+            // silently fail
+        } finally {
+            setSaving(false);
+        }
+    }
+
+    async function saveDefaultRest(value: string) {
+        const num = parseInt(value) || 0;
+        if (num < 0 || num > 600) return;
+        setSaving(true);
+        try {
+            await updateSettings({ default_rest_time: num });
+        } catch {
+            // silently fail
+        } finally {
+            setSaving(false);
+        }
     }
 
     return (
         <div className="max-w-3xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="font-display text-3xl font-bold tracking-tight text-body uppercase italic">
+                <h1 className="font-display text-3xl font-bold tracking-tight text-accent uppercase italic">
                     Settings
                 </h1>
                 <p className="text-dim mt-1 text-sm">Manage your application preferences.</p>
             </div>
 
-            <div className="bg-card border border-subtle rounded-xl p-6 md:p-8 shadow-xl">
+            <div className="bg-card border border-subtle rounded-xl p-6 md:p-8 shadow-xl space-y-8">
                 <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-1">
                     Preferences
                 </h2>
-                <p className="text-xs text-dim mb-6">Customise your experience.</p>
+                <p className="text-xs text-dim -mt-6 mb-6">Customise your experience.</p>
 
                 <div className="mb-6">
                     <label className="block text-xs uppercase tracking-wider text-dim font-bold mb-2">Theme</label>
@@ -38,6 +58,69 @@ export default function Settings() {
                         {theme === "dark" ? "Light Mode" : "Dark Mode"}
                     </button>
                 </div>
+
+                <div className="border-t border-subtle pt-6 space-y-6">
+                    <h3 className="text-sm font-bold text-body uppercase tracking-wide">Workout Display</h3>
+
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-body">RPE Field</p>
+                            <p className="text-xs text-dim">Show Rate of Perceived Exertion input per set</p>
+                        </div>
+                        <button
+                            onClick={() => handleToggle('show_rpe', !settings.show_rpe)}
+                            disabled={saving || loading}
+                            className={`relative w-11 h-6 rounded-full transition-colors ${settings.show_rpe ? 'bg-accent' : 'bg-elevated border border-subtle'} disabled:opacity-50`}
+                        >
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.show_rpe ? 'translate-x-5' : ''}`} />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-body">Estimated 1RM</p>
+                            <p className="text-xs text-dim">Show estimated one-rep max column in workouts</p>
+                        </div>
+                        <button
+                            onClick={() => handleToggle('show_1rm', !settings.show_1rm)}
+                            disabled={saving || loading}
+                            className={`relative w-11 h-6 rounded-full transition-colors ${settings.show_1rm ? 'bg-accent' : 'bg-elevated border border-subtle'} disabled:opacity-50`}
+                        >
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.show_1rm ? 'translate-x-5' : ''}`} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="border-t border-subtle pt-6">
+                    <h3 className="text-sm font-bold text-body uppercase tracking-wide mb-4">Rest Timer</h3>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium text-body">Default Rest Time</p>
+                            <p className="text-xs text-dim">Default seconds between sets for new exercises</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <TransparentNumericInput
+                                value={settings.default_rest_time}
+                                onChange={(val) => saveDefaultRest(val)}
+                                min={0}
+                                max={600}
+                                step={5}
+                                className="w-20"
+                                inputClassName="w-full bg-surface border border-subtle rounded-lg py-2 px-3 text-sm text-body text-center focus:border-accent focus:outline-none transition-colors font-mono"
+                            />
+                            <span className="text-xs text-dim font-mono">s</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex justify-center pt-4">
+                <button
+                    onClick={() => navigate('/')}
+                    className="px-8 py-3 bg-elevated hover:bg-hover text-body font-bold border border-subtle rounded-xl transition-all text-sm"
+                >
+                    Close Settings
+                </button>
             </div>
         </div>
     );

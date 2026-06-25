@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import NotificationProvider from './components/NotificationProvider';
 import WorkoutProvider from './components/WorkoutContext';
 import ThemeProvider from './components/ThemeContext';
+import SettingsProvider from './components/SettingsContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -17,12 +18,14 @@ root.render(
     <ErrorBoundary>
       <ThemeProvider>
         <NotificationProvider>
+          <SettingsProvider>
           <WorkoutProvider>
             <BrowserRouter>
               < Navbar />
               <App />
             </BrowserRouter >
           </WorkoutProvider>
+          </SettingsProvider>
         </NotificationProvider>
       </ThemeProvider>
     </ErrorBoundary>

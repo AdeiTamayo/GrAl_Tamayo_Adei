@@ -6,6 +6,7 @@ import TransparentNumericInput from "../components/TransparentNumericInput";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useNotification } from "../components/NotificationProvider";
 import { useWorkout } from "../components/WorkoutContext";
+import { useSettings } from "../components/SettingsContext";
 
 interface Routine {
     id: number;
@@ -39,6 +40,9 @@ export default function CurrentWorkout() {
         addRestTime,
     } = useWorkout();
 
+    const { settings } = useSettings();
+    const showRpe = settings?.show_rpe !== false;
+    const show1rm = settings?.show_1rm !== false;
     const [showExercisePicker, setShowExercisePicker] = useState(false);
     const [routines, setRoutines] = useState<Routine[]>([]);
     const [showRoutinePicker, setShowRoutinePicker] = useState(false);
@@ -209,7 +213,8 @@ export default function CurrentWorkout() {
                                     weight: set.weight || 0,
                                     reps: set.repetitions || 0,
                                     time: ex.rest_time,
-                                    note: set.note || null
+                                    note: set.note || null,
+                                    rpe: set.rpe || null
                                 })
                         });
                         const setData = await setRes.json();
@@ -419,7 +424,8 @@ export default function CurrentWorkout() {
                                             <th className="py-2 px-2 w-12">Set</th>
                                             <th className="py-2 px-2">Weight (kg)</th>
                                             <th className="py-2 px-2">Reps</th>
-                                            <th className="py-2 px-2">e1RM</th>
+                                            {showRpe && <th className="py-2 px-2 w-16">RPE</th>}
+                                            {show1rm && <th className="py-2 px-2 w-16">e1RM</th>}
                                             <th className="py-2 px-2 text-center">Goal</th>
                                             <th className="py-2 px-2 min-w-[100px]">Notes</th>
                                             <th className="py-2 px-2 text-right"></th>
@@ -467,15 +473,32 @@ export default function CurrentWorkout() {
                                                         inputClassName="w-full bg-card border border-subtle rounded-lg py-1.5 px-3 text-sm focus:border-accent focus:ring-0 transition-colors disabled:opacity-50"
                                                     />
                                                 </td>
-                                                <td className="py-2 px-2">
-                                                    {set.weight && set.repetitions ? (
-                                                        <span className="font-mono text-xs text-accent/80">
-                                                            {(Number(set.weight) * (1 + Number(set.repetitions) / 30)).toFixed(1)}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-dim text-xs">—</span>
-                                                    )}
-                                                </td>
+                                                {showRpe && (
+                                                    <td className="py-2 px-1">
+                                                        <TransparentNumericInput
+                                                            value={set.rpe ?? ""}
+                                                            onChange={(val) => updateSet(exIdx, setIdx, "rpe", val)}
+                                                            disabled={set.is_done}
+                                                            placeholder="—"
+                                                            min={1}
+                                                            max={10}
+                                                            step={0.5}
+                                                            className="w-full"
+                                                            inputClassName="w-full bg-card border border-subtle rounded-lg py-1.5 px-2 text-sm focus:border-accent focus:ring-0 transition-colors disabled:opacity-50 text-center"
+                                                        />
+                                                    </td>
+                                                )}
+                                                {show1rm && (
+                                                    <td className="py-2 px-2">
+                                                        {set.weight && set.repetitions ? (
+                                                            <span className="font-mono text-xs text-accent/80">
+                                                                {(Number(set.weight) * (1 + Number(set.repetitions) / 30)).toFixed(1)}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-dim text-xs">—</span>
+                                                        )}
+                                                    </td>
+                                                )}
                                                 <td className="py-2 px-2 text-center">
                                                     {(() => {
                                                         const goal = goals[ex.exercise_id];

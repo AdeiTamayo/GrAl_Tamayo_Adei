@@ -320,6 +320,27 @@ exports.updateWeight = async (req, res) => {
     }
 };
 
+exports.getSettings = async (req, res) => {
+    try {
+        const settings = await User.getSettings(req.userId);
+        return res.status(200).json({ success: true, data: settings });
+    } catch (error) {
+        console.error('[Settings] Error fetching:', error.message);
+        return res.status(500).json({ success: false, error: 'Failed to fetch settings' });
+    }
+};
+
+exports.updateSettings = async (req, res) => {
+    try {
+        const { show_rpe, show_1rm, default_rest_time } = req.body;
+        const settings = await User.updateSettings(req.userId, { show_rpe, show_1rm, default_rest_time });
+        return res.status(200).json({ success: true, data: settings });
+    } catch (error) {
+        console.error('[Settings] Error updating:', error.message);
+        return res.status(500).json({ success: false, error: 'Failed to update settings' });
+    }
+};
+
 exports.deleteWeight = async (req, res) => {
     try {
         const userId = req.userId;

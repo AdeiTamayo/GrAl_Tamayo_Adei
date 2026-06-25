@@ -12,5 +12,7 @@ router.get('/weights', authMiddleware, userController.getWeightHistory);
 router.post('/weights', authMiddleware, userController.addWeight);
 router.put('/weights', authMiddleware, userController.updateWeight);
 router.delete('/weights/:id', authMiddleware, userController.deleteWeight);
+router.get('/settings', authMiddleware, userController.getSettings);
+router.put('/settings', authMiddleware, userController.updateSettings);
 
 module.exports = router;

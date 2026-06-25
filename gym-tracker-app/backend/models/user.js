@@ -146,8 +146,18 @@ class User {
             }
 
             // Count total matching rows before pagination
-            const countQuery = query.replace(/SELECT .* FROM/, 'SELECT COUNT(*)::int AS total FROM');
-            const countResult = await pool.query(countQuery, params);
+            let countQuery = 'SELECT COUNT(*)::int AS total FROM weight_history WHERE user_id = $1';
+            const countParams = [userId];
+            let countIdx = 2;
+            if (startDate) {
+                countQuery += ` AND date >= $${countIdx++}`;
+                countParams.push(startDate);
+            }
+            if (endDate) {
+                countQuery += ` AND date <= $${countIdx++}`;
+                countParams.push(endDate);
+            }
+            const countResult = await pool.query(countQuery, countParams);
             const total = countResult.rows[0].total;
 
             // Sorting
@@ -254,6 +264,66 @@ class User {
             return latestWeight;
         } catch (error) {
             console.error('[User Model] Error syncing profile weight:', error.message);
+            throw error;
+        }
+    }
+
+    static async getSettings(userId) {
+        try {
+            const query = `SELECT * FROM user_settings WHERE user_id = $1`;
+            const result = await pool.query(query, [userId]);
+            if (result.rows.length === 0) {
+                const insert = await pool.query(
+                    `INSERT INTO user_settings (user_id) VALUES ($1) RETURNING *`,
+                    [userId]
+                );
+                return insert.rows[0];
+            }
+            return result.rows[0];
+        } catch (error) {
+            console.error('[User Model] Error getting settings:', error.message);
+            throw error;
+        }
+    }
+
+    static async updateSettings(userId, data) {
+        try {
+            const { show_rpe, show_1rm, default_rest_time } = data;
+
+            // Ensure a row exists first
+            await pool.query(
+                `INSERT INTO user_settings (user_id) VALUES ($1) ON CONFLICT (user_id) DO NOTHING`,
+                [userId]
+            );
+
+            const sets = [];
+            const params = [];
+            let idx = 1;
+
+            if (show_rpe !== undefined) {
+                sets.push(`show_rpe = $${idx++}`);
+                params.push(show_rpe);
+            }
+            if (show_1rm !== undefined) {
+                sets.push(`show_1rm = $${idx++}`);
+                params.push(show_1rm);
+            }
+            if (default_rest_time !== undefined) {
+                sets.push(`default_rest_time = $${idx++}`);
+                params.push(default_rest_time);
+            }
+
+            if (sets.length === 0) {
+                const existing = await pool.query(`SELECT * FROM user_settings WHERE user_id = $1`, [userId]);
+                return existing.rows[0];
+            }
+
+            params.push(userId);
+            const query = `UPDATE user_settings SET ${sets.join(', ')} WHERE user_id = $${idx} RETURNING *`;
+            const result = await pool.query(query, params);
+            return result.rows[0];
+        } catch (error) {
+            console.error('[User Model] Error updating settings:', error.message);
             throw error;
         }
     }
