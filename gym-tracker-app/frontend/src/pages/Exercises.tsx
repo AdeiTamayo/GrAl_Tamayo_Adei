@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
 import Select from '../components/Select';
@@ -47,6 +48,7 @@ type Filters = {
 type ViewMode = 'list' | 'details' | 'create' | 'edit';
 
 export default function Exercises() {
+    const navigate = useNavigate();
     const [allExercises, setAllExercises] = useState<Exercise[]>([]);
     const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
 
@@ -523,6 +525,7 @@ export default function Exercises() {
 
                         <div className="flex gap-4 mt-8 pt-4 border-t border-subtle">
                             <Button type="button" variant="secondary" onClick={() => setViewMode('edit')}>Edit Exercise</Button>
+                            <Button type="button" variant="primary" onClick={() => navigate(`/exercise-history?exerciseId=${selectedExercise.id}&exerciseName=${encodeURIComponent(selectedExercise.name)}`)}>View History</Button>
                             <DeleteButton onClick={() => setDeleteConfirmId(selectedExercise.id)} />
                         </div>
                     </div>
@@ -564,10 +567,21 @@ export default function Exercises() {
                                         <li
                                             key={ex.id}
                                             onClick={() => fetchExerciseById(ex.id)}
-                                            className="bg-surface/40 border cursor-pointer border-subtle/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-accent/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/5"
+                                            className="bg-surface/40 border cursor-pointer border-subtle/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-accent/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/5 group"
                                         >
                                             <div>
-                                                <h2 className="font-display text-xl font-bold text-body mb-2 truncate">{ex.name}</h2>
+                                                <div className="flex items-center justify-between">
+                                                    <h2 className="font-display text-xl font-bold text-body mb-2 truncate">{ex.name}</h2>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); navigate(`/exercise-history?exerciseId=${ex.id}&exerciseName=${encodeURIComponent(ex.name)}`); }}
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-dim hover:text-accent hover:bg-accent/10"
+                                                        title="View exercise history"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
                                                 <div className="text-sm text-muted space-x-2">
                                                     <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.target}</span>
                                                     <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.equipment}</span>
