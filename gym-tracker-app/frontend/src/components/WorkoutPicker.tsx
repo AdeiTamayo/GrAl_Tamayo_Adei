@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '../utils/api';
+import Pagination from './Pagination';
 import Select from './Select';
 
 interface Workout {
@@ -161,27 +162,11 @@ export default function WorkoutPicker({ onSelect, onClose, title = "Select Worko
                                 </button>
                             ))}
                         </div>
-                        {filteredWorkouts.length > ITEMS_PER_PAGE && (
-                            <div className="flex items-center justify-center gap-3 mt-3 pb-1">
-                                <button
-                                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                                    disabled={page === 1}
-                                    className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                >
-                                    &larr; Prev
-                                </button>
-                                <span className="text-xs text-muted font-medium">
-                                    Page {page} of {Math.ceil(filteredWorkouts.length / ITEMS_PER_PAGE)}
-                                </span>
-                                <button
-                                    onClick={() => setPage(p => Math.min(Math.ceil(filteredWorkouts.length / ITEMS_PER_PAGE), p + 1))}
-                                    disabled={page === Math.ceil(filteredWorkouts.length / ITEMS_PER_PAGE)}
-                                    className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                >
-                                    Next &rarr;
-                                </button>
-                            </div>
-                        )}
+                        <Pagination
+                            page={page}
+                            totalPages={Math.ceil(filteredWorkouts.length / ITEMS_PER_PAGE)}
+                            onPageChange={setPage}
+                        />
                     </>
                 )}
             </div>

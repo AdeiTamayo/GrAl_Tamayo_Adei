@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import DatePicker from "../components/DatePicker";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import Select from "../components/Select";
 
@@ -280,12 +281,10 @@ export default function Register() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-semibold text-muted mb-2">Birth date</label>
-                                <input
-                                    type="date"
+                                <DatePicker
                                     value={birthDate}
-                                    onChange={(e) => setBirthDate(e.target.value)}
-                                    max={new Date().toLocaleDateString('en-CA')}
-                                    className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors [color-scheme:dark]"
+                                    onChange={setBirthDate}
+                                    buttonClassName="!px-3 !py-3 text-sm"
                                 />
                             </div>
                         </div>

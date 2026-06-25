@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Button from '../components/Button';
+import Modal from '../components/Modal';
+import Pagination from '../components/Pagination';
 import EditableExerciseCard from '../components/EditableExerciseCard';
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import { apiFetch } from "../utils/api";
@@ -59,7 +61,6 @@ export default function RoutinesManagement() {
 
     // Layout Reference Focus Wrappers
     const createRoutineRef = useRef<HTMLDivElement>(null);
-    const detailsDropdownRef = useRef<HTMLDivElement>(null);
 
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({
@@ -310,27 +311,11 @@ export default function RoutinesManagement() {
                                     })}
                                 </ul>
 
-                                {totalPages > 1 && (
-                                    <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
-                                        <button
-                                            onClick={() => setRoutinesPage((p) => Math.max(1, p - 1))}
-                                            disabled={routinesPage === 1}
-                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                        >
-                                            &larr; Prev
-                                        </button>
-                                        <span className="text-xs text-muted font-medium">
-                                            Page {routinesPage} of {totalPages}
-                                        </span>
-                                        <button
-                                            onClick={() => setRoutinesPage((p) => Math.min(totalPages, p + 1))}
-                                            disabled={routinesPage === totalPages}
-                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                        >
-                                            Next &rarr;
-                                        </button>
-                                    </div>
-                                )}
+                                <Pagination
+                                    page={routinesPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setRoutinesPage}
+                                />
                             </>
                         )}
                     </div>
@@ -341,7 +326,7 @@ export default function RoutinesManagement() {
                     <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative">
 
                         {/* Header Details Wrapper with Dropdown Flow Control */}
-                        <div className="flex justify-between items-start mb-6" ref={detailsDropdownRef}>
+                        <div className="flex justify-between items-start mb-6">
                             <div className="flex-1 mr-4">
                                 <h2 className="font-display text-2xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
                                     {selectedRoutine.name}
@@ -352,33 +337,19 @@ export default function RoutinesManagement() {
                                 )}
                             </div>
 
-                            {/* Dropdown Control Button for Editing Details */}
-                            <div className="flex gap-2 shrink-0 relative">
+                            <div className="flex gap-2 shrink-0">
                                 <Button
                                     type="button"
-                                    onClick={() => setShowDetailsDropdown(!showDetailsDropdown)}
+                                    onClick={() => setShowDetailsDropdown(true)}
                                     variant="secondary"
-                                    className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 font-medium"
+                                    className="px-3 py-1.5 text-xs rounded-lg font-medium"
                                 >
-                                    <span>Modify Details</span>
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                    Modify Details
                                 </Button>
 
                                 <Button type="button" onClick={() => setSelectedRoutine(null)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
                                     Close
                                 </Button>
-
-                                {showDetailsDropdown && (
-                                    <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-subtle rounded-xl p-4 shadow-xl z-20 flex flex-col gap-3 animate-in fade-in duration-100">
-                                        <h4 className="text-xs uppercase tracking-wider text-muted font-bold">Edit Core Metadata</h4>
-                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-accent focus:outline-none" />
-                                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-accent focus:outline-none" />
-                                        <div className="flex gap-2 justify-end mt-1">
-                                            <button type="button" onClick={() => setShowDetailsDropdown(false)} className="text-muted text-xs font-semibold px-2.5 py-1.5 hover:text-heading">Cancel</button>
-                                            <Button type="button" onClick={saveRoutineEdit} variant="primary" className="px-3 py-1 text-xs rounded-md">Save Changes</Button>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -463,23 +434,13 @@ export default function RoutinesManagement() {
                         </div>
 
                         {/* Exercise Picker Modal */}
-                        {showPicker && (
-                            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                                <div className="relative w-full max-w-xl">
-                                    <button
-                                        onClick={() => setShowPicker(false)}
-                                        className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                                    >
-                                        Close
-                                    </button>
-                                    <ExercisePicker
-                                        title="Add Exercise to Routine"
-                                        onSelect={handleLiveAddExercise}
-                                        onClose={() => setShowPicker(false)}
-                                    />
-                                </div>
-                            </div>
-                        )}
+                        <Modal open={showPicker} onClose={() => setShowPicker(false)} maxWidth="xl">
+                            <ExercisePicker
+                                title="Add Exercise to Routine"
+                                onSelect={handleLiveAddExercise}
+                                onClose={() => setShowPicker(false)}
+                            />
+                        </Modal>
                     </div>
                 )}
             </div>
@@ -492,6 +453,20 @@ export default function RoutinesManagement() {
                     confirmLabel="Delete"
                 />
             )}
+
+            <Modal open={showDetailsDropdown} onClose={() => setShowDetailsDropdown(false)} maxWidth="sm">
+                <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <h3 className="font-display text-lg font-bold text-accent mb-4">Edit Core Metadata</h3>
+                    <div className="flex flex-col gap-3">
+                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-sm text-body focus:border-accent focus:outline-none" />
+                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-sm text-body focus:border-accent focus:outline-none" />
+                    </div>
+                    <div className="flex gap-2 justify-end mt-4">
+                        <Button type="button" onClick={() => setShowDetailsDropdown(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
+                        <Button type="button" onClick={saveRoutineEdit} variant="primary" className="px-4 py-2 text-xs rounded-lg">Save Changes</Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

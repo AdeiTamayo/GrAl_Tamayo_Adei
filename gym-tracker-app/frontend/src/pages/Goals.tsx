@@ -1,5 +1,9 @@
 import { useState, useEffect, useMemo, FormEvent, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import Button from "../components/Button";
+import Modal from "../components/Modal";
+import Pagination from "../components/Pagination";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
 import DeleteButton from "../components/DeleteButton";
@@ -18,6 +22,7 @@ interface Goal {
 }
 
 export default function Goals() {
+    const [searchParams] = useSearchParams();
     const [goals, setGoals] = useState<Goal[]>([]);
 
     // Form state
@@ -25,7 +30,7 @@ export default function Goals() {
     const [selectedExerciseName, setSelectedExerciseName] = useState("");
     const [targetWeight, setTargetWeight] = useState<number | "">("");
     const [targetReps, setTargetReps] = useState<number | "">("");
-    const [expectedDate, setExpectedDate] = useState("");
+    const [expectedDate, setExpectedDate] = useState(searchParams.get('date') || "");
     const [editingGoalId, setEditingGoalId] = useState<number | null>(null);
     const [showPicker, setShowPicker] = useState(false);
 
@@ -216,27 +221,17 @@ export default function Goals() {
                             >
                                 {selectedExerciseName || <span className="text-dim">Select Exercise</span>}
                             </button>
-                            {showPicker && (
-                                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                                    <div className="relative w-full max-w-xl">
-                                        <button
-                                            onClick={() => setShowPicker(false)}
-                                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                                        >
-                                            Close
-                                        </button>
-                                        <ExercisePicker
-                                            title="Select Exercise"
-                                            onSelect={(ex) => {
-                                                setSelectedExerciseId(ex.id);
-                                                setSelectedExerciseName(ex.name);
-                                                setShowPicker(false);
-                                            }}
-                                            onClose={() => setShowPicker(false)}
-                                        />
-                                    </div>
-                                </div>
-                            )}
+                            <Modal open={showPicker} onClose={() => setShowPicker(false)} maxWidth="xl">
+                                <ExercisePicker
+                                    title="Select Exercise"
+                                    onSelect={(ex) => {
+                                        setSelectedExerciseId(ex.id);
+                                        setSelectedExerciseName(ex.name);
+                                        setShowPicker(false);
+                                    }}
+                                    onClose={() => setShowPicker(false)}
+                                />
+                            </Modal>
                             <div className="grid grid-cols-2 gap-4">
                                 <TransparentNumericInput
                                     placeholder="Weight (kg)"
@@ -262,13 +257,13 @@ export default function Goals() {
                             <DatePicker value={expectedDate} onChange={setExpectedDate} placeholder="Set due date (optional)" />
 
                             <div className="flex gap-3 mt-2">
-                                <button type="submit" className="flex-1 bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover transition-all hover:scale-[1.02] active:scale-[0.98]">
+                                <Button type="submit" variant="primary" className="flex-1">
                                     {editingGoalId ? "Update Goal" : "Create Goal"}
-                                </button>
+                                </Button>
                                 {editingGoalId && (
-                                    <button type="button" onClick={resetForm} className="flex-1 bg-transparent border border-subtle text-muted font-bold py-3 rounded-lg hover:bg-elevated transition-all hover:scale-[1.02] active:scale-[0.98]">
+                                    <Button onClick={resetForm} variant="secondary" className="flex-1">
                                         Cancel
-                                    </button>
+                                    </Button>
                                 )}
                             </div>
                         </form>
@@ -358,27 +353,11 @@ export default function Goals() {
                                     </li>
                                 ))}
                             </ul>
-                            {filteredGoals.length > GOALS_PER_PAGE && (
-                                <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
-                                    <button
-                                        onClick={() => setGoalsPage(p => Math.max(1, p - 1))}
-                                        disabled={goalsPage === 1}
-                                        className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                    >
-                                        &larr; Prev
-                                    </button>
-                                    <span className="text-xs text-muted font-medium">
-                                        Page {goalsPage} of {Math.max(1, Math.ceil(filteredGoals.length / GOALS_PER_PAGE))}
-                                    </span>
-                                    <button
-                                        onClick={() => setGoalsPage(p => Math.min(Math.max(1, Math.ceil(filteredGoals.length / GOALS_PER_PAGE)), p + 1))}
-                                        disabled={goalsPage === Math.max(1, Math.ceil(filteredGoals.length / GOALS_PER_PAGE))}
-                                        className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                    >
-                                        Next &rarr;
-                                    </button>
-                                </div>
-                            )}
+                            <Pagination
+                                page={goalsPage}
+                                totalPages={Math.max(1, Math.ceil(filteredGoals.length / GOALS_PER_PAGE))}
+                                onPageChange={setGoalsPage}
+                            />
                         </>
                     )}
                 </div>

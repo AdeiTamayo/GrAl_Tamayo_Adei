@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../components/ThemeContext";
 import { useSettings } from "../components/SettingsContext";
+import Button from "../components/Button";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 
 export default function Settings() {
@@ -47,16 +48,15 @@ export default function Settings() {
                 <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-1">
                     Preferences
                 </h2>
-                <p className="text-xs text-dim -mt-6 mb-6">Customise your experience.</p>
-
                 <div className="mb-6">
                     <label className="block text-xs uppercase tracking-wider text-dim font-bold mb-2">Theme</label>
-                    <button
+                    <Button
                         onClick={toggleTheme}
-                        className="px-5 py-2.5 rounded-lg text-sm font-bold transition-all bg-elevated text-muted hover:bg-hover"
+                        variant="secondary"
+                        className="!px-5 !py-2.5"
                     >
                         {theme === "dark" ? "Light Mode" : "Dark Mode"}
-                    </button>
+                    </Button>
                 </div>
 
                 <div className="border-t border-subtle pt-6 space-y-6">
@@ -115,12 +115,13 @@ export default function Settings() {
             </div>
 
             <div className="flex justify-center pt-4">
-                <button
+                <Button
                     onClick={() => navigate('/')}
-                    className="px-8 py-3 bg-elevated hover:bg-hover text-body font-bold border border-subtle rounded-xl transition-all text-sm"
+                    variant="secondary"
+                    className="!px-8 !py-3"
                 >
                     Close Settings
-                </button>
+                </Button>
             </div>
         </div>
     );

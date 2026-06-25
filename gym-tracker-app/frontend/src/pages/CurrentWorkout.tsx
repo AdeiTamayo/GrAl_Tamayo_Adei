@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { apiFetch } from "../utils/api";
+import { formatTime } from "../utils/helpers";
 import Button from "../components/Button";
+import Modal from "../components/Modal";
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import TransparentNumericInput from "../components/TransparentNumericInput";
+import DeleteButton from "../components/DeleteButton";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useNotification } from "../components/NotificationProvider";
 import { useWorkout } from "../components/WorkoutContext";
@@ -169,13 +172,6 @@ export default function CurrentWorkout() {
         addExercise(exercise);
         setShowExercisePicker(false);
         if (!isWorkoutActive) startWorkout();
-    };
-
-    const formatTime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return [h, m, s].map(v => v < 10 ? "0" + v : v).filter((v, i) => v !== "00" || i > 0).join(":");
     };
 
     const saveWorkout = async () => {
@@ -540,7 +536,7 @@ export default function CurrentWorkout() {
                                                     />
                                                 </td>
                                                 <td className="py-2 px-2 text-right">
-                                                    <button onClick={() => removeSet(exIdx, setIdx)} className="text-dim hover:text-red-400 font-bold text-lg">×</button>
+                                                    <DeleteButton onClick={() => removeSet(exIdx, setIdx)} className="!p-1 !w-7 !h-7" />
                                                 </td>
                                             </tr>
                                         ))}
@@ -563,142 +559,88 @@ export default function CurrentWorkout() {
                     </Button>
                 </div>
 
-                {showExercisePicker && (
-                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
-                            <button
-                                onClick={() => setShowExercisePicker(false)}
-                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                            >
-                                Close
-                            </button>
-                            <div className="p-4 border-b border-subtle">
-                                <h2 className="text-xl font-bold uppercase italic text-accent">Select Exercise</h2>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4">
-                                <ExercisePicker onSelect={handleAddExercise} />
-                            </div>
+                <Modal open={showExercisePicker} onClose={() => setShowExercisePicker(false)} maxWidth="2xl" backdrop="darker">
+                    <div className="max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
+                        <div className="p-4 border-b border-subtle">
+                            <h2 className="text-xl font-bold uppercase italic text-accent">Select Exercise</h2>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4">
+                            <ExercisePicker onSelect={handleAddExercise} />
                         </div>
                     </div>
-                )}
+                </Modal>
 
-                {showRoutinePicker && (
-                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-lg bg-card border border-subtle rounded-3xl p-6">
-                            <button
-                                onClick={() => setShowRoutinePicker(false)}
-                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                            >
-                                Close
-                            </button>
-                            <h2 className="text-xl font-bold uppercase italic text-accent mb-6">Load Routine</h2>
-                            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                                {routines.length === 0 && <p className="text-dim text-center">No routines found.</p>}
-                                {routines.map((r) => (
-                                    <button
-                                        key={r.id}
-                                        onClick={() => loadRoutine(r.id)}
-                                        className="w-full text-left p-4 bg-surface hover:bg-elevated border border-subtle hover:border-accent/50 rounded-2xl transition-all group"
-                                    >
-                                        <div className="font-bold text-body group-hover:text-accent transition-colors">{r.name}</div>
-                                        <div className="text-xs text-dim mt-1">Click to load exercises</div>
-                                    </button>
-                                ))}
-                            </div>
+                <Modal open={showRoutinePicker} onClose={() => setShowRoutinePicker(false)} maxWidth="lg" backdrop="darker">
+                    <div className="bg-card border border-subtle rounded-3xl p-6">
+                        <h2 className="text-xl font-bold uppercase italic text-accent mb-6">Load Routine</h2>
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                            {routines.length === 0 && <p className="text-dim text-center">No routines found.</p>}
+                            {routines.map((r) => (
+                                <button
+                                    key={r.id}
+                                    onClick={() => loadRoutine(r.id)}
+                                    className="w-full text-left p-4 bg-surface hover:bg-elevated border border-subtle hover:border-accent/50 rounded-2xl transition-all group"
+                                >
+                                    <div className="font-bold text-body group-hover:text-accent transition-colors">{r.name}</div>
+                                    <div className="text-xs text-dim mt-1">Click to load exercises</div>
+                                </button>
+                            ))}
                         </div>
                     </div>
-                )}
+                </Modal>
 
-                {showSaveRoutineModal && (
-                    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-sm">
-                            <button
-                                onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }}
-                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                            >
-                                Close
-                            </button>
-                            <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                            <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
-                                Save as Routine
-                            </h2>
-                            <p className="text-sm text-muted mb-6">
-                                Create a routine from {exercises.length} exercise{exercises.length !== 1 ? 's' : ''}.
-                            </p>
-                            <input
-                                type="text"
-                                value={routineName}
-                                onChange={(e) => setRoutineName(e.target.value)}
-                                placeholder="Routine name"
-                                className="w-full bg-surface border border-subtle rounded-lg py-2.5 px-3 text-sm text-body placeholder:text-dim focus:border-accent focus:ring-0 transition-colors mb-4"
-                                autoFocus
-                                onKeyDown={(e) => { if (e.key === 'Enter') saveAsRoutine(); }}
-                            />
-                            <div className="space-y-3">
-                                <button
-                                    onClick={saveAsRoutine}
-                                    className="w-full bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover transition-all"
-                                >
-                                    Create Routine
-                                </button>
-                                <button
-                                    onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }}
-                                    className="w-full bg-elevated text-muted font-bold py-3 rounded-lg hover:bg-hover transition-all"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
+                <Modal open={showSaveRoutineModal} onClose={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} maxWidth="sm" backdrop="darker">
+                    <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
+                        Save as Routine
+                    </h2>
+                    <p className="text-sm text-muted mb-6">
+                        Create a routine from {exercises.length} exercise{exercises.length !== 1 ? 's' : ''}.
+                    </p>
+                    <input
+                        type="text"
+                        value={routineName}
+                        onChange={(e) => setRoutineName(e.target.value)}
+                        placeholder="Routine name"
+                        className="w-full bg-surface border border-subtle rounded-lg py-2.5 px-3 text-sm text-body placeholder:text-dim focus:border-accent focus:ring-0 transition-colors mb-4"
+                        autoFocus
+                        onKeyDown={(e) => { if (e.key === 'Enter') saveAsRoutine(); }}
+                    />
+                    <div className="space-y-3">
+                        <Button onClick={saveAsRoutine} variant="primary" fullWidth>
+                            Create Routine
+                        </Button>
+                        <Button onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} variant="secondary" fullWidth>
+                            Cancel
+                        </Button>
                     </div>
                 </div>
-                )}
+                </Modal>
 
-                {showFinishModal && (
-                    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-sm">
-                            <button
-                                onClick={() => setShowFinishModal(false)}
-                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                            >
-                                Close
-                            </button>
-                            <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                            <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
-                                Finish Workout
-                            </h2>
-                            <p className="text-sm text-muted mb-6">
-                                Duration: {formatTime(elapsedTime)}
-                            </p>
-                            <div className="space-y-3">
-                                <button
-                                    onClick={() => { setShowFinishModal(false); saveWorkout(); }}
-                                    className="w-full bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
-                                >
-                                    Save Workout
-                                </button>
-                                <button
-                                    onClick={() => { setShowFinishModal(false); setShowSaveRoutineModal(true); }}
-                                    className="w-full bg-elevated text-muted font-bold py-3 rounded-lg hover:bg-hover transition-all"
-                                >
-                                    Save as Routine
-                                </button>
-                                <button
-                                    onClick={() => { setShowFinishModal(false); resetWorkout(); navigate("/"); }}
-                                    className="w-full bg-rose-500/10 text-rose-500 font-bold py-3 rounded-lg border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all"
-                                >
-                                    Delete Workout
-                                </button>
-                                <button
-                                    onClick={() => setShowFinishModal(false)}
-                                    className="w-full bg-elevated text-muted font-bold py-3 rounded-lg hover:bg-hover transition-all"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
+                <Modal open={showFinishModal} onClose={() => setShowFinishModal(false)} maxWidth="sm" backdrop="darker">
+                    <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
+                        Finish Workout
+                    </h2>
+                    <p className="text-sm text-muted mb-6">
+                        Duration: {formatTime(elapsedTime)}
+                    </p>
+                    <div className="space-y-3">
+                        <Button onClick={() => { setShowFinishModal(false); saveWorkout(); }} variant="primary" fullWidth>
+                            Save Workout
+                        </Button>
+                        <Button onClick={() => { setShowFinishModal(false); setShowSaveRoutineModal(true); }} variant="secondary" fullWidth>
+                            Save as Routine
+                        </Button>
+                        <Button onClick={() => { setShowFinishModal(false); resetWorkout(); navigate("/"); }} variant="danger" fullWidth>
+                            Delete Workout
+                        </Button>
+                        <Button onClick={() => setShowFinishModal(false)} variant="secondary" fullWidth>
+                            Cancel
+                        </Button>
                     </div>
                 </div>
-                )}
+                </Modal>
             </div>
         </div>
     );

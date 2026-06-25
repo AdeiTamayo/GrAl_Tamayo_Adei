@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../utils/api";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import Button from "../components/Button";
+import Modal from "../components/Modal";
+import Pagination from "../components/Pagination";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
 import DatePicker from "../components/DatePicker";
@@ -220,12 +223,13 @@ export default function PersonalRecords() {
                     <div className="bg-card border border-subtle rounded-xl p-7 shadow-xl">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Log a PR</h3>
-                            <button
+                            <Button
                                 onClick={() => setShowAddForm(!showAddForm)}
-                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all focus:outline-none ${showAddForm ? 'bg-elevated text-muted hover:bg-hover' : 'bg-accent text-black hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98]'}`}
+                                variant={showAddForm ? "secondary" : "primary"}
+                                className="!px-4 !py-2"
                             >
                                 {showAddForm ? "Cancel" : "Add PR"}
-                            </button>
+                            </Button>
                         </div>
 
                         {showAddForm && (
@@ -237,27 +241,17 @@ export default function PersonalRecords() {
                                 >
                                     {formExerciseName || <span className="text-dim">Select Exercise</span>}
                                 </button>
-                                {showPicker && (
-                                    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                                        <div className="relative w-full max-w-xl">
-                                            <button
-                                                onClick={() => setShowPicker(false)}
-                                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                                            >
-                                                Close
-                                            </button>
-                                            <ExercisePicker
-                                                title="Select Exercise"
-                                                onSelect={(ex) => {
-                                                    setFormExerciseId(ex.id);
-                                                    setFormExerciseName(ex.name);
-                                                    setShowPicker(false);
-                                                }}
-                                                onClose={() => setShowPicker(false)}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+                                <Modal open={showPicker} onClose={() => setShowPicker(false)} maxWidth="xl">
+                                    <ExercisePicker
+                                        title="Select Exercise"
+                                        onSelect={(ex) => {
+                                            setFormExerciseId(ex.id);
+                                            setFormExerciseName(ex.name);
+                                            setShowPicker(false);
+                                        }}
+                                        onClose={() => setShowPicker(false)}
+                                    />
+                                </Modal>
                                 <div className="grid grid-cols-2 gap-4">
                                     <TransparentNumericInput
                                         placeholder="Weight (kg)"
@@ -288,9 +282,9 @@ export default function PersonalRecords() {
                                     onChange={e => setNewNote(e.target.value)}
                                     className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                 />
-                                <button type="submit" disabled={isCreating || !formExerciseId} className="w-full bg-accent text-black font-bold py-3 mt-2 rounded-lg hover:bg-accent-hover transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                                <Button type="submit" disabled={isCreating || !formExerciseId} variant="primary" fullWidth className="mt-2">
                                     {isCreating ? "Adding..." : "Log PR"}
-                                </button>
+                                </Button>
                             </form>
                         )}
                     </div>
@@ -346,27 +340,11 @@ export default function PersonalRecords() {
                                             </li>
                                         ))}
                                     </ul>
-                                    {prSummary.length > PRS_PER_PAGE && (
-                                        <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
-                                            <button
-                                                onClick={() => setPrPage(p => Math.max(1, p - 1))}
-                                                disabled={prPage === 1}
-                                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                            >
-                                                &larr; Prev
-                                            </button>
-                                            <span className="text-xs text-muted font-medium">
-                                                Page {prPage} of {Math.ceil(prSummary.length / PRS_PER_PAGE)}
-                                            </span>
-                                            <button
-                                                onClick={() => setPrPage(p => Math.min(Math.ceil(prSummary.length / PRS_PER_PAGE), p + 1))}
-                                                disabled={prPage === Math.ceil(prSummary.length / PRS_PER_PAGE)}
-                                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                            >
-                                                Next &rarr;
-                                            </button>
-                                        </div>
-                                    )}
+                                    <Pagination
+                                        page={prPage}
+                                        totalPages={Math.ceil(prSummary.length / PRS_PER_PAGE)}
+                                        onPageChange={setPrPage}
+                                    />
                                 </>
                             )
                         )}
@@ -378,7 +356,7 @@ export default function PersonalRecords() {
                     <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 lg:p-8 shadow-xl">
                         <div className="flex justify-between items-start mb-6">
                             <h2 className="font-display text-2xl font-bold text-accent tracking-wide uppercase">{selectedExerciseName} Progress</h2>
-                            <button onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} className="px-4 py-2 bg-surface hover:bg-elevated text-muted rounded-lg font-bold text-sm transition-colors border border-subtle">Close</button>
+                            <Button onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} variant="secondary" className="!px-4 !py-2">Close</Button>
                         </div>
 
                         {/* Progress Chart */}
@@ -471,61 +449,45 @@ export default function PersonalRecords() {
                 />
             )}
 
-            {editRecord && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="relative w-full max-w-sm">
-                        <button
-                            onClick={() => setEditRecord(null)}
-                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                        >
-                            Close
-                        </button>
-                        <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-4">Edit PR</h2>
-                        <div className="space-y-4">
-                            <TransparentNumericInput
-                                placeholder="Weight (kg)"
-                                value={editRecord.weight}
-                                onChange={(val) => setEditRecord({ ...editRecord, weight: val === "" ? "" : Number(val) })}
-                                className="w-full"
-                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
-                                step={0.1} min={0} max={999}
-                            />
-                            <TransparentNumericInput
-                                placeholder="Reps"
-                                value={editRecord.repetitions}
-                                onChange={(val) => setEditRecord({ ...editRecord, repetitions: val === "" ? "" : Number(val) })}
-                                className="w-full"
-                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
-                                step={1} min={0} max={999}
-                            />
-                            <DatePicker value={editRecord.date} onChange={(date) => setEditRecord({ ...editRecord, date })} placeholder="Select date" />
-                            <input
-                                type="text"
-                                placeholder="Note (optional)"
-                                value={editRecord.note}
-                                onChange={e => setEditRecord({ ...editRecord, note: e.target.value })}
-                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
-                            />
-                            <div className="space-y-3 pt-2">
-                                <button
-                                    onClick={updatePR}
-                                    className="w-full bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover transition-all"
-                                >
-                                    Save Changes
-                                </button>
-                                <button
-                                    onClick={() => setEditRecord(null)}
-                                    className="w-full bg-elevated text-muted font-bold py-3 rounded-lg hover:bg-hover transition-all"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
+            <Modal open={!!editRecord} onClose={() => setEditRecord(null)} maxWidth="sm" backdrop="darker">
+                <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-4">Edit PR</h2>
+                <div className="space-y-4">
+                    <TransparentNumericInput
+                        placeholder="Weight (kg)"
+                        value={editRecord?.weight ?? ""}
+                        onChange={(val) => editRecord && setEditRecord({ ...editRecord, weight: val === "" ? "" : Number(val) })}
+                        className="w-full"
+                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                        step={0.1} min={0} max={999}
+                    />
+                    <TransparentNumericInput
+                        placeholder="Reps"
+                        value={editRecord?.repetitions ?? ""}
+                        onChange={(val) => editRecord && setEditRecord({ ...editRecord, repetitions: val === "" ? "" : Number(val) })}
+                        className="w-full"
+                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                        step={1} min={0} max={999}
+                    />
+                    <DatePicker value={editRecord?.date ?? ""} onChange={(date) => editRecord && setEditRecord({ ...editRecord, date })} placeholder="Select date" />
+                    <input
+                        type="text"
+                        placeholder="Note (optional)"
+                        value={editRecord?.note ?? ""}
+                        onChange={e => editRecord && setEditRecord({ ...editRecord, note: e.target.value })}
+                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                    />
+                    <div className="space-y-3 pt-2">
+                        <Button onClick={updatePR} variant="primary" fullWidth>
+                            Save Changes
+                        </Button>
+                        <Button onClick={() => setEditRecord(null)} variant="secondary" fullWidth>
+                            Cancel
+                        </Button>
                     </div>
                 </div>
             </div>
-            )}
+            </Modal>
         </div>
     );
 }

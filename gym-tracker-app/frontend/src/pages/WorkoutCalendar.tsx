@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Calendar from "../components/Calendar";
 import Button from "../components/Button";
+import DeleteButton from "../components/DeleteButton";
+import Modal from "../components/Modal";
 import Select from "../components/Select";
 import DatePicker from "../components/DatePicker";
 
@@ -146,7 +148,7 @@ export default function WorkoutCalendar() {
     const plannedDates = useMemo(() => {
         return new Set(planned.map(p => p.date?.substring(0, 10)).filter(Boolean));
     }, [planned]);
-  
+
     const goalDates = useMemo(() => {
         const set = new Set<string>();
         for (const g of goals) {
@@ -166,7 +168,7 @@ export default function WorkoutCalendar() {
         if (!selectedDate) return [];
         return planned.filter(p => p.date?.substring(0, 10) === selectedDate);
     }, [planned, selectedDate]);
-  
+
     const selectedGoals = useMemo(() => {
         if (!selectedDate) return [];
         return goals.filter(g => g.expected_date?.substring(0, 10) === selectedDate);
@@ -218,14 +220,6 @@ export default function WorkoutCalendar() {
                                 <>{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</>
                             ) : "Select a day"}
                         </h2>
-                        {selectedDate && (
-                            <button
-                                onClick={openPlanModal}
-                                className="bg-lime-400 text-black font-bold text-xs py-2 px-3 rounded-lg hover:bg-lime-300 transition-all"
-                            >
-                                + Schedule
-                            </button>
-                        )}
                     </div>
 
                     {selectedWorkouts.length === 0 && selectedGoals.length === 0 && selectedPlanned.length === 0 ? (
@@ -259,11 +253,11 @@ export default function WorkoutCalendar() {
                             )}
                             {selectedGoals.length > 0 && (
                                 <>
-                                    <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3 text-amber-400">Goal Deadlines</h3>
+                                    <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3 text-accent">Goal Deadlines</h3>
                                     <ul className="space-y-3 mb-6">
                                         {selectedGoals.map(g => (
                                             <li key={g.id} className="bg-surface/40 border border-subtle/80 rounded-lg p-4">
-                                                <strong className="text-lg font-bold text-accent capitalize">{g.exercise_name}</strong>
+                                                <strong className="text-lg font-bold text-body capitalize">{g.exercise_name}</strong>
                                                 <div className="text-sm text-body font-medium mt-1">{g.target_weight} kg × {g.target_reps} reps</div>
                                             </li>
                                         ))}
@@ -272,7 +266,7 @@ export default function WorkoutCalendar() {
                             )}
                             {selectedPlanned.length > 0 && (
                                 <>
-                                    <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3 text-blue-400">Scheduled Workouts</h3>
+                                    <h3 className="font-display text-sm font-bold text-heading tracking-wide uppercase mb-3 text-accent">Scheduled Workouts</h3>
                                     <ul className="space-y-3">
                                         {selectedPlanned.map(p => (
                                             <li key={p.id} className="bg-surface/40 border border-subtle/80 rounded-lg p-4 flex items-center justify-between group">
@@ -280,12 +274,20 @@ export default function WorkoutCalendar() {
                                                     <strong className="text-lg font-bold text-body capitalize">{p.name}</strong>
                                                     {p.routine_name && <div className="text-sm text-dim font-medium mt-1">Routine: {p.routine_name}</div>}
                                                 </div>
-                                                <button
-                                                    onClick={() => handleDeletePlanned(p.id)}
-                                                    className="text-xs font-semibold text-dim hover:text-rose-400 transition-colors"
-                                                >
-                                                    Remove
-                                                </button>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    {p.routine_id && (
+                                                        <button
+                                                            onClick={() => navigate(`/active-workout?loadRoutine=${p.routine_id}&name=${encodeURIComponent(p.name)}`)}
+                                                            className="p-1.5 bg-accent/10 hover:bg-accent text-accent hover:text-black rounded-lg border border-accent/30 transition-colors"
+                                                            title="Start workout"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M8 5v14l11-7z" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                    <DeleteButton onClick={() => handleDeletePlanned(p.id)} className="!p-1.5 !w-8 !h-8" />
+                                                </div>
                                             </li>
                                         ))}
                                     </ul>
@@ -294,7 +296,33 @@ export default function WorkoutCalendar() {
                         </>
                     )}
 
-                    <div className="mt-6 pt-4 border-t border-subtle text-xs text-dim space-y-1">
+
+                    {selectedDate && (
+                        <div className="flex items-center gap-2  border-t border-subtle mt-6 pt-4">
+                            <Button
+                                onClick={() => navigate(`/workouts?date=${selectedDate}`)}
+                                variant="secondary"
+                                className="!text-xs !py-2 !px-3"
+                            >
+                                + Log Workout
+                            </Button>
+                            <Button
+                                onClick={() => navigate(`/goals?date=${selectedDate}`)}
+                                variant="secondary"
+                                className="!text-xs !py-2 !px-3"
+                            >
+                                + Add Goal
+                            </Button>
+                            <Button
+                                onClick={openPlanModal}
+                                variant="secondary"
+                                className="!text-xs !py-2 !px-3"
+                            >
+                                + Schedule
+                            </Button>
+                        </div>
+                    )}
+                    <div className="mt-6 pt-4 border-t border-subtle text-xs text-dim flex gap-4">
                         <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-accent mr-1.5 align-middle" />Logged workout</div>
                         <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 mr-1.5 align-middle" />Goal deadline</div>
                         <div><span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-400 mr-1.5 align-middle" />Scheduled workout</div>
@@ -302,67 +330,58 @@ export default function WorkoutCalendar() {
                 </div>
             </div>
 
-            {showPlanModal && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="relative w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <button
-                            onClick={() => setShowPlanModal(false)}
-                            className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                        >
-                            Close
-                        </button>
+            <Modal open={showPlanModal} onClose={() => setShowPlanModal(false)} maxWidth="sm" backdrop="darker">
+                <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">Schedule Workout</h2>
+                    <p className="text-sm text-muted mb-5">Assign a routine to {planDate}.</p>
 
-                        <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">Schedule Workout</h2>
-                        <p className="text-sm text-muted mb-5">Assign a routine to {planDate}.</p>
+                    <div className="space-y-4">
+                        <DatePicker
+                            value={planDate}
+                            onChange={(d) => setPlanDate(d)}
+                            placeholder="Select date"
+                            buttonClassName="!px-3 !py-2 text-sm"
+                        />
 
-                        <div className="space-y-4">
-                            <DatePicker
-                                value={planDate}
-                                onChange={(d) => setPlanDate(d)}
-                                placeholder="Select date"
-                                buttonClassName="!px-3 !py-2 text-sm"
+                        <Select
+                            value={String(planRoutineId)}
+                            onChange={(val) => {
+                                setPlanRoutineId(val ? Number(val) : "");
+                                const routine = routines.find(r => r.id === Number(val));
+                                if (routine) setPlanName(routine.name);
+                            }}
+                            options={[
+                                { value: "", label: "-- No routine --" },
+                                ...routines.map(r => ({ value: String(r.id), label: r.name }))
+                            ]}
+                            placeholder="Select routine"
+                            buttonClassName="px-3 py-2 text-sm"
+                        />
+
+                        <div>
+                            <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Workout Name</label>
+                            <input
+                                type="text"
+                                value={planName}
+                                onChange={(e) => setPlanName(e.target.value)}
+                                placeholder="e.g. Push Day"
+                                className="w-full bg-surface border border-subtle rounded-lg px-3 py-2 text-sm text-body placeholder:text-dim focus:border-lime-400 focus:outline-none"
                             />
-
-                            <Select
-                                value={String(planRoutineId)}
-                                onChange={(val) => {
-                                    setPlanRoutineId(val ? Number(val) : "");
-                                    const routine = routines.find(r => r.id === Number(val));
-                                    if (routine) setPlanName(routine.name);
-                                }}
-                                options={[
-                                    { value: "", label: "-- No routine --" },
-                                    ...routines.map(r => ({ value: String(r.id), label: r.name }))
-                                ]}
-                                placeholder="Select routine"
-                                buttonClassName="px-3 py-2 text-sm"
-                            />
-
-                            <div>
-                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Workout Name</label>
-                                <input
-                                    type="text"
-                                    value={planName}
-                                    onChange={(e) => setPlanName(e.target.value)}
-                                    placeholder="e.g. Push Day"
-                                    className="w-full bg-surface border border-subtle rounded-lg px-3 py-2 text-sm text-body placeholder:text-dim focus:border-lime-400 focus:outline-none"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="mt-6">
-                            <Button
-                                onClick={handleAddPlanned}
-                                disabled={!planDate || !planName.trim()}
-                                variant="primary"
-                                fullWidth
-                            >
-                                Schedule
-                            </Button>
                         </div>
                     </div>
+
+                    <div className="mt-6">
+                        <Button
+                            onClick={handleAddPlanned}
+                            disabled={!planDate || !planName.trim()}
+                            variant="primary"
+                            fullWidth
+                        >
+                            Schedule
+                        </Button>
+                    </div>
                 </div>
-            )}
+            </Modal>
         </div>
     );
 }

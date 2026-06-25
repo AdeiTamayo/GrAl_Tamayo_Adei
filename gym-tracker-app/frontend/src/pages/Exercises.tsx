@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
+import Pagination from '../components/Pagination';
 import Select from '../components/Select';
 import ConfirmModal from '../components/ConfirmModal';
 import DeleteButton from '../components/DeleteButton';
@@ -594,27 +595,11 @@ export default function Exercises() {
                                 )}
                             </ul>
                         )}
-                        {exercisesOpen && filteredExercises.length > pageSize && (
-                            <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
-                                <button
-                                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                                    disabled={page === 1}
-                                    className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                >
-                                    &larr; Prev
-                                </button>
-                                <span className="text-xs text-muted font-medium">
-                                    Page {page} of {Math.max(1, Math.ceil(filteredExercises.length / pageSize))}
-                                </span>
-                                <button
-                                    onClick={() => setPage(p => Math.min(Math.max(1, Math.ceil(filteredExercises.length / pageSize)), p + 1))}
-                                    disabled={page === Math.max(1, Math.ceil(filteredExercises.length / pageSize))}
-                                    className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                >
-                                    Next &rarr;
-                                </button>
-                            </div>
-                        )}
+                        <Pagination
+                            page={page}
+                            totalPages={Math.max(1, Math.ceil(filteredExercises.length / pageSize))}
+                            onPageChange={setPage}
+                        />
                     </>
                 )}
             </div>

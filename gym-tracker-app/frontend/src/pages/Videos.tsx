@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Video } from "../../types";
 import { apiFetch } from "../utils/api";
+import Pagination from "../components/Pagination";
 import Select from "../components/Select";
-import Calendar from "../components/Calendar";
+import DatePicker from "../components/DatePicker";
 
 export default function UserVideos() {
     const [videos, setVideos] = useState<Video[]>([]);
@@ -11,8 +12,10 @@ export default function UserVideos() {
 
     // Filter states
     const [filterType, setFilterType] = useState<string>("all");
-    const [filterDate, setFilterDate] = useState<string>("");
+    const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+    const [filterDateTo, setFilterDateTo] = useState<string>("");
     const [sortOrder, setSortOrder] = useState<string>("desc");
+    const [activeDatePicker, setActiveDatePicker] = useState<'from' | 'to' | null>(null);
 
     // Pagination
     const [videosPage, setVideosPage] = useState(1);
@@ -34,7 +37,8 @@ export default function UserVideos() {
 
         const params = new URLSearchParams();
         if (filterType !== "all") params.append("type", filterType);
-        if (filterDate) params.append("date", filterDate);
+        if (filterDateFrom) params.append("date_from", filterDateFrom);
+        if (filterDateTo) params.append("date_to", filterDateTo);
         if (sortOrder) params.append("sort", sortOrder);
 
         apiFetch(`/api/videos?${params.toString()}`, {
@@ -55,7 +59,7 @@ export default function UserVideos() {
                 setError(err.message || "Failed to fetch videos");
                 setLoading(false);
             });
-    }, [token, filterType, filterDate, sortOrder]);
+    }, [token, filterType, filterDateFrom, filterDateTo, sortOrder]);
 
     if (error) {
         return (
@@ -74,40 +78,46 @@ export default function UserVideos() {
                 </div>
 
                 {/* FILTER CONTROLS BAR */}
-                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                    <div className="flex flex-col min-w-[140px] flex-1 md:flex-initial">
-                        <label className="text-[10px] uppercase font-bold text-dim mb-1 tracking-wider">Analysis Type</label>
-                        <Select
-                            value={filterType}
-                            onChange={setFilterType}
-                            options={[
-                                { value: "all", label: "All Movements" },
-                                { value: "pose_estimation", label: "Pose Estimation" },
-                                { value: "squat_analysis", label: "Squat Analysis" },
-                                { value: "barbell_tracking", label: "Barbell Tracking" },
-                            ]}
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <Select
+                        value={filterType}
+                        onChange={setFilterType}
+                        options={[
+                            { value: "all", label: "All Movements" },
+                            { value: "pose_estimation", label: "Pose Estimation" },
+                            { value: "squat_analysis", label: "Squat Analysis" },
+                            { value: "barbell_tracking", label: "Barbell Tracking" },
+                        ]}
+                        buttonClassName="!px-3 !py-2 text-xs min-w-[140px]"
+                    />
+
+                    <div className="flex items-center gap-1.5">
+                        <DatePicker
+                            value={filterDateFrom}
+                            onChange={(d) => { setFilterDateFrom(d); setActiveDatePicker(null); }}
+                            placeholder="From"
+                            buttonClassName="!px-3 !py-2 text-xs w-auto rounded-xl"
+                            open={activeDatePicker === 'from'}
+                            onOpenChange={(o) => setActiveDatePicker(o ? 'from' : null)}
+                        />
+                        <DatePicker
+                            value={filterDateTo}
+                            onChange={(d) => { setFilterDateTo(d); setActiveDatePicker(null); }}
+                            placeholder="To"
+                            buttonClassName="!px-3 !py-2 text-xs w-auto rounded-xl"
+                            open={activeDatePicker === 'to'}
+                            onOpenChange={(o) => setActiveDatePicker(o ? 'to' : null)}
+                            menuAlign="right"
                         />
                     </div>
 
-                    <div className="flex flex-col min-w-[140px] flex-1 md:flex-initial">
-                        <label className="text-[10px] uppercase font-bold text-dim mb-1 tracking-wider">Date Recorded</label>
-                        <DateFilterButton
-                            value={filterDate}
-                            onChange={setFilterDate}
-                        />
-                    </div>
-
-                    <div className="flex flex-col min-w-[120px] flex-1 md:flex-initial">
-                        <label className="text-[10px] uppercase font-bold text-dim mb-1 tracking-wider">Order By</label>
-                        <Select
-                            value={sortOrder}
-                            onChange={setSortOrder}
-                            options={[
-                                { value: "desc", label: "Newest First" },
-                                { value: "asc", label: "Oldest First" },
-                            ]}
-                        />
-                    </div>
+                    <button
+                        onClick={() => setSortOrder(o => o === 'asc' ? 'desc' : 'asc')}
+                        className="bg-surface border border-subtle rounded-lg px-3 py-2 text-xs text-body hover:border-accent transition-colors"
+                        title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                    >
+                        {sortOrder === 'asc' ? '\u2191' : '\u2193'}
+                    </button>
                 </div>
             </div>
 
@@ -164,76 +174,14 @@ export default function UserVideos() {
                         ))}
                     </div>
 
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
-                            <button
-                                onClick={() => setVideosPage((p) => Math.max(1, p - 1))}
-                                disabled={videosPage === 1}
-                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                            >
-                                &larr; Prev
-                            </button>
-                            <span className="text-xs text-muted font-medium">
-                                Page {videosPage} of {totalPages}
-                            </span>
-                            <button
-                                onClick={() => setVideosPage((p) => Math.min(totalPages, p + 1))}
-                                disabled={videosPage === totalPages}
-                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                            >
-                                Next &rarr;
-                            </button>
-                        </div>
-                    )}
+                    <Pagination
+                        page={videosPage}
+                        totalPages={totalPages}
+                        onPageChange={setVideosPage}
+                    />
                 </>
             )}
         </div>
     );
 }
 
-function DateFilterButton({ value, onChange }: { value: string; onChange: (val: string) => void }) {
-    const [open, setOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        function handleClick(e: MouseEvent) {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-        }
-        document.addEventListener("mousedown", handleClick);
-        return () => document.removeEventListener("mousedown", handleClick);
-    }, []);
-
-    return (
-        <div className="relative" ref={ref}>
-            <button
-                type="button"
-                onClick={() => setOpen(!open)}
-                className="w-full bg-surface border border-subtle rounded-lg px-4 py-3 text-left flex items-center justify-between gap-2 text-heading hover:border-hover transition-colors focus:border-accent focus:outline-none"
-            >
-                <span>{value || "Any date"}</span>
-                <svg className={`w-3 h-3 text-dim transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-            {value && (
-                <button
-                    onClick={() => { onChange(""); setOpen(false); }}
-                    className="absolute right-8 top-1/2 -translate-y-1/2 text-dim hover:text-body text-xs font-bold z-10"
-                >
-                    ✕
-                </button>
-            )}
-            {open && (
-                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150 min-w-[280px]">
-                    <div className="relative border border-accent/50 rounded-xl bg-surface shadow-xl">
-                        <Calendar
-                            selectedDate={value || undefined}
-                            onSelect={(date) => { onChange(date); setOpen(false); }}
-                            className="!border-0 !shadow-none bg-surface"
-                        />
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}

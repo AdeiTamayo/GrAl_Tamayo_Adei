@@ -66,10 +66,6 @@ export default function EditableExerciseCard({
 
     const handleAddSetSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newWeight && !newReps && !newTime) {
-            setAddError("Fill in at least one field");
-            return;
-        }
         setAddError("");
         onAddSet(
             newWeight ? Number(newWeight) : null,

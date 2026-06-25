@@ -68,6 +68,8 @@ export default function Hero() {
     const [recentWorkouts, setRecentWorkouts] = useState<Workout[]>([]);
     const [videos, setVideos] = useState<VideoItem[]>([]);
     const [latestWeight, setLatestWeight] = useState<WeightEntry | null>(null);
+    const [plannedDates, setPlannedDates] = useState<Set<string>>(new Set());
+    const [goalDates, setGoalDates] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
     const [dashboardError, setDashboardError] = useState<string | null>(null);
     const [showMore, setShowMore] = useState(false);
@@ -87,8 +89,10 @@ export default function Hero() {
             apiFetch('/api/workouts', { headers }).then(r => r.json()),
             apiFetch('/api/videos?sort=desc', { headers }).then(r => r.json()),
             apiFetch('/api/user/weights', { headers }).then(r => r.json()),
+            apiFetch('/api/planned-workouts', { headers }).then(r => r.json()),
+            apiFetch('/api/goals', { headers }).then(r => r.json()),
         ])
-            .then(([statsData, workoutData, videoData, weightData]) => {
+            .then(([statsData, workoutData, videoData, weightData, plannedData, goalsData]) => {
                 if (statsData.success) {
                     setWorkoutCount(statsData.data.workoutCount);
                     setWeeklyVolume(statsData.data.weeklyVolume);
@@ -106,6 +110,20 @@ export default function Hero() {
                     const entries: WeightEntry[] = weightData.data || [];
                     entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                     if (entries.length > 0) setLatestWeight(entries[0]);
+                }
+                if (plannedData.success) {
+                    const dates = new Set<string>();
+                    (plannedData.data || []).forEach((p: any) => {
+                        if (p.date) dates.add(p.date.substring(0, 10));
+                    });
+                    setPlannedDates(dates);
+                }
+                if (goalsData.success) {
+                    const dates = new Set<string>();
+                    (goalsData.goals || []).forEach((g: any) => {
+                        if (g.expected_date) dates.add(g.expected_date.substring(0, 10));
+                    });
+                    setGoalDates(dates);
                 }
             })
             .catch((err) => { setDashboardError("Failed to load dashboard data."); console.error(err); })
@@ -206,7 +224,7 @@ export default function Hero() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                     <div className="flex flex-col gap-4">
-                        <Calendar events={workoutEvents} compact />
+                        <Calendar events={workoutEvents} plannedDates={plannedDates} goalDates={goalDates} compact />
                         <Link to="/workout-calendar" className="w-full bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-xl px-4 py-2.5 transition-all text-center">
                             View Full Calendar
                         </Link>
@@ -262,7 +280,12 @@ export default function Hero() {
 
                 {!loading && videos.length > 0 && (
                     <div>
-                        <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim mb-4">Recent Videos</h2>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim">Recent Videos</h2>
+                            <Link to="/upload" className="text-xs font-bold text-accent hover:text-accent-hover uppercase tracking-wider transition-colors">
+                                + Upload Video
+                            </Link>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {videos.map(video => (
                                 <Link key={video.id} to="/videos" className="group bg-card border border-subtle/80 rounded-xl overflow-hidden hover:border-accent/40 transition-all hover:shadow-lg">

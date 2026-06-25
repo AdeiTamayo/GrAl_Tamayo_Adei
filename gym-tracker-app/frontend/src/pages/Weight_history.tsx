@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, FormEvent } from "react";
 import { apiFetch } from "../utils/api";
+import Button from "../components/Button";
+import Pagination from "../components/Pagination";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import DatePicker from "../components/DatePicker";
 import Select from "../components/Select";
@@ -279,17 +281,13 @@ export default function WeightHistory() {
                         <DatePicker value={date} onChange={setDate} />
 
                         <div className="flex gap-3 mt-2">
-                            <button type="submit" className="flex-1 bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover transition-all hover:scale-[1.02] active:scale-[0.98]">
+                            <Button type="submit" variant="primary" className="flex-1">
                                 {editingId ? "Update" : "Add Entry"}
-                            </button>
+                            </Button>
                             {editingId && (
-                                <button
-                                    type="button"
-                                    onClick={resetForm}
-                                    className="flex-1 bg-transparent border border-subtle text-muted font-bold py-3 rounded-lg hover:bg-elevated transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                >
+                                <Button onClick={resetForm} variant="secondary" className="flex-1">
                                     Cancel
-                                </button>
+                                </Button>
                             )}
                         </div>
                     </form>
@@ -355,27 +353,12 @@ export default function WeightHistory() {
                                     </li>
                                 ))}
                             </ul>
-                            {totalPages > 1 && (
-                                <div className="flex items-center justify-center gap-2 mt-5 pt-4 border-t border-subtle">
-                                    <button
-                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                        disabled={currentPage === 1}
-                                        className="w-20 px-3 py-1.5 bg-surface border border-subtle rounded text-sm text-body disabled:opacity-40 hover:border-accent transition-colors"
-                                    >
-                                        Prev
-                                    </button>
-                                    <span className="text-sm text-dim font-medium">
-                                        Page {currentPage} of {totalPages}
-                                    </span>
-                                    <button
-                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={currentPage === totalPages}
-                                        className="w-20 px-3 py-1.5 bg-surface border border-subtle rounded text-sm text-body disabled:opacity-40 hover:border-accent transition-colors"
-                                    >
-                                        Next
-                                    </button>
-                                </div>
-                            )}
+                            <Pagination
+                                page={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                                compact
+                            />
                         </>
                     )}
                 </div>

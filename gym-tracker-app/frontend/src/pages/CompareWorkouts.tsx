@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import Modal from "../components/Modal";
 import WorkoutPicker from "../components/WorkoutPicker";
 
 interface SetEntry {
@@ -41,6 +42,7 @@ export default function CompareWorkouts() {
     const [pickedA, setPickedA] = useState<PickedWorkout | null>(null);
     const [pickedB, setPickedB] = useState<PickedWorkout | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
     const [showPickerA, setShowPickerA] = useState(false);
     const [showPickerB, setShowPickerB] = useState(false);
 
@@ -55,6 +57,7 @@ export default function CompareWorkouts() {
     const fetchComparison = async () => {
         if (!pickedA || !pickedB) return;
         setError(null);
+        setLoading(true);
         try {
             const [resA, resB] = await Promise.all([
                 apiFetch(`/api/workouts/${pickedA.id}`, { headers }),
@@ -71,6 +74,8 @@ export default function CompareWorkouts() {
             }
         } catch (err) {
             setError("Error fetching workout data.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -186,62 +191,42 @@ export default function CompareWorkouts() {
                 </div>
 
                 {/* Picker Modals */}
-                {showPickerA && (
-                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-lg max-h-[80vh]">
-                            <div className="border border-accent/30 rounded-xl bg-card shadow-xl overflow-hidden">
-                                <button
-                                    onClick={() => setShowPickerA(false)}
-                                    className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                                >
-                                    Close
-                                </button>
-                                <WorkoutPicker
-                                    onSelect={(w) => {
-                                        setPickedA(w);
-                                        setShowPickerA(false);
-                                    }}
-                                    title="Select Workout A"
-                                    excludeId={pickedB?.id}
-                                    className="!border-0 !rounded-none !shadow-none"
-                                />
-                            </div>
-                        </div>
+                <Modal open={showPickerA} onClose={() => setShowPickerA(false)} maxWidth="lg" backdrop="darker">
+                    <div className="border border-accent/30 rounded-xl bg-card shadow-xl overflow-hidden">
+                        <WorkoutPicker
+                            onSelect={(w) => {
+                                setPickedA(w);
+                                setShowPickerA(false);
+                            }}
+                            title="Select Workout A"
+                            excludeId={pickedB?.id}
+                            className="!border-0 !rounded-none !shadow-none"
+                        />
                     </div>
-                )}
+                </Modal>
 
-                {showPickerB && (
-                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-lg max-h-[80vh]">
-                            <div className="border border-accent/30 rounded-xl bg-card shadow-xl overflow-hidden">
-                                <button
-                                    onClick={() => setShowPickerB(false)}
-                                    className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                                >
-                                    Close
-                                </button>
-                                <WorkoutPicker
-                                    onSelect={(w) => {
-                                        setPickedB(w);
-                                        setShowPickerB(false);
-                                    }}
-                                    title="Select Workout B"
-                                    excludeId={pickedA?.id}
-                                    className="!border-0 !rounded-none !shadow-none"
-                                />
-                            </div>
-                        </div>
+                <Modal open={showPickerB} onClose={() => setShowPickerB(false)} maxWidth="lg" backdrop="darker">
+                    <div className="border border-accent/30 rounded-xl bg-card shadow-xl overflow-hidden">
+                        <WorkoutPicker
+                            onSelect={(w) => {
+                                setPickedB(w);
+                                setShowPickerB(false);
+                            }}
+                            title="Select Workout B"
+                            excludeId={pickedA?.id}
+                            className="!border-0 !rounded-none !shadow-none"
+                        />
                     </div>
-                )}
+                </Modal>
 
                 <div className="flex justify-center gap-4 mb-10">
                     <Button
                         variant="primary"
-                        disabled={!pickedA || !pickedB}
+                        disabled={!pickedA || !pickedB || loading}
                         onClick={fetchComparison}
                         className="px-10"
                     >
-                        Compare Now
+                        {loading ? "Loading..." : "Compare Now"}
                     </Button>
                     {(workoutA || workoutB) && (
                         <Button variant="secondary" onClick={resetComparison} className="px-6">

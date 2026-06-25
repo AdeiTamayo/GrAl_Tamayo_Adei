@@ -2,13 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkout } from './WorkoutContext';
 import Button from './Button';
-
-const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return [h, m, s].map(v => v < 10 ? "0" + v : v).filter((v, i) => v !== "00" || i > 0).join(":");
-};
+import { formatTime } from '../utils/helpers';
 
 export default function ActiveWorkoutBanner() {
     const { isWorkoutActive, elapsedTime, activeExerciseName, workoutName, isRestTimerActive, restTime } = useWorkout();

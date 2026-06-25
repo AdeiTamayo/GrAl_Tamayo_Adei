@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Modal from "../components/Modal";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
 
 interface HistoryPoint {
@@ -99,27 +100,17 @@ export default function ExerciseHistory() {
                     </div>
                 </header>
 
-                {showPicker && (
-                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="relative w-full max-w-2xl max-h-[80vh]">
-                            <div className="border border-accent/30 rounded-xl bg-card shadow-xl overflow-hidden">
-                                <button
-                                    onClick={() => setShowPicker(false)}
-                                    className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                                >
-                                    Close
-                                </button>
-                                <ExercisePicker
-                                    onSelect={(ex) => {
-                                        setSelectedExercise(ex);
-                                        setShowPicker(false);
-                                    }}
-                                    className="!border-0 !rounded-none !shadow-none"
-                                />
-                            </div>
-                        </div>
+                <Modal open={showPicker} onClose={() => setShowPicker(false)} maxWidth="2xl" backdrop="darker" containerClassName="max-h-[80vh]">
+                    <div className="border border-accent/30 rounded-xl bg-card shadow-xl overflow-hidden">
+                        <ExercisePicker
+                            onSelect={(ex) => {
+                                setSelectedExercise(ex);
+                                setShowPicker(false);
+                            }}
+                            className="!border-0 !rounded-none !shadow-none"
+                        />
                     </div>
-                )}
+                </Modal>
 
                 {!selectedExercise && (
                     <div className="text-center py-20 bg-surface/30 rounded-3xl border border-subtle border-dashed">

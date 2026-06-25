@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, FormEvent } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import Modal from "../components/Modal";
+import Pagination from "../components/Pagination";
 import EditableExerciseCard from '../components/EditableExerciseCard';
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
 import DatePicker from '../components/DatePicker';
@@ -46,6 +48,7 @@ type EditableSetField = "weight" | "repetitions" | "time" | "note";
 
 export default function WorkoutsManagement() {
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const preselectedId = (location.state as { preselectedWorkoutId?: number })?.preselectedWorkoutId;
     const { showNotification } = useNotification();
 
@@ -61,8 +64,9 @@ export default function WorkoutsManagement() {
     const [showDetailsDropdown, setShowDetailsDropdown] = useState(false);
 
     // Create new workout form
+    const urlDate = searchParams.get('date');
     const [newWorkoutName, setNewWorkoutName] = useState("");
-    const [newWorkoutDate, setNewWorkoutDate] = useState(new Date().toLocaleDateString('en-CA'));
+    const [newWorkoutDate, setNewWorkoutDate] = useState(urlDate || new Date().toLocaleDateString('en-CA'));
     const [newWorkoutNote, setNewWorkoutNote] = useState("");
     // Edit workout form
     const [editName, setEditName] = useState("");
@@ -87,10 +91,6 @@ export default function WorkoutsManagement() {
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
 
-    // Bulk delete
-    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-    const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
-
     // Calendar control – only one date picker open at a time
     const [activeDatePicker, setActiveDatePicker] = useState<'from' | 'to' | null>(null);
 
@@ -99,7 +99,6 @@ export default function WorkoutsManagement() {
     const pageSize = 20;
 
     const createWorkoutRef = useRef<HTMLDivElement>(null);
-    const detailsDropdownRef = useRef<HTMLDivElement>(null);
 
     // ---- API HEADERS MEMO ----
     const token = localStorage.getItem("user_login_token");
@@ -212,9 +211,6 @@ export default function WorkoutsManagement() {
             if (createWorkoutRef.current && !createWorkoutRef.current.contains(target)) {
                 setShowCreateDropdown(false);
             }
-            if (detailsDropdownRef.current && !detailsDropdownRef.current.contains(target)) {
-                setShowDetailsDropdown(false);
-            }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -306,7 +302,6 @@ export default function WorkoutsManagement() {
 
     async function deleteWorkout(id: number) {
         setWorkouts((prev) => prev.filter((w) => w.id !== id));
-        setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
         if (selectedWorkout && selectedWorkout.id === id) {
             setSelectedWorkout(null);
         }
@@ -318,34 +313,6 @@ export default function WorkoutsManagement() {
             console.error("Delete workout failed", err);
             setError("Failed to delete workout");
             await fetchWorkouts();
-        }
-    }
-
-    async function deleteBulkWorkouts() {
-        const ids = Array.from(selectedIds);
-        if (ids.length === 0) return;
-
-        setWorkouts((prev) => prev.filter((w) => !selectedIds.has(w.id)));
-        if (selectedWorkout && selectedIds.has(selectedWorkout.id)) {
-            setSelectedWorkout(null);
-        }
-        setSelectedIds(new Set());
-        setBulkDeleteConfirm(false);
-
-        let failed = 0;
-        for (const id of ids) {
-            try {
-                await apiFetch("/api/workouts/" + id, { method: "DELETE", headers });
-            } catch (err: any) {
-                console.error("Bulk delete failed for id", id, err);
-                failed++;
-            }
-        }
-        if (failed > 0) {
-            setError(`Failed to delete ${failed} workout(s).`);
-            await fetchWorkouts();
-        } else {
-            showNotification(`Deleted ${ids.length} workout(s).`, "success");
         }
     }
 
@@ -687,7 +654,6 @@ export default function WorkoutsManagement() {
                                 className="flex-1 border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
                             />
                             <div className="flex gap-2 items-center">
-                                <span className="text-dim text-xs">From</span>
                                 <DatePicker
                                     value={dateFrom}
                                     onChange={(d) => { setDateFrom(d); setActiveDatePicker(null); }}
@@ -696,7 +662,6 @@ export default function WorkoutsManagement() {
                                     open={activeDatePicker === 'from'}
                                     onOpenChange={(o) => setActiveDatePicker(o ? 'from' : null)}
                                 />
-                                <span className="text-dim text-xs">To</span>
                                 <DatePicker
                                     value={dateTo}
                                     onChange={(d) => { setDateTo(d); setActiveDatePicker(null); }}
@@ -708,21 +673,6 @@ export default function WorkoutsManagement() {
                                 />
                             </div>
                         </div>
-
-                        {/* Bulk Delete Bar */}
-                        {selectedIds.size > 0 && (
-                            <div className="flex items-center justify-between mb-3 px-2">
-                                <span className="text-xs text-muted font-semibold">{selectedIds.size} selected</span>
-                                <Button
-                                    type="button"
-                                    onClick={() => setBulkDeleteConfirm(true)}
-                                    variant="danger"
-                                    className="px-3 py-1 text-xs rounded-lg"
-                                >
-                                    Delete Selected
-                                </Button>
-                            </div>
-                        )}
 
                         {filteredWorkouts.length === 0 ? (
                             <div className="text-center py-10 bg-card/40 rounded-xl border border-subtle/60">
@@ -738,19 +688,6 @@ export default function WorkoutsManagement() {
                                             className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${selectedWorkout?.id === w.id ? 'bg-surface border-accent/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
                                         >
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedIds.has(w.id)}
-                                                    onChange={() => {
-                                                        setSelectedIds((prev) => {
-                                                            const next = new Set(prev);
-                                                            if (next.has(w.id)) next.delete(w.id); else next.add(w.id);
-                                                            return next;
-                                                        });
-                                                    }}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="accent-accent cursor-pointer shrink-0"
-                                                />
                                                 <div className="min-w-0">
                                                     <span className="text-sm stroke-zinc-100 font-semibold text-heading block truncate">{w.name}</span>
                                                     <span className="font-mono text-xs text-dim mt-0.5 block">{w.date?.substring(0, 10)}</span>
@@ -763,28 +700,11 @@ export default function WorkoutsManagement() {
                                     ))}
                                 </ul>
 
-                                {/* Pagination */}
-                                {totalPages > 1 && (
-                                    <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
-                                        <button
-                                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                            disabled={currentPage === 1}
-                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                        >
-                                            &larr; Prev
-                                        </button>
-                                        <span className="text-xs text-muted font-medium">
-                                            Page {currentPage} of {totalPages}
-                                        </span>
-                                        <button
-                                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                            disabled={currentPage === totalPages}
-                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
-                                        >
-                                            Next &rarr;
-                                        </button>
-                                    </div>
-                                )}
+                                <Pagination
+                                    page={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={setCurrentPage}
+                                />
                             </>
                         )}
                     </div>
@@ -794,8 +714,8 @@ export default function WorkoutsManagement() {
                 {selectedWorkout && (
                     <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative">
 
-                        {/* Header Details Wrapper with Dropdown Flow Control */}
-                        <div className="flex justify-between items-start mb-6" ref={detailsDropdownRef}>
+                        {/* Header Details Wrapper */}
+                        <div className="flex justify-between items-start mb-6">
                             <div className="flex-1 mr-4">
                                 <h2 className="font-display text-2xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
                                     {selectedWorkout.name}
@@ -806,19 +726,14 @@ export default function WorkoutsManagement() {
                                 )}
                             </div>
 
-                            {/* Dropdown Control Button for Editing Details */}
-                            <div className="flex gap-2 shrink-0 relative">
+                            <div className="flex gap-2 shrink-0">
                                 <Button
                                     type="button"
-                                    onClick={() => {
-                                        if (!showDetailsDropdown) openEditWorkout();
-                                        setShowDetailsDropdown(!showDetailsDropdown);
-                                    }}
+                                    onClick={() => { openEditWorkout(); setShowDetailsDropdown(true); }}
                                     variant="secondary"
-                                    className="px-3 py-1.5 text-xs rounded-lg flex items-center gap-1.5 font-medium"
+                                    className="px-3 py-1.5 text-xs rounded-lg font-medium"
                                 >
-                                    <span>Modify Details</span>
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                    Modify Details
                                 </Button>
 
                                 <Button type="button" onClick={() => { setRoutineName(selectedWorkout.name || ""); setShowSaveRoutineModal(true); }} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
@@ -828,19 +743,6 @@ export default function WorkoutsManagement() {
                                 <Button type="button" onClick={() => setSelectedWorkout(null)} variant="secondary" className="px-3 py-1.5 text-xs rounded-lg font-medium">
                                     Close
                                 </Button>
-
-                                {showDetailsDropdown && (
-                                    <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-subtle rounded-xl p-4 shadow-xl z-20 flex flex-col gap-3 animate-in fade-in duration-100">
-                                        <h4 className="text-xs uppercase tracking-wider text-muted font-bold">Edit Core Metadata</h4>
-                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-accent focus:outline-none" />
-                                        <DatePicker value={editDate} onChange={setEditDate} />
-                                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-accent focus:outline-none" />
-                                        <div className="flex gap-2 justify-end mt-1">
-                                            <button type="button" onClick={() => setShowDetailsDropdown(false)} className="text-muted text-xs font-semibold px-2.5 py-1.5 hover:text-heading">Cancel</button>
-                                            <Button type="button" onClick={saveWorkoutEdit} variant="primary" className="px-3 py-1 text-xs rounded-md">Save Changes</Button>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -895,23 +797,13 @@ export default function WorkoutsManagement() {
                                 >
                                     + Add New Exercise Entry
                                 </Button>
-                                {showPicker && (
-                                    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                                        <div className="relative w-full max-w-xl">
-                                            <button
-                                                onClick={() => setShowPicker(false)}
-                                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                                            >
-                                                Close
-                                            </button>
-                                            <ExercisePicker
-                                                title="Add Exercise to Workout"
-                                                onSelect={handleAddExercise}
-                                                onClose={() => setShowPicker(false)}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+                                <Modal open={showPicker} onClose={() => setShowPicker(false)} maxWidth="xl">
+                                    <ExercisePicker
+                                        title="Add Exercise to Workout"
+                                        onSelect={handleAddExercise}
+                                        onClose={() => setShowPicker(false)}
+                                    />
+                                </Modal>
                             </div>
                         </div>
                     </div>
@@ -939,49 +831,53 @@ export default function WorkoutsManagement() {
                 />
             )}
 
-            {bulkDeleteConfirm && (
-                <ConfirmModal
-                    message={`Are you sure you want to delete ${selectedIds.size} workout(s)?`}
-                    onConfirm={deleteBulkWorkouts}
-                    onCancel={() => setBulkDeleteConfirm(false)}
-                    confirmLabel="Delete All"
-                />
-            )}
-
-            {showSaveRoutineModal && (
-                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl w-full max-w-md animate-in fade-in zoom-in-95 duration-150">
-                        <h3 className="font-display text-lg font-bold text-accent mb-4">Save as Routine</h3>
-                        <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name</label>
-                        <input
-                            type="text"
-                            value={routineName}
-                            onChange={(e) => setRoutineName(e.target.value)}
-                            placeholder="e.g. Push Day"
-                            className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all mb-4"
-                            autoFocus
-                        />
-                        <div className="flex gap-3 justify-end">
-                            <Button
-                                type="button"
-                                onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }}
-                                variant="secondary"
-                                className="px-4 py-2 text-xs rounded-lg"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={saveAsRoutine}
-                                variant="primary"
-                                className="px-4 py-2 text-xs rounded-lg"
-                            >
-                                Create Routine
-                            </Button>
-                        </div>
+            <Modal open={showDetailsDropdown} onClose={() => setShowDetailsDropdown(false)} maxWidth="sm">
+                <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <h3 className="font-display text-lg font-bold text-accent mb-4">Edit Core Metadata</h3>
+                    <div className="flex flex-col gap-3">
+                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-sm text-body focus:border-accent focus:outline-none" />
+                        <DatePicker value={editDate} onChange={setEditDate} />
+                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-sm text-body focus:border-accent focus:outline-none" />
+                    </div>
+                    <div className="flex gap-2 justify-end mt-4">
+                        <Button type="button" onClick={() => setShowDetailsDropdown(false)} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
+                        <Button type="button" onClick={saveWorkoutEdit} variant="primary" className="px-4 py-2 text-xs rounded-lg">Save Changes</Button>
                     </div>
                 </div>
-            )}
+            </Modal>
+
+            <Modal open={showSaveRoutineModal} onClose={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} maxWidth="sm">
+                <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <h3 className="font-display text-lg font-bold text-accent mb-4">Save as Routine</h3>
+                    <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name</label>
+                    <input
+                        type="text"
+                        value={routineName}
+                        onChange={(e) => setRoutineName(e.target.value)}
+                        placeholder="e.g. Push Day"
+                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all mb-4"
+                        autoFocus
+                    />
+                    <div className="flex gap-3 justify-end">
+                        <Button
+                            type="button"
+                            onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }}
+                            variant="secondary"
+                            className="px-4 py-2 text-xs rounded-lg"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={saveAsRoutine}
+                            variant="primary"
+                            className="px-4 py-2 text-xs rounded-lg"
+                        >
+                            Create Routine
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

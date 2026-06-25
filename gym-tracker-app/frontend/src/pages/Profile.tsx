@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
+import Button from "../components/Button";
+import DatePicker from "../components/DatePicker";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import Select from "../components/Select";
 
@@ -248,12 +250,17 @@ export default function Profile() {
                                         max={field === "weight" ? 500 : 300}
                                         step={field === "weight" ? 0.1 : 1}
                                     />
+                                ) : type === "date" ? (
+                                    <DatePicker
+                                        value={getFormValue(field)}
+                                        onChange={(val) => handleChange(field, val)}
+                                        buttonClassName="!px-3 !py-3 text-sm"
+                                    />
                                 ) : (
                                     <input
                                         type={type}
                                         value={getFormValue(field)}
                                         onChange={e => handleChange(field, e.target.value)}
-                                        max={type === "date" ? new Date().toLocaleDateString('en-CA') : undefined}
                                         className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors [color-scheme:dark]"
                                     />
                                 )}
@@ -278,42 +285,47 @@ export default function Profile() {
                 <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-subtle/80">
                     {editing ? (
                         <>
-                            <button
+                            <Button
                                 onClick={saveProfile}
                                 disabled={saving}
-                                className="flex-1 bg-accent text-black font-bold py-3 px-4 rounded-lg hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                variant="primary"
+                                className="flex-1"
                             >
                                 {saving ? "Saving..." : "Save changes"}
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 onClick={cancelEdit}
-                                className="flex-1 bg-transparent text-muted font-bold py-3 px-4 rounded-lg border border-subtle hover:bg-elevated transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                variant="secondary"
+                                className="flex-1"
                             >
                                 Cancel
-                            </button>
+                            </Button>
                         </>
                     ) : (
                         <>
-                            <button
+                            <Button
                                 onClick={() => { setEditing(true); setSuccess(null); }}
-                                className="flex-1 bg-accent text-black font-bold py-3 px-4 rounded-lg hover:bg-accent-hover transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                variant="primary"
+                                className="flex-1"
                             >
                                 Edit profile
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
                                 onClick={() => logout()}
-                                className="flex-1 bg-transparent text-muted font-bold py-3 px-4 rounded-lg border border-subtle hover:bg-surface hover:text-body hover:border-hover transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                variant="secondary"
+                                className="flex-1"
                             >
                                 Logout
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
                                 onClick={() => setShowDeleteModal(true)}
-                                className="flex-1 bg-rose-500/10 text-rose-500 font-bold py-3 px-4 rounded-lg border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                variant="danger"
+                                className="flex-1"
                             >
                                 Delete account
-                            </button>
+                            </Button>
                         </>
                     )}
                 </div>
@@ -351,21 +363,22 @@ export default function Profile() {
                             </div>
 
                             <div className="flex gap-3 pt-2">
-                                <button
-                                    type="button"
+                                <Button
                                     onClick={() => { setShowDeleteModal(false); setPasswordConfirm(""); }}
                                     disabled={deleting}
-                                    className="flex-1 bg-surface text-muted font-bold py-3 px-4 rounded-lg border border-subtle hover:bg-elevated transition-all"
+                                    variant="secondary"
+                                    className="flex-1"
                                 >
                                     Cancel
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="submit"
                                     disabled={deleting || !passwordConfirm}
-                                    className="flex-1 bg-rose-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-rose-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    variant="danger"
+                                    className="flex-1"
                                 >
                                     {deleting ? "Deleting..." : "Confirm Delete"}
-                                </button>
+                                </Button>
                             </div>
                         </form>
                     </div>
