@@ -28,10 +28,10 @@ export default function Notification({ message, type = 'success', duration = 500
     }, [duration, handleClose]);
 
     const icon = type === 'success' ? '✓' : '✕';
-    const borderColor = type === 'success' ? 'border-lime-500' : 'border-rose-500';
-    const bgColor = type === 'success' ? 'bg-lime-500/10' : 'bg-rose-500/10';
-    const textColor = type === 'success' ? 'text-lime-400' : 'text-rose-400';
-    const iconBg = type === 'success' ? 'bg-lime-500/20' : 'bg-rose-500/20';
+    const borderColor = type === 'success' ? 'border-accent' : 'border-rose-500';
+    const bgColor = type === 'success' ? 'bg-accent/10' : 'bg-rose-500/10';
+    const textColor = type === 'success' ? 'text-accent' : 'text-rose-400';
+    const iconBg = type === 'success' ? 'bg-accent/20' : 'bg-rose-500/20';
 
     return (
         <div

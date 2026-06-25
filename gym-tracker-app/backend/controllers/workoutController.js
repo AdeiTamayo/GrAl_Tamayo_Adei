@@ -181,9 +181,9 @@ exports.deleteWorkoutExercise = async (req, res) => {
 exports.addSet = async (req, res) => {
     try {
         const workoutExerciseId = req.params.workoutExerciseId;
-        const { weight, reps, time, note } = req.body;
+        const { weight, reps, time, note, rpe } = req.body;
 
-        const row = await Workout.insertSet(workoutExerciseId, weight, reps, time, note);
+        const row = await Workout.insertSet(workoutExerciseId, weight, reps, time, note, rpe);
 
         let isPr = false;
         try {
@@ -208,15 +208,15 @@ exports.addSet = async (req, res) => {
 exports.updateSet = async (req, res) => {
     try {
         const setId = req.params.setId;
-        const { weight, reps, time, note } = req.body;
+        const { weight, reps, time, note, rpe } = req.body;
 
         const query = `
             UPDATE sets 
-            SET weight = $1, repetitions = $2, time = $3, note = $4
-            WHERE id = $5 RETURNING *;
+            SET weight = $1, repetitions = $2, time = $3, note = $4, rpe = $5
+            WHERE id = $6 RETURNING *;
         `;
         const pool = require('../config/database');
-        const result = await pool.query(query, [weight, reps, time, note, setId]);
+        const result = await pool.query(query, [weight, reps, time, note, rpe || null, setId]);
 
         return res.status(200).json({ success: true, data: result.rows[0] });
     } catch (error) {

@@ -48,7 +48,7 @@ export default function Register() {
 
         if (score <= 2) return { score, label: "Weak", color: "text-rose-400" };
         if (score === 3) return { score, label: "Medium", color: "text-amber-400" };
-        return { score, label: "Strong", color: "text-lime-400" };
+        return { score, label: "Strong", color: "text-accent" };
     };
 
     async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -163,7 +163,7 @@ export default function Register() {
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors"
+                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors"
                             />
                         </div>
 
@@ -173,7 +173,7 @@ export default function Register() {
                                 type="text"
                                 value={surname}
                                 onChange={(e) => setSurname(e.target.value)}
-                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors "
+                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors "
                             />
                         </div>
 
@@ -189,7 +189,7 @@ export default function Register() {
                                 value={email}
                                 required
                                 onChange={(e) => setEmail(e.target.value)}
-                                className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-lime-400"
+                                className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-accent"
                                     }`}
                             />
                         </div>
@@ -212,7 +212,7 @@ export default function Register() {
                                 value={password}
                                 required
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors"
+                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors"
                             />
                         </div>
 
@@ -228,7 +228,7 @@ export default function Register() {
                                 value={confirmPassword}
                                 required
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors ${confirmPassword && password !== confirmPassword ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-lime-400"
+                                className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors ${confirmPassword && password !== confirmPassword ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-accent"
                                     }`}
                             />
                         </div>
@@ -285,7 +285,7 @@ export default function Register() {
                                     value={birthDate}
                                     onChange={(e) => setBirthDate(e.target.value)}
                                     max={new Date().toLocaleDateString('en-CA')}
-                                    className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors [color-scheme:dark]"
+                                    className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors [color-scheme:dark]"
                                 />
                             </div>
                         </div>
@@ -306,7 +306,7 @@ export default function Register() {
                         <button
                             type="button"
                             onClick={() => navigate("/login")}
-                            className="text-lime-400 hover:text-lime-300 font-bold transition-colors"
+                            className="text-accent hover:text-accent-hover font-bold transition-colors"
                         >
                             Sign In
                         </button>

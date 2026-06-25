@@ -34,9 +34,10 @@ interface ExercisePickerProps {
     onSelect: (exercise: Exercise) => void;
     onClose?: () => void;
     title?: string;
+    className?: string;
 }
 
-export default function ExercisePicker({ onSelect, onClose, title = "Select Exercise" }: ExercisePickerProps) {
+export default function ExercisePicker({ onSelect, onClose, title = "Select Exercise", className = "" }: ExercisePickerProps) {
     const [allExercises, setAllExercises] = useState<Exercise[]>([]);
     const [filterOptions, setFilterOptions] = useState<FilterOptions>({
         equipment: [],
@@ -61,6 +62,9 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
     const [newDifficulty, setNewDifficulty] = useState('intermediate');
     const [newCategory, setNewCategory] = useState('');
     const [saving, setSaving] = useState(false);
+    const [exercisesOpen, setExercisesOpen] = useState(true);
+    const [exPage, setExPage] = useState(1);
+    const EXERCISES_PER_PAGE = 5;
 
     useEffect(() => {
         loadData();
@@ -99,6 +103,10 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
         });
     }, [allExercises, filters]);
 
+    useEffect(() => {
+        setExPage(1);
+    }, [filteredExercises.length]);
+
     async function handleCreateExercise(e: React.FormEvent) {
         e.preventDefault();
         setSaving(true);
@@ -134,7 +142,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
     }
 
     return (
-        <div className="flex flex-col h-full max-h-[80vh] bg-card border border-subtle rounded-2xl overflow-hidden shadow-2xl">
+        <div className={`flex flex-col h-full max-h-[80vh] bg-card border border-subtle rounded-2xl overflow-hidden shadow-2xl ${className}`}>
             {/* Header */}
             <div className="p-4 border-b border-subtle flex justify-between items-center bg-surface/50">
                 <h3 className="text-lg font-display font-bold text-body uppercase tracking-tight">{viewMode === 'list' ? title : 'New Exercise'}</h3>
@@ -150,11 +158,11 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                         </button>
                     )}
                 </div>
-                        {error && (
-                <div className="mx-4 mt-2 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm">
-                    {error}
-                </div>
-            )}
+                {error && (
+                    <div className="mx-4 mt-2 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl font-medium text-sm">
+                        {error}
+                    </div>
+                )}
 
             </div>
 
@@ -167,7 +175,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                             placeholder="Filter by name..."
                             value={filters.search}
                             onChange={e => setFilters({ ...filters, search: e.target.value })}
-                            className="w-full bg-surface border border-subtle rounded-xl px-4 py-2.5 text-sm text-body focus:outline-none focus:border-lime-400 transition-colors"
+                            className="w-full bg-surface border border-subtle rounded-xl px-4 py-2.5 text-sm text-body focus:outline-none focus:border-accent transition-colors"
                         />
                         <div className="grid grid-cols-3 gap-2">
                             <Select
@@ -209,40 +217,63 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                             <div className="p-8 text-center text-dim animate-pulse">Loading exercises...</div>
                         ) : filteredExercises.length === 0 ? (
                             <div className="p-8 text-center text-dim">No exercises found</div>
-                        ) : (
-                            <div className="space-y-1">
-                                {filteredExercises.map(ex => (
-                                    <button
-                                        key={ex.id}
-                                        onClick={() => onSelect(ex)}
-                                        className="w-full text-left p-3 rounded-xl hover:bg-surface group transition-all border border-transparent hover:border-subtle"
-                                    >
-                                        <div className="font-bold text-heading group-hover:text-lime-400 transition-colors uppercase tracking-tight text-sm">{ex.name}</div>
-                                        <div className="flex gap-2 mt-1 blur-[0.2px] group-hover:blur-0 transition-all">
-                                            <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.target}</span>
-                                            <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.equipment}</span>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
+                        ) : !exercisesOpen ? null : (
+                            <>
+                                <div className="space-y-1">
+                                    {filteredExercises.slice((exPage - 1) * EXERCISES_PER_PAGE, exPage * EXERCISES_PER_PAGE).map(ex => (
+                                        <button
+                                            key={ex.id}
+                                            onClick={() => onSelect(ex)}
+                                            className="w-full text-left p-3 rounded-xl hover:bg-surface group transition-all border border-transparent hover:border-subtle"
+                                        >
+                                            <div className="font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-tight text-sm">{ex.name}</div>
+                                            <div className="flex gap-2 mt-1 blur-[0.2px] group-hover:blur-0 transition-all">
+                                                <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.target}</span>
+                                                <span className="text-[10px] uppercase font-bold text-dim bg-elevated/50 px-1.5 py-0.5 rounded tracking-widest">{ex.equipment}</span>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                                {filteredExercises.length > EXERCISES_PER_PAGE && (
+                                    <div className="flex items-center justify-center gap-3 mt-3 pb-1">
+                                        <button
+                                            onClick={() => setExPage(p => Math.max(1, p - 1))}
+                                            disabled={exPage === 1}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                        >
+                                            &larr; Prev
+                                        </button>
+                                        <span className="text-xs text-muted font-medium">
+                                            Page {exPage} of {Math.ceil(filteredExercises.length / EXERCISES_PER_PAGE)}
+                                        </span>
+                                        <button
+                                            onClick={() => setExPage(p => Math.min(Math.ceil(filteredExercises.length / EXERCISES_PER_PAGE), p + 1))}
+                                            disabled={exPage === Math.ceil(filteredExercises.length / EXERCISES_PER_PAGE)}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                        >
+                                            Next &rarr;
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </>
             ) : (
-                <form onSubmit={handleCreateExercise} className="p-6 space-y-4 overflow-y-auto flex-1">
+                <form onSubmit={handleCreateExercise} className="p-4 space-y-3 overflow-y-auto flex-1">
                     <div>
-                        <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Exercise Name</label>
+                        <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Exercise Name</label>
                         <input
                             type="text"
                             value={newName}
                             onChange={e => setNewName(e.target.value)}
                             required
-                            className="w-full bg-surface border border-subtle rounded-xl px-4 py-2.5 text-body focus:outline-none focus:border-lime-400"
+                            className="w-full bg-surface border border-subtle rounded-xl px-3 py-2 text-xs text-body focus:outline-none focus:border-accent transition-colors"
                         />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Target Muscle</label>
+                            <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Target Muscle</label>
                             <Select
                                 value={newTarget}
                                 onChange={(val) => setNewTarget(val)}
@@ -251,10 +282,11 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                     { value: "", label: "Select" },
                                     ...filterOptions.muscles.map(m => ({ value: m, label: m }))
                                 ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Equipment</label>
+                            <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Equipment</label>
                             <Select
                                 value={newEquipment}
                                 onChange={(val) => setNewEquipment(val)}
@@ -263,12 +295,13 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                     { value: "", label: "Select" },
                                     ...filterOptions.equipment.map(e => ({ value: e, label: e }))
                                 ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                             />
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                         <div>
-                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Category</label>
+                            <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Category</label>
                             <Select
                                 value={newCategory}
                                 onChange={(val) => setNewCategory(val)}
@@ -277,10 +310,11 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                     { value: "", label: "Select" },
                                     ...filterOptions.categoryType.map(c => ({ value: c, label: c }))
                                 ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-dim uppercase tracking-widest mb-1.5">Difficulty</label>
+                            <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Difficulty</label>
                             <Select
                                 value={newDifficulty}
                                 onChange={(val) => setNewDifficulty(val)}
@@ -290,10 +324,11 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                     { value: "intermediate", label: "Intermediate" },
                                     { value: "expert", label: "Expert" }
                                 ]}
+                                className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                             />
                         </div>
                     </div>
-                    <Button type="submit" fullWidth disabled={saving} className="mt-4">
+                    <Button type="submit" variant="secondary" fullWidth disabled={saving} className="mt-2 text-xs py-2">
                         {saving ? 'Creating...' : 'Create and Select'}
                     </Button>
                 </form>

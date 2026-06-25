@@ -13,8 +13,8 @@ exports.getGoals = async (req, res) => {
 exports.createGoal = async (req, res) => {
     console.log("Create goal request received");
     try {
-        const { exercise_id, target_weight, target_reps } = req.body;
-        const newGoal = await Goal.createGoal(req.userId, exercise_id, target_weight, target_reps);
+        const { exercise_id, target_weight, target_reps, expected_date } = req.body;
+        const newGoal = await Goal.createGoal(req.userId, exercise_id, target_weight, target_reps, expected_date);
         res.json({ success: true, goal: newGoal });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -24,8 +24,8 @@ exports.createGoal = async (req, res) => {
 exports.updateGoal = async (req, res) => {
     console.log("Update goal request received");
     try {
-        const { target_weight, target_reps } = req.body;
-        const updatedGoal = await Goal.updateGoal(req.params.id, req.userId, target_weight, target_reps);
+        const { target_weight, target_reps, expected_date } = req.body;
+        const updatedGoal = await Goal.updateGoal(req.params.id, req.userId, target_weight, target_reps, expected_date);
         if (updatedGoal) {
             res.json({ success: true, goal: updatedGoal });
         } else {

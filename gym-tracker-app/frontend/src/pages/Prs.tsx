@@ -3,7 +3,7 @@ import { apiFetch } from "../utils/api";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
-import Calendar from "../components/Calendar";
+import DatePicker from "../components/DatePicker";
 import ConfirmModal from "../components/ConfirmModal";
 import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
@@ -46,8 +46,10 @@ export default function PersonalRecords() {
     // UX states
     const [showAddForm, setShowAddForm] = useState(false);
     const [showPicker, setShowPicker] = useState(false);
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [showEditDatePicker, setShowEditDatePicker] = useState(false);
+    const [prsOpen, setPrsOpen] = useState(true);
+    const [prPage, setPrPage] = useState(1);
+    const PRS_PER_PAGE = 5;
+
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
     const [editRecord, setEditRecord] = useState<{ id: number; weight: number | ""; repetitions: number | ""; date: string; note: string } | null>(null);
 
@@ -205,7 +207,7 @@ export default function PersonalRecords() {
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Personal Records </h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Personal Records </h1>
             </div>
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
 
@@ -220,7 +222,7 @@ export default function PersonalRecords() {
                             <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Log a PR</h3>
                             <button
                                 onClick={() => setShowAddForm(!showAddForm)}
-                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all focus:outline-none ${showAddForm ? 'bg-elevated text-muted hover:bg-hover' : 'bg-lime-400 text-black hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98]'}`}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all focus:outline-none ${showAddForm ? 'bg-elevated text-muted hover:bg-hover' : 'bg-accent text-black hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98]'}`}
                             >
                                 {showAddForm ? "Cancel" : "Add PR"}
                             </button>
@@ -236,21 +238,23 @@ export default function PersonalRecords() {
                                     {formExerciseName || <span className="text-dim">Select Exercise</span>}
                                 </button>
                                 {showPicker && (
-                                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
-                                            <div className="p-4 border-b border-subtle flex justify-between items-center">
-                                                <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
-                                                <button onClick={() => setShowPicker(false)} className="text-dim hover:text-white text-xl leading-none">&times;</button>
-                                            </div>
-                                            <div className="flex-1 overflow-y-auto p-4">
-                                                <ExercisePicker
-                                                    onSelect={(ex) => {
-                                                        setFormExerciseId(ex.id);
-                                                        setFormExerciseName(ex.name);
-                                                        setShowPicker(false);
-                                                    }}
-                                                />
-                                            </div>
+                                    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                        <div className="relative w-full max-w-xl">
+                                            <button
+                                                onClick={() => setShowPicker(false)}
+                                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                                            >
+                                                Close
+                                            </button>
+                                            <ExercisePicker
+                                                title="Select Exercise"
+                                                onSelect={(ex) => {
+                                                    setFormExerciseId(ex.id);
+                                                    setFormExerciseName(ex.name);
+                                                    setShowPicker(false);
+                                                }}
+                                                onClose={() => setShowPicker(false)}
+                                            />
                                         </div>
                                     </div>
                                 )}
@@ -260,7 +264,7 @@ export default function PersonalRecords() {
                                         value={newWeight}
                                         onChange={(val) => setNewWeight(val === "" ? "" : Number(val))}
                                         className="w-full"
-                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                         step={0.1}
                                         min={0}
                                         max={999}
@@ -270,37 +274,21 @@ export default function PersonalRecords() {
                                         value={newReps}
                                         onChange={(val) => setNewReps(val === "" ? "" : Number(val))}
                                         className="w-full"
-                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                        inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                         step={1}
                                         min={0}
                                         max={999}
                                     />
                                 </div>
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowDatePicker(!showDatePicker)}
-                                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body focus:border-lime-400 focus:outline-none transition-all text-left"
-                                    >
-                                        {newDate || <span className="text-dim">Select date</span>}
-                                    </button>
-                                    {showDatePicker && (
-                                        <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                                            <Calendar
-                                                selectedDate={newDate || undefined}
-                                                onSelect={(date) => { setNewDate(date); setShowDatePicker(false); }}
-                                            />
-                                        </div>
-                                    )}
-                                </div>
+                                <DatePicker value={newDate} onChange={setNewDate} placeholder="Select date" />
                                 <input
                                     type="text"
                                     placeholder="Note (optional)"
                                     value={newNote}
                                     onChange={e => setNewNote(e.target.value)}
-                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                 />
-                                <button type="submit" disabled={isCreating || !formExerciseId} className="w-full bg-lime-400 text-black font-bold py-3 mt-2 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button type="submit" disabled={isCreating || !formExerciseId} className="w-full bg-accent text-black font-bold py-3 mt-2 rounded-lg hover:bg-accent-hover transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed">
                                     {isCreating ? "Adding..." : "Log PR"}
                                 </button>
                             </form>
@@ -308,32 +296,79 @@ export default function PersonalRecords() {
                     </div>
 
                     <div className="bg-card border border-subtle rounded-xl p-6 shadow-xl">
-                        <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-5">Current Best PRs</h2>
-                        {prSummary.length === 0 ? (
-                            <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
-                                <p className="text-dim font-medium italic">No PRs recorded yet. Go lift something heavy!</p>
-                            </div>
-                        ) : (
-                            <ul className="space-y-3 list-none">
-                                {prSummary.map(pr => (
-                                    <li
-                                        key={pr.id}
-                                        onClick={() => fetchPrHistory(pr.exercise_id, pr.exercise_name)}
-                                        className={`bg-surface/40 border border-subtle/80 rounded-lg p-4 cursor-pointer hover:border-lime-400/50 hover:bg-surface transition-all ${selectedExerciseId === pr.exercise_id ? 'border-lime-400/50 bg-surface shadow-md ring-1 ring-lime-400/20' : ''}`}
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <div>
-                                                <strong className="text-lg font-bold text-lime-400 capitalize">{pr.exercise_name}</strong>
-                                                <div className="text-sm text-dim font-medium mt-1">{pr.date?.substring(0, 10)}</div>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-xl font-bold text-body">{pr.weight} kg</span>
-                                                <div className="text-sm text-muted font-medium mt-1">{pr.repetitions} reps</div>
-                                            </div>
+                        <div className="flex items-center justify-between mb-5">
+                            <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Current Best PRs</h2>
+                            <button
+                                onClick={() => setPrsOpen(!prsOpen)}
+                                className="text-xs font-medium text-dim hover:text-body transition-colors px-2 py-1 rounded-lg hover:bg-elevated"
+                            >
+                                {prsOpen ? "Hide" : `Show (${prSummary.length})`}
+                            </button>
+                        </div>
+                        {prsOpen && (
+                            prSummary.length === 0 ? (
+                                <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
+                                    <p className="text-dim font-medium italic">No PRs recorded yet. Go lift something heavy!</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <ul className="space-y-3 list-none">
+                                        {prSummary.slice((prPage - 1) * PRS_PER_PAGE, prPage * PRS_PER_PAGE).map(pr => (
+                                            <li
+                                                key={pr.id}
+                                                className={`bg-surface/40 border border-subtle/80 rounded-lg p-4 hover:border-accent/50 hover:bg-surface transition-all ${selectedExerciseId === pr.exercise_id ? 'border-accent/50 bg-surface shadow-md ring-1 ring-accent/20' : ''}`}
+                                            >
+                                                <div
+                                                    className="flex justify-between items-center cursor-pointer"
+                                                    onClick={() => { setPrPage(1); fetchPrHistory(pr.exercise_id, pr.exercise_name); }}
+                                                >
+                                                    <div>
+                                                        <strong className="text-lg font-bold text-accent capitalize">{pr.exercise_name}</strong>
+                                                        <div className="text-sm text-dim font-medium mt-1">{pr.date?.substring(0, 10)}</div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-xl font-bold text-body">{pr.weight} kg</span>
+                                                        <div className="text-sm text-muted font-medium mt-1">{pr.repetitions} reps</div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setFormExerciseId(pr.exercise_id);
+                                                        setFormExerciseName(pr.exercise_name);
+                                                        setShowAddForm(true);
+                                                    }}
+                                                    className="mt-2 text-xs font-semibold text-accent bg-accent/10 border border-accent/20 rounded-lg px-3 py-1 hover:bg-accent/20 transition-colors"
+                                                >
+                                                    + Add PR
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    {prSummary.length > PRS_PER_PAGE && (
+                                        <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
+                                            <button
+                                                onClick={() => setPrPage(p => Math.max(1, p - 1))}
+                                                disabled={prPage === 1}
+                                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                            >
+                                                &larr; Prev
+                                            </button>
+                                            <span className="text-xs text-muted font-medium">
+                                                Page {prPage} of {Math.ceil(prSummary.length / PRS_PER_PAGE)}
+                                            </span>
+                                            <button
+                                                onClick={() => setPrPage(p => Math.min(Math.ceil(prSummary.length / PRS_PER_PAGE), p + 1))}
+                                                disabled={prPage === Math.ceil(prSummary.length / PRS_PER_PAGE)}
+                                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                            >
+                                                Next &rarr;
+                                            </button>
                                         </div>
-                                    </li>
-                                ))}
-                            </ul>
+                                    )}
+                                </>
+                            )
                         )}
                     </div>
                 </div>
@@ -342,7 +377,7 @@ export default function PersonalRecords() {
                 {selectedExerciseName && (
                     <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 lg:p-8 shadow-xl">
                         <div className="flex justify-between items-start mb-6">
-                            <h2 className="font-display text-2xl font-bold text-lime-400 tracking-wide uppercase">{selectedExerciseName} Progress</h2>
+                            <h2 className="font-display text-2xl font-bold text-accent tracking-wide uppercase">{selectedExerciseName} Progress</h2>
                             <button onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} className="px-4 py-2 bg-surface hover:bg-elevated text-muted rounded-lg font-bold text-sm transition-colors border border-subtle">Close</button>
                         </div>
 
@@ -369,14 +404,14 @@ export default function PersonalRecords() {
                                         />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px', fontSize: '14px' }}
-                                            itemStyle={{ color: '#a3e635' }}
+                                            itemStyle={{ color: 'var(--accent)' }}
                                         />
                                         <Line
                                             type="monotone"
                                             dataKey="weight"
-                                            stroke="#a3e635"
+                                            stroke="var(--accent)"
                                             strokeWidth={3}
-                                            dot={{ fill: '#a3e635', r: 4, strokeWidth: 2, stroke: '#000' }}
+                                            dot={{ fill: 'var(--accent)', r: 4, strokeWidth: 2, stroke: '#000' }}
                                             activeDot={{ r: 6, strokeWidth: 0 }}
                                         />
                                     </LineChart>
@@ -387,7 +422,7 @@ export default function PersonalRecords() {
                         </div>
 
                         <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-6 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-lime-400 rounded-full"></span>
+                            <span className="w-1.5 h-1.5 bg-accent rounded-full"></span>
                             History Timeline
                         </h3>
 
@@ -399,7 +434,7 @@ export default function PersonalRecords() {
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-sm font-bold text-muted uppercase tracking-wider">{history.date?.substring(0, 10)}</span>
                                                 {history.id === currentMaxRecordId && (
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest bg-lime-400/10 text-lime-400 border border-lime-400/20 px-2 py-0.5 rounded-full">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded-full">
                                                         All-Time Best
                                                     </span>
                                                 )}
@@ -438,7 +473,14 @@ export default function PersonalRecords() {
 
             {editRecord && (
                 <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <div className="relative w-full max-w-sm">
+                        <button
+                            onClick={() => setEditRecord(null)}
+                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                        >
+                            Close
+                        </button>
+                        <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                         <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-4">Edit PR</h2>
                         <div className="space-y-4">
                             <TransparentNumericInput
@@ -446,7 +488,7 @@ export default function PersonalRecords() {
                                 value={editRecord.weight}
                                 onChange={(val) => setEditRecord({ ...editRecord, weight: val === "" ? "" : Number(val) })}
                                 className="w-full"
-                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                 step={0.1} min={0} max={999}
                             />
                             <TransparentNumericInput
@@ -454,37 +496,21 @@ export default function PersonalRecords() {
                                 value={editRecord.repetitions}
                                 onChange={(val) => setEditRecord({ ...editRecord, repetitions: val === "" ? "" : Number(val) })}
                                 className="w-full"
-                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                inputClassName="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                                 step={1} min={0} max={999}
                             />
-                            <div className="relative">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowEditDatePicker(!showEditDatePicker)}
-                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body focus:border-lime-400 focus:outline-none transition-all text-left"
-                                >
-                                    {editRecord.date || <span className="text-dim">Select date</span>}
-                                </button>
-                                {showEditDatePicker && (
-                                    <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                                        <Calendar
-                                            selectedDate={editRecord.date || undefined}
-                                            onSelect={(date) => { setEditRecord({ ...editRecord, date }); setShowEditDatePicker(false); }}
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                            <DatePicker value={editRecord.date} onChange={(date) => setEditRecord({ ...editRecord, date })} placeholder="Select date" />
                             <input
                                 type="text"
                                 placeholder="Note (optional)"
                                 value={editRecord.note}
                                 onChange={e => setEditRecord({ ...editRecord, note: e.target.value })}
-                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                             />
                             <div className="space-y-3 pt-2">
                                 <button
                                     onClick={updatePR}
-                                    className="w-full bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all"
+                                    className="w-full bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover transition-all"
                                 >
                                     Save Changes
                                 </button>
@@ -498,6 +524,7 @@ export default function PersonalRecords() {
                         </div>
                     </div>
                 </div>
+            </div>
             )}
         </div>
     );

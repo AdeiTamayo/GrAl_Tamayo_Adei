@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS goals (
     exercise_id INTEGER NOT NULL REFERENCES exercises(id) ON DELETE CASCADE,
     target_weight DECIMAL(6,2),
     target_reps INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    expected_date DATE
 );

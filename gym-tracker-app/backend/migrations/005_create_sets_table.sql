@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS sets (
     weight              DECIMAL(5,2),
     repetitions         INTEGER,
     note                VARCHAR(255), 
-    time                INTEGER
+    time                INTEGER, 
+    rpe                 DECIMAL(3,1)
 );
 

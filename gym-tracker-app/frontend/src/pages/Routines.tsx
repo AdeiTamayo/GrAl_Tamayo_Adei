@@ -47,6 +47,16 @@ export default function RoutinesManagement() {
     const [error, setError] = useState<string | null>(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
+    // Pagination
+    const [routinesPage, setRoutinesPage] = useState(1);
+    const pageSize = 20;
+    const totalPages = Math.max(1, Math.ceil(routines.length / pageSize));
+    const paginatedRoutines = routines.slice((routinesPage - 1) * pageSize, routinesPage * pageSize);
+
+    useEffect(() => {
+        setRoutinesPage(1);
+    }, [routines.length]);
+
     // Layout Reference Focus Wrappers
     const createRoutineRef = useRef<HTMLDivElement>(null);
     const detailsDropdownRef = useRef<HTMLDivElement>(null);
@@ -205,7 +215,7 @@ export default function RoutinesManagement() {
             {/* Top Toolbar Level */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-subtle pb-5">
                 <div>
-                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Routines Management</h1>
+                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Routines Management</h1>
                 </div>
 
                 {/* Create Routine Dropdown Wrapper */}
@@ -233,7 +243,7 @@ export default function RoutinesManagement() {
                                         onChange={(e) => setNewRoutineName(e.target.value)}
                                         required
                                         placeholder="e.g., Heavy Push Day"
-                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-lime-400 focus:outline-none transition-all"
+                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all"
                                     />
                                 </div>
                                 <div>
@@ -243,7 +253,7 @@ export default function RoutinesManagement() {
                                         placeholder="Focus on progressive overload mechanics"
                                         value={newRoutineNote}
                                         onChange={(e) => setNewRoutineNote(e.target.value)}
-                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-all"
+                                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
                                     />
                                 </div>
 
@@ -278,26 +288,50 @@ export default function RoutinesManagement() {
                                 <p className="text-dim text-sm font-medium italic px-4">No templates configured yet.</p>
                             </div>
                         ) : (
-                            <ul className="space-y-2.5 list-none p-0 m-0">
-                                {routines.map((r) => {
-                                    const isCurrent = selectedRoutine?.id === r.id;
-                                    return (
-                                        <li
-                                            key={r.id}
-                                            onClick={() => fetchRoutineById(r.id)}
-                                            className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${isCurrent ? 'bg-surface border-lime-400/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
+                            <>
+                                <ul className="space-y-2.5 list-none p-0 m-0">
+                                    {paginatedRoutines.map((r) => {
+                                        const isCurrent = selectedRoutine?.id === r.id;
+                                        return (
+                                            <li
+                                                key={r.id}
+                                                onClick={() => fetchRoutineById(r.id)}
+                                                className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${isCurrent ? 'bg-surface border-accent/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
+                                            >
+                                                <div className="truncate max-w-[65%]">
+                                                    <span className="text-sm font-semibold text-heading block truncate">{r.name}</span>
+                                                    <span className="text-dim text-[10px] font-mono tracking-wider uppercase mt-0.5 block">Template Profile</span>
+                                                </div>
+                                                <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                                    <DeleteButton onClick={() => setDeleteConfirmId(r.id)} />
+                                                </div>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
+                                        <button
+                                            onClick={() => setRoutinesPage((p) => Math.max(1, p - 1))}
+                                            disabled={routinesPage === 1}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
                                         >
-                                            <div className="truncate max-w-[65%]">
-                                                <span className="text-sm font-semibold text-heading block truncate">{r.name}</span>
-                                                <span className="text-dim text-[10px] font-mono tracking-wider uppercase mt-0.5 block">Template Profile</span>
-                                            </div>
-                                            <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                                <DeleteButton onClick={() => setDeleteConfirmId(r.id)} />
-                                            </div>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                                            &larr; Prev
+                                        </button>
+                                        <span className="text-xs text-muted font-medium">
+                                            Page {routinesPage} of {totalPages}
+                                        </span>
+                                        <button
+                                            onClick={() => setRoutinesPage((p) => Math.min(totalPages, p + 1))}
+                                            disabled={routinesPage === totalPages}
+                                            className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                        >
+                                            Next &rarr;
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -309,7 +343,7 @@ export default function RoutinesManagement() {
                         {/* Header Details Wrapper with Dropdown Flow Control */}
                         <div className="flex justify-between items-start mb-6" ref={detailsDropdownRef}>
                             <div className="flex-1 mr-4">
-                                <h2 className="font-display text-2xl font-bold text-lime-400 uppercase tracking-wide flex items-center gap-3">
+                                <h2 className="font-display text-2xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
                                     {selectedRoutine.name}
                                 </h2>
 
@@ -337,8 +371,8 @@ export default function RoutinesManagement() {
                                 {showDetailsDropdown && (
                                     <div className="absolute right-0 top-full mt-2 w-80 bg-card border border-subtle rounded-xl p-4 shadow-xl z-20 flex flex-col gap-3 animate-in fade-in duration-100">
                                         <h4 className="text-xs uppercase tracking-wider text-muted font-bold">Edit Core Metadata</h4>
-                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-lime-400 focus:outline-none" />
-                                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-lime-400 focus:outline-none" />
+                                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-accent focus:outline-none" />
+                                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" className="w-full border border-subtle bg-surface rounded-lg px-3 py-2 text-xs text-body focus:border-accent focus:outline-none" />
                                         <div className="flex gap-2 justify-end mt-1">
                                             <button type="button" onClick={() => setShowDetailsDropdown(false)} className="text-muted text-xs font-semibold px-2.5 py-1.5 hover:text-heading">Cancel</button>
                                             <Button type="button" onClick={saveRoutineEdit} variant="primary" className="px-3 py-1 text-xs rounded-md">Save Changes</Button>
@@ -351,7 +385,7 @@ export default function RoutinesManagement() {
                         <hr className="border-none border-t border-subtle/60" />
 
                         {/* Exercises List Display Block */}
-                        <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase">Routine Exercices</h3>
+                        <h3 className="font-sans text-xs font-bold tracking-widest text-accent uppercase">Routine Exercices</h3>
                         {!selectedRoutine.exercises || selectedRoutine.exercises.length === 0 ? (
                             <p className="text-xs text-dim font-sans py-6 text-center border border-dashed border-subtle rounded-xl bg-card/20">
                                 No exercises configured for this routine template yet. Append elements via the container panel below.
@@ -414,29 +448,38 @@ export default function RoutinesManagement() {
 
                         {/* Search Exercises Dropdown Selection Panel */}
                         <div className="pt-6 border-t border-subtle/60">
-                            <h3 className="font-sans text-xs font-bold tracking-widest text-lime-400 uppercase mb-3">Add New Exercise to Template</h3>
+                            <h3 className="font-sans text-xs font-bold tracking-widest text-accent uppercase mb-3">Add New Exercise to Template</h3>
 
                             <div className="flex flex-col gap-4">
-                                {!showPicker ? (
-                                    <Button
-                                        variant="secondary"
-                                        fullWidth
-                                        className="py-4 border-dashed border-subtle hover:border-lime-500/50 hover:bg-lime-500/5 transition-all text-sm font-semibold"
-                                        onClick={() => setShowPicker(true)}
-                                    >
-                                        Add exercise
-                                    </Button>
-                                ) : (
-                                    <div className="animate-in fade-in zoom-in-95 duration-200">
-                                        <ExercisePicker
-                                            title="Add Exercise to Routine"
-                                            onSelect={handleLiveAddExercise}
-                                            onClose={() => setShowPicker(false)}
-                                        />
-                                    </div>
-                                )}
+                                <Button
+                                    variant="secondary"
+                                    fullWidth
+                                    className="py-4 border-dashed border-subtle hover:border-accent/50 hover:bg-accent/5 transition-all text-sm font-semibold"
+                                    onClick={() => setShowPicker(true)}
+                                >
+                                    + Add New Exercise Entry
+                                </Button>
                             </div>
                         </div>
+
+                        {/* Exercise Picker Modal */}
+                        {showPicker && (
+                            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                                <div className="relative w-full max-w-xl">
+                                    <button
+                                        onClick={() => setShowPicker(false)}
+                                        className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                                    >
+                                        Close
+                                    </button>
+                                    <ExercisePicker
+                                        title="Add Exercise to Routine"
+                                        onSelect={handleLiveAddExercise}
+                                        onClose={() => setShowPicker(false)}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

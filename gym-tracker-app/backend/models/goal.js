@@ -4,7 +4,7 @@ class Goal {
     static async getUserGoals(userId) {
         try {
             const query = `
-                SELECT g.id, g.exercise_id, g.target_weight, g.target_reps, g.created_at, e.name AS exercise_name
+                SELECT g.id, g.exercise_id, g.target_weight, g.target_reps, g.created_at, g.expected_date, e.name AS exercise_name
                 FROM goals g
                 JOIN exercises e ON g.exercise_id = e.id
                 WHERE g.user_id = $1
@@ -18,14 +18,14 @@ class Goal {
         }
     }
 
-    static async createGoal(userId, exerciseId, targetWeight, targetReps) {
+    static async createGoal(userId, exerciseId, targetWeight, targetReps, expectedDate) {
         try {
             const query = `
-                INSERT INTO goals (user_id, exercise_id, target_weight, target_reps) 
-                VALUES ($1, $2, $3, $4) 
-                RETURNING id, target_weight, target_reps;
+                INSERT INTO goals (user_id, exercise_id, target_weight, target_reps, expected_date) 
+                VALUES ($1, $2, $3, $4, $5) 
+                RETURNING id, target_weight, target_reps, expected_date;
             `;
-            const result = await pool.query(query, [userId, exerciseId, targetWeight, targetReps]);
+            const result = await pool.query(query, [userId, exerciseId, targetWeight, targetReps, expectedDate || null]);
             return result.rows[0];
         } catch (error) {
             console.error('[Goal Model] Error creating goal:', error);
@@ -33,15 +33,15 @@ class Goal {
         }
     }
 
-    static async updateGoal(goalId, userId, targetWeight, targetReps) {
+    static async updateGoal(goalId, userId, targetWeight, targetReps, expectedDate) {
         try {
             const query = `
                 UPDATE goals 
-                SET target_weight = $1, target_reps = $2 
-                WHERE id = $3 AND user_id = $4 
-                RETURNING id, target_weight, target_reps;
+                SET target_weight = $1, target_reps = $2, expected_date = $3 
+                WHERE id = $4 AND user_id = $5 
+                RETURNING id, target_weight, target_reps, expected_date;
             `;
-            const result = await pool.query(query, [targetWeight, targetReps, goalId, userId]);
+            const result = await pool.query(query, [targetWeight, targetReps, expectedDate || null, goalId, userId]);
             return result.rows[0];
         } catch (error) {
             console.error('[Goal Model] Error updating goal:', error);

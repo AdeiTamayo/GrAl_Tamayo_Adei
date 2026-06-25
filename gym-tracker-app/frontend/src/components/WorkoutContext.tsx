@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useSettings } from './SettingsContext';
 
 interface SetEntry {
     set_number: number;
@@ -6,6 +7,7 @@ interface SetEntry {
     repetitions: number | string;
     note: string;
     is_done: boolean;
+    rpe?: number | string;
 }
 
 interface ActiveExercise {
@@ -51,6 +53,9 @@ export function useWorkout() {
 }
 
 export default function WorkoutProvider({ children }: { children: ReactNode }) {
+    const { settings } = useSettings();
+    const defaultRest = settings?.default_rest_time || 60;
+
     const [isWorkoutActive, setIsWorkoutActive] = useState(false);
     const [startTime, setStartTime] = useState<number | null>(null);
     const [elapsedTime, setElapsedTime] = useState(0);
@@ -60,7 +65,7 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
     const [restTime, setRestTime] = useState(0);
     const [isRestTimerActive, setIsRestTimerActive] = useState(false);
     const [restStartTime, setRestStartTime] = useState<number | null>(null);
-    const [restDuration, setRestDuration] = useState(60);
+    const [restDuration, setRestDuration] = useState(defaultRest);
 
     const activeExerciseName = isWorkoutActive && exercises.length > 0
         ? (exercises.find(ex => ex.sets.some(s => !s.is_done)) || exercises[exercises.length - 1]).name
@@ -107,17 +112,18 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
         setIsRestTimerActive(false);
         setRestTime(0);
         setRestStartTime(null);
-        setRestDuration(60);
-    }, []);
+        setRestDuration(defaultRest);
+    }, [defaultRest]);
 
     const addExercise = useCallback((exercise: { id: number; name: string }) => {
+        const rest = settings?.default_rest_time || 60;
         setExercises(prev => [...prev, {
             exercise_id: exercise.id,
             name: exercise.name,
-            rest_time: 60,
-            sets: [{ set_number: 1, weight: "", repetitions: "", note: "", is_done: false }]
+            rest_time: rest,
+            sets: [{ set_number: 1, weight: "", repetitions: "", note: "", is_done: false, rpe: "" }]
         }]);
-    }, []);
+    }, [settings?.default_rest_time]);
 
     const addSet = useCallback((exerciseIndex: number) => {
         setExercises(prev => {
@@ -130,7 +136,8 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
                     weight: lastSet?.weight || "",
                     repetitions: lastSet?.repetitions || "",
                     note: "",
-                    is_done: false
+                    is_done: false,
+                    rpe: "",
                 }]
             };
             return updated;

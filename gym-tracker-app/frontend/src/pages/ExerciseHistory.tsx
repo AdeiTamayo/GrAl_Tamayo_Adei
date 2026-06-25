@@ -65,6 +65,10 @@ export default function ExerciseHistory() {
         }
     }, [selectedExercise, fetchHistory]);
 
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     const formatData = useMemo(() => {
         return history.map(h => ({
             ...h,
@@ -80,7 +84,7 @@ export default function ExerciseHistory() {
             <div className="max-w-6xl mx-auto">
                 <header className="mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
-                        <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">
+                        <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">
                             Progress History
                         </h1>
                     </div>
@@ -88,27 +92,29 @@ export default function ExerciseHistory() {
                     <div className="w-full md:w-auto">
                         <button
                             onClick={() => setShowPicker(true)}
-                            className="w-full md:w-64 bg-surface border border-subtle rounded-xl px-4 py-3 text-body hover:border-lime-400 transition-all flex justify-between items-center"
+                            className="w-full md:w-64 border border-subtle bg-surface rounded-lg px-4 py-3 text-left hover:border-hover transition-colors"
                         >
-                            <span className="truncate">{selectedExercise ? selectedExercise.name : "Select Exercise..."}</span>
-                            <span className="text-lime-400">🔍</span>
+                            <span className={selectedExercise ? "text-body" : "text-dim"}>{selectedExercise ? selectedExercise.name : "Select Exercise..."}</span>
                         </button>
                     </div>
                 </header>
 
                 {showPicker && (
                     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
-                            <div className="p-4 border-b border-subtle flex justify-between items-center">
-                                <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
-                                <button onClick={() => setShowPicker(false)} className="text-dim hover:text-white">✕</button>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4">
+                        <div className="relative w-full max-w-2xl max-h-[80vh]">
+                            <div className="border border-accent/30 rounded-xl bg-card shadow-xl overflow-hidden">
+                                <button
+                                    onClick={() => setShowPicker(false)}
+                                    className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                                >
+                                    Close
+                                </button>
                                 <ExercisePicker
                                     onSelect={(ex) => {
                                         setSelectedExercise(ex);
                                         setShowPicker(false);
                                     }}
+                                    className="!border-0 !rounded-none !shadow-none"
                                 />
                             </div>
                         </div>
@@ -125,7 +131,7 @@ export default function ExerciseHistory() {
                     <div className="text-center py-8 bg-red-900/20 rounded-3xl border border-red-900 mb-6">
                         <p className="text-red-400 text-lg font-medium">{fetchError}</p>
                         {fetchError.includes("Cannot connect") && (
-                            <p className="text-dim text-sm mt-2">Start the backend with <code className="text-lime-400">cd backend && node server.js</code></p>
+                            <p className="text-dim text-sm mt-2">Start the backend with <code className="text-accent">cd backend && node server.js</code></p>
                         )}
                         {fetchError.includes("Invalid token") && (
                             <p className="text-dim text-sm mt-2">Please log in again.</p>
@@ -142,7 +148,7 @@ export default function ExerciseHistory() {
 
                 {isLoading && (
                     <div className="flex justify-center items-center py-20">
-                        <div className="w-10 h-10 border-4 border-lime-400 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
                     </div>
                 )}
 
@@ -151,25 +157,25 @@ export default function ExerciseHistory() {
                         {/* Max Weight Chart */}
                         <div className="bg-card border border-subtle p-6 rounded-3xl shadow-xl">
                             <h2 className="text-xl font-bold mb-6 text-muted flex items-center gap-2">
-                                <span className="w-2 h-6 bg-lime-400 rounded-full"></span>
+                                <span className="w-2 h-6 bg-accent rounded-full"></span>
                                 Max Weight (kg)
                             </h2>
                             <div className="h-80 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={formatData}>
+                                    <LineChart data={formatData} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1f1f22" vertical={false} />
                                         <XAxis dataKey="dateLabel" stroke="#52525b" fontSize={12} tickMargin={10} />
                                         <YAxis stroke="#52525b" fontSize={12} tickMargin={10} />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px' }}
-                                            itemStyle={{ color: '#a3e635' }}
+                                            itemStyle={{ color: 'var(--accent)' }}
                                         />
                                         <Line
                                             type="monotone"
                                             dataKey="max_weight"
-                                            stroke="#a3e635"
+                                            stroke="var(--accent)"
                                             strokeWidth={3}
-                                            dot={{ fill: '#a3e635', r: 5 }}
+                                            dot={{ fill: 'var(--accent)', r: 5 }}
                                             activeDot={{ r: 8, strokeWidth: 0 }}
                                         />
                                     </LineChart>
@@ -185,7 +191,7 @@ export default function ExerciseHistory() {
                             </h2>
                             <div className="h-80 w-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={formatData}>
+                                    <LineChart data={formatData} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1f1f22" vertical={false} />
                                         <XAxis dataKey="dateLabel" stroke="#52525b" fontSize={12} tickMargin={10} />
                                         <YAxis stroke="#52525b" fontSize={12} tickMargin={10} />

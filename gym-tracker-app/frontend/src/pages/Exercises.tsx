@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
 import Select from '../components/Select';
@@ -47,6 +48,7 @@ type Filters = {
 type ViewMode = 'list' | 'details' | 'create' | 'edit';
 
 export default function Exercises() {
+    const navigate = useNavigate();
     const [allExercises, setAllExercises] = useState<Exercise[]>([]);
     const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
 
@@ -80,7 +82,7 @@ export default function Exercises() {
     const [success, setSuccess] = useState<string | null>(null);
 
     const [page, setPage] = useState(1);
-    const [totalExercises, setTotalExercises] = useState(0);
+    const [exercisesOpen, setExercisesOpen] = useState(true);
     const pageSize = 20;
 
     const headers = useMemo(() => ({
@@ -121,27 +123,7 @@ export default function Exercises() {
         return filteredExercises.slice(start, start + pageSize);
     }, [filteredExercises, page, pageSize]);
 
-    const totalPages = Math.max(1, Math.ceil(filteredExercises.length / pageSize));
 
-    const paginationButtons = useMemo(() => {
-        if (filteredExercises.length <= pageSize) return null;
-        const startPage = Math.max(1, Math.min(page - 2, totalPages - 4));
-        const endPage = Math.min(startPage + 4, totalPages);
-        const items: React.ReactNode[] = [];
-        for (let p = startPage; p <= endPage; p++) {
-            const isActive = p === page;
-            items.push(
-                <button
-                    key={p}
-                    onClick={function () { setPage(p); }}
-                    className={'px-3 py-1.5 rounded-lg text-xs font-bold transition-colors' + (isActive ? ' bg-lime-400 text-black' : ' bg-elevated text-muted hover:bg-hover')}
-                >
-                    {p}
-                </button>
-            );
-        }
-        return items;
-    }, [page, totalPages, filteredExercises.length, pageSize]);
 
     // Reset to page 1 when filters change
     useEffect(() => {
@@ -431,7 +413,7 @@ export default function Exercises() {
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Exercises</h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Exercises</h1>
                 {viewMode === 'list' && (
                     <Button onClick={() => setViewMode('create')} variant="primary">+ Create Exercise</Button>
                 )}
@@ -443,7 +425,7 @@ export default function Exercises() {
                 {error && viewMode !== 'create' && viewMode !== 'edit' && (
                     <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">{error}</p>
                 )}
-                {success && <p className="text-sm font-semibold text-lime-400 tracking-wide animate-in fade-in duration-300">{success}</p>}
+                {success && <p className="text-sm font-semibold text-accent tracking-wide animate-in fade-in duration-300">{success}</p>}
             </div>
 
             {viewMode !== 'create' && (
@@ -454,7 +436,7 @@ export default function Exercises() {
                         <div className="flex gap-4 w-full flex-col sm:flex-row">
                             <input
                                 type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
-                                className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                                className="w-full sm:w-1/5 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                             />
                             <Select
                                 value={filters.muscles}
@@ -464,6 +446,7 @@ export default function Exercises() {
                                     { value: "", label: "All Muscles" },
                                     ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
                                 ]}
+                                className="flex-1"
                             />
                             <Select
                                 value={filters.equipment}
@@ -473,6 +456,7 @@ export default function Exercises() {
                                     { value: "", label: "All Equipment" },
                                     ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
                                 ]}
+                                className="flex-1"
                             />
                             <Select
                                 value={filters.categoryType}
@@ -482,6 +466,7 @@ export default function Exercises() {
                                     { value: "", label: "All Categories" },
                                     ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
                                 ]}
+                                className="flex-1"
                             />
                         </div>
                     )}
@@ -540,6 +525,7 @@ export default function Exercises() {
 
                         <div className="flex gap-4 mt-8 pt-4 border-t border-subtle">
                             <Button type="button" variant="secondary" onClick={() => setViewMode('edit')}>Edit Exercise</Button>
+                            <Button type="button" variant="primary" onClick={() => navigate(`/exercise-history?exerciseId=${selectedExercise.id}&exerciseName=${encodeURIComponent(selectedExercise.name)}`)}>View History</Button>
                             <DeleteButton onClick={() => setDeleteConfirmId(selectedExercise.id)} />
                         </div>
                     </div>
@@ -571,50 +557,62 @@ export default function Exercises() {
                     />
                 ) : (
                     <>
-                        <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            {paginatedExercises.length > 0 ? (
-                                paginatedExercises.map(ex => (
-                                    <li
-                                        key={ex.id}
-                                        onClick={() => fetchExerciseById(ex.id)}
-                                        className="bg-surface/40 border cursor-pointer border-subtle/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-lime-400/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-lime-400/5"
-                                    >
-                                        <div>
-                                            <h2 className="font-display text-xl font-bold text-body mb-2 truncate">{ex.name}</h2>
-                                            <div className="text-sm text-muted space-x-2">
-                                                <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.target}</span>
-                                                <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.equipment}</span>
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-xs font-bold text-muted uppercase tracking-wider">{filteredExercises.length} exercises</span>
+                        </div>
+                        {exercisesOpen && (
+                            <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {paginatedExercises.length > 0 ? (
+                                    paginatedExercises.map(ex => (
+                                        <li
+                                            key={ex.id}
+                                            onClick={() => fetchExerciseById(ex.id)}
+                                            className="bg-surface/40 border cursor-pointer border-subtle/80 rounded-xl p-5 flex flex-col justify-between gap-4 hover:border-accent/50 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/5 group"
+                                        >
+                                            <div>
+                                                <div className="flex items-center justify-between">
+                                                    <h2 className="font-display text-xl font-bold text-body mb-2 truncate">{ex.name}</h2>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); navigate(`/exercise-history?exerciseId=${ex.id}&exerciseName=${encodeURIComponent(ex.name)}`); }}
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg text-dim hover:text-accent hover:bg-accent/10"
+                                                        title="View exercise history"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <div className="text-sm text-muted space-x-2">
+                                                    <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.target}</span>
+                                                    <span className="inline-block bg-elevated px-2 py-1 rounded text-muted">{ex.equipment}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </li>
-                                ))
-                            ) : (
-                                !loading && <p className="text-muted col-span-2">No exercises found.</p>
-                            )}
-                        </ul>
-
-                        {filteredExercises.length > pageSize && (
-                            <div className="flex items-center justify-between pt-4 border-t border-subtle/60">
-                                <p className="text-xs text-dim font-mono">
-                                    Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filteredExercises.length)} of {filteredExercises.length}
-                                </p>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                                        disabled={page === 1}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-elevated text-muted hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        Previous
-                                    </button>
-                                    {paginationButtons}
-                                    <button
-                                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={page === totalPages}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-elevated text-muted hover:bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        Next
-                                    </button>
-                                </div>
+                                        </li>
+                                    ))
+                                ) : (
+                                    !loading && <p className="text-muted col-span-2">No exercises found.</p>
+                                )}
+                            </ul>
+                        )}
+                        {exercisesOpen && filteredExercises.length > pageSize && (
+                            <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
+                                <button
+                                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                                    disabled={page === 1}
+                                    className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                >
+                                    &larr; Prev
+                                </button>
+                                <span className="text-xs text-muted font-medium">
+                                    Page {page} of {Math.max(1, Math.ceil(filteredExercises.length / pageSize))}
+                                </span>
+                                <button
+                                    onClick={() => setPage(p => Math.min(Math.max(1, Math.ceil(filteredExercises.length / pageSize)), p + 1))}
+                                    disabled={page === Math.max(1, Math.ceil(filteredExercises.length / pageSize))}
+                                    className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                                >
+                                    Next &rarr;
+                                </button>
                             </div>
                         )}
                     </>
@@ -684,104 +682,180 @@ function ExerciseForm({
     onSubmit,
     onCancel
 }: ExerciseFormProps) {
+    const [showNewMuscle, setShowNewMuscle] = useState(false);
+    const [showNewEquipment, setShowNewEquipment] = useState(false);
+    const [showNewCategory, setShowNewCategory] = useState(false);
+    const [showNewSecondary, setShowNewSecondary] = useState(false);
     return (
-        <form onSubmit={(e) => onSubmit(e, ex?.id)} className="bg-card border border-subtle rounded-xl p-6 shadow-xl space-y-4">
-            <h2 className="font-display text-xl font-bold text-body tracking-wide uppercase mb-4">
+        <form onSubmit={(e) => onSubmit(e, ex?.id)} className="bg-card border border-subtle rounded-xl p-5 shadow-xl space-y-3">
+            <h2 className="font-display text-base font-bold text-body tracking-wide uppercase mb-2">
                 {isEdit ? 'Edit Exercise' : 'Create Custom Exercise'}
             </h2>
 
             {error && (
-                <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">
+                <p className="text-xs font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">
                     {error}
                 </p>
             )}
 
             <div>
-                <label className="block text-sm font-semibold text-muted mb-2">Exercise Name *</label>
+                <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Exercise Name *</label>
                 <input
                     type="text"
                     name="name"
                     required
                     value={formName}
                     onChange={e => setFormName(e.target.value)}
-                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                 />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Body Part</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Body Part</label>
                     <input
                         type="text"
                         name="bodyPart"
                         value={formBodyPart}
                         onChange={e => setFormBodyPart(e.target.value)}
-                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                        className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Target Muscle *</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Target Muscle *</label>
                     <Select
                         value={formTarget}
                         onChange={(val) => setFormTarget(val)}
-                        placeholder="Select Target"
+                        placeholder="Select"
                         options={[
-                            { value: "", label: "Select Target" },
+                            { value: "", label: "Select" },
                             ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
                     <input type="hidden" name="target_muscle" value={formTarget} />
-                    <input
-                        type="text"
-                        name="new_target_muscle"
-                        placeholder="Or add new muscle..."
-                        className="w-full mt-2 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                    />
+                    <div className="mt-2">
+                        {showNewMuscle ? (
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="new_target_muscle"
+                                    placeholder="Create new muscle..."
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
+                                    autoFocus
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewMuscle(false)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-accent transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setShowNewMuscle(true)}
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-accent transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                Create new muscle
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Equipment *</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Equipment *</label>
                     <Select
                         value={formEquipment}
                         onChange={(val) => setFormEquipment(val)}
-                        placeholder="Select Equipment"
+                        placeholder="Select"
                         options={[
-                            { value: "", label: "Select Equipment" },
+                            { value: "", label: "Select" },
                             ...filterOptions.equipment?.map(e => ({ value: e, label: e })) || []
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
                     <input type="hidden" name="equipment" value={formEquipment} />
-                    <input
-                        type="text"
-                        name="new_equipment"
-                        placeholder="Or add new equipment..."
-                        className="w-full mt-2 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                    />
+                    <div className="mt-2">
+                        {showNewEquipment ? (
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="new_equipment"
+                                    placeholder="Create new equipment..."
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
+                                    autoFocus
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewEquipment(false)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-accent transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setShowNewEquipment(true)}
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-accent transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                Create new equipment
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Category *</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Category *</label>
                     <Select
                         value={formCategory}
                         onChange={(val) => setFormCategory(val)}
-                        placeholder="Select Category"
+                        placeholder="Select"
                         options={[
-                            { value: "", label: "Select Category" },
+                            { value: "", label: "Select" },
                             ...filterOptions.categoryType?.map(c => ({ value: c, label: c })) || []
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
                     <input type="hidden" name="category" value={formCategory} />
-                    <input
-                        type="text"
-                        name="new_category"
-                        placeholder="Or add new category..."
-                        className="w-full mt-2 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                    />
+                    <div className="mt-2">
+                        {showNewCategory ? (
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    name="new_category"
+                                    placeholder="Create new category..."
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
+                                    autoFocus
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewCategory(false)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-accent transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setShowNewCategory(true)}
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-accent transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                Create new category
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Difficulty</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Difficulty</label>
                     <Select
                         value={formDifficulty}
                         onChange={(val) => setFormDifficulty(val)}
@@ -791,12 +865,13 @@ function ExerciseForm({
                             { value: "intermediate", label: "Intermediate" },
                             { value: "advanced", label: "Advanced" }
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
                     <input type="hidden" name="difficulty" value={formDifficulty} />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Secondary Muscles</label>
+                    <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Secondary Muscles</label>
                     <Select
                         value={formSecondaryPick}
                         onChange={(val) => {
@@ -805,30 +880,54 @@ function ExerciseForm({
                             }
                             setFormSecondaryPick('');
                         }}
-                        placeholder="Select Secondary Muscle"
+                        placeholder="Select"
                         options={[
-                            { value: "", label: "Select Secondary Muscle" },
+                            { value: "", label: "Select" },
                             ...filterOptions.muscles?.map(m => ({ value: m, label: m })) || []
                         ]}
+                        className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                     />
-                    <input
-                        type="text"
-                        placeholder="Or add new secondary muscle..."
-                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                e.preventDefault();
-                                const value = e.currentTarget.value.trim();
-                                if (value && !selectedSecondaryMuscles.includes(value)) {
-                                    setSelectedSecondaryMuscles(prev => [...prev, value]);
-                                }
-                                e.currentTarget.value = '';
-                            }
-                        }}
-                    />
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="mt-2">
+                        {showNewSecondary ? (
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Create new secondary muscle..."
+                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const value = e.currentTarget.value.trim();
+                                            if (value && !selectedSecondaryMuscles.includes(value)) {
+                                                setSelectedSecondaryMuscles(prev => [...prev, value]);
+                                            }
+                                            e.currentTarget.value = '';
+                                        }
+                                    }}
+                                    autoFocus
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewSecondary(false)}
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-dim hover:text-accent transition-colors"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setShowNewSecondary(true)}
+                                className="flex items-center gap-1.5 text-xs text-dim hover:text-accent transition-colors"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
+                                Create new secondary muscle
+                            </button>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
                         {selectedSecondaryMuscles.map(muscle => (
-                            <div key={muscle} className="flex items-center gap-2 bg-elevated px-3 py-1 rounded-full text-heading text-sm">
+                            <div key={muscle} className="flex items-center gap-1 bg-elevated px-2 py-0.5 rounded-full text-heading text-xs">
                                 <span>{muscle}</span>
                                 <input type="hidden" name="secondary_muscles" value={muscle} />
                                 <button type="button" className="text-muted hover:text-rose-500 font-bold" onClick={() => setSelectedSecondaryMuscles(prev => prev.filter(m => m !== muscle))}>✕</button>
@@ -839,32 +938,30 @@ function ExerciseForm({
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-muted mb-2">Description</label>
+                <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Description</label>
                 <textarea
                     name="description"
                     defaultValue={ex?.description || ''}
                     rows={3}
-                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-muted mb-2">Instructions (one per line) *</label>
+                <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Instructions (one per line) *</label>
                 <textarea
                     name="instructions"
                     defaultValue={ex?.instructions?.join('\n') || ''}
                     rows={4}
-                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-lime-400 focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
                 />
             </div>
 
-            <div className="pt-2">
-                <Button type="submit" variant="primary" fullWidth disabled={saving}>
+            <div className="flex gap-2 pt-1">
+                <Button type="submit" variant="secondary" fullWidth disabled={saving} className="text-xs py-2">
                     {saving ? 'Saving...' : isEdit ? 'Update Exercise' : 'Save Custom Exercise'}
                 </Button>
-            </div>
-            <div className="pt-2 pb-2">
-                <Button type="button" variant="secondary" fullWidth onClick={onCancel}>
+                <Button type="button" variant="secondary" fullWidth onClick={onCancel} className="text-xs py-2">
                     Cancel
                 </Button>
             </div>

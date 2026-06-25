@@ -198,7 +198,7 @@ export default function Profile() {
                 {/* Status Messages Side by Side or Stacked without Boxes */}
                 <div className="flex flex-col gap-2 mb-6">
                     {success && (
-                        <p className="text-sm font-semibold text-lime-400 tracking-wide animate-in fade-in duration-300">
+                        <p className="text-sm font-semibold text-accent tracking-wide animate-in fade-in duration-300">
                             {success}
                         </p>
                     )}
@@ -254,7 +254,7 @@ export default function Profile() {
                                         value={getFormValue(field)}
                                         onChange={e => handleChange(field, e.target.value)}
                                         max={type === "date" ? new Date().toLocaleDateString('en-CA') : undefined}
-                                        className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-lime-400 transition-colors [color-scheme:dark]"
+                                        className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors [color-scheme:dark]"
                                     />
                                 )}
                             </div>
@@ -281,7 +281,7 @@ export default function Profile() {
                             <button
                                 onClick={saveProfile}
                                 disabled={saving}
-                                className="flex-1 bg-lime-400 text-black font-bold py-3 px-4 rounded-lg hover:bg-lime-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="flex-1 bg-accent text-black font-bold py-3 px-4 rounded-lg hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 {saving ? "Saving..." : "Save changes"}
                             </button>
@@ -296,7 +296,7 @@ export default function Profile() {
                         <>
                             <button
                                 onClick={() => { setEditing(true); setSuccess(null); }}
-                                className="flex-1 bg-lime-400 text-black font-bold py-3 px-4 rounded-lg hover:bg-lime-300 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                className="flex-1 bg-accent text-black font-bold py-3 px-4 rounded-lg hover:bg-accent-hover transition-all hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 Edit profile
                             </button>
@@ -322,7 +322,14 @@ export default function Profile() {
             {/* --- Confirm Account Deletion Modal --- */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-                    <div className="w-full max-w-md bg-card border border-subtle rounded-xl p-6 md:p-8 shadow-2xl">
+                    <div className="relative w-full max-w-md">
+                        <button
+                            onClick={() => { setShowDeleteModal(false); setPasswordConfirm(""); }}
+                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                        >
+                            Close
+                        </button>
+                        <div className="w-full bg-card border border-subtle rounded-xl p-6 md:p-8 shadow-2xl">
                         <h2 className="text-xl font-display text-rose-500 uppercase tracking-tight mb-2">Delete Account Permanently</h2>
                         <p className="text-sm text-muted mb-6 leading-relaxed">
                             This action cannot be undone. Please type your password to confirm you want to delete your profile and wipe all logged application metrics.
@@ -363,6 +370,7 @@ export default function Profile() {
                         </form>
                     </div>
                 </div>
+            </div>
             )}
         </div>
     );

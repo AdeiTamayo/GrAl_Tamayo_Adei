@@ -6,6 +6,7 @@ import TransparentNumericInput from "../components/TransparentNumericInput";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useNotification } from "../components/NotificationProvider";
 import { useWorkout } from "../components/WorkoutContext";
+import { useSettings } from "../components/SettingsContext";
 
 interface Routine {
     id: number;
@@ -39,6 +40,9 @@ export default function CurrentWorkout() {
         addRestTime,
     } = useWorkout();
 
+    const { settings } = useSettings();
+    const showRpe = settings?.show_rpe !== false;
+    const show1rm = settings?.show_1rm !== false;
     const [showExercisePicker, setShowExercisePicker] = useState(false);
     const [routines, setRoutines] = useState<Routine[]>([]);
     const [showRoutinePicker, setShowRoutinePicker] = useState(false);
@@ -61,6 +65,19 @@ export default function CurrentWorkout() {
             navigate('/active-workout', { replace: true });
         }
     }, [searchParams, navigate]);
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    useEffect(() => {
+        if (showExercisePicker || showRoutinePicker || showFinishModal || showSaveRoutineModal) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [showExercisePicker, showRoutinePicker, showFinishModal, showSaveRoutineModal]);
 
     const fetchRoutines = useCallback(async () => {
         try {
@@ -205,12 +222,13 @@ export default function CurrentWorkout() {
                         const setRes = await apiFetch(`/api/workouts/exercises/${workoutExerciseId}/sets`, {
                             method: "POST",
                             headers,
-                            body: JSON.stringify({
-                                weight: set.weight || 0,
-                                reps: set.repetitions || 0,
-                                time: ex.rest_time,
-                                note: set.is_done ? "Completed" : "Skipped"
-                            })
+                                body: JSON.stringify({
+                                    weight: set.weight || 0,
+                                    reps: set.repetitions || 0,
+                                    time: ex.rest_time,
+                                    note: set.note || null,
+                                    rpe: set.rpe || null
+                                })
                         });
                         const setData = await setRes.json();
                         if (setData.success) {
@@ -324,7 +342,7 @@ export default function CurrentWorkout() {
                             type="text"
                             value={workoutName}
                             onChange={(e) => setWorkoutName(e.target.value)}
-                            className="bg-transparent text-3xl font-bold font-display uppercase italic text-lime-400 border-none focus:ring-0 w-full"
+                            className="bg-transparent text-3xl font-bold font-display uppercase italic text-accent border-none focus:ring-0 w-full"
                         />
                         <div className="text-muted font-mono mt-1 text-lg">
                             {formatTime(elapsedTime)}
@@ -345,8 +363,8 @@ export default function CurrentWorkout() {
 
                 {isRestTimerActive && (
                     <div className="bg-surface border border-subtle p-4 rounded-xl mb-6 flex flex-wrap items-center gap-3 shadow-lg">
-                        <span className="font-bold uppercase tracking-wider text-lime-400 text-sm">Rest</span>
-                        <span className="font-mono text-2xl font-black text-lime-400">{formatTime(restTime)}</span>
+                        <span className="font-bold uppercase tracking-wider text-accent text-sm">Rest</span>
+                        <span className="font-mono text-2xl font-black text-accent">{formatTime(restTime)}</span>
                         <div className="flex gap-2 ml-auto">
                             <Button variant="secondary" onClick={() => addRestTime(15)}>
                                 +15s
@@ -374,33 +392,36 @@ export default function CurrentWorkout() {
                                         const achieved = diff <= 0;
                                         return (
                                             <div className="flex items-center gap-2 mt-1 text-sm">
-                                                <span className={`font-semibold ${achieved ? 'text-lime-400' : 'text-dim'}`}>
+                                                <span className={`font-semibold ${achieved ? 'text-accent' : 'text-dim'}`}>
                                                     Goal: {targetWeight} kg
                                                 </span>
                                                 {bestWeight > 0 && (
-                                                    <span className={`font-medium ${achieved ? 'text-lime-400' : 'text-amber-400'}`}>
+                                                    <span className={`font-medium ${achieved ? 'text-accent' : 'text-amber-400'}`}>
                                                         ({achieved ? '✓' : `${-diff.toFixed(1)} kg`})
                                                     </span>
                                                 )}
                                             </div>
                                         );
                                     })()}
-                                    {/* Inline Exercise rest modification control */}
-                                    <div className="flex items-center gap-1 mt-1 text-muted text-sm">
+                                    {/* Inline Exercise rest presets */}
+                                    <div className="flex items-center gap-2 mt-1 text-muted text-sm flex-wrap">
                                         <span>Target Rest:</span>
-                                        <button
-                                            onClick={() => updateExerciseRest(exIdx, ex.rest_time - 5)}
-                                            className="px-1.5 py-0.5 bg-elevated rounded hover:bg-hover font-bold"
-                                        >
-                                            -
-                                        </button>
-                                        <span className="font-mono font-bold text-lime-400 mx-1">{ex.rest_time}s</span>
-                                        <button
-                                            onClick={() => updateExerciseRest(exIdx, ex.rest_time + 5)}
-                                            className="px-1.5 py-0.5 bg-elevated rounded hover:bg-hover font-bold"
-                                        >
-                                            +
-                                        </button>
+                                        <span className="font-mono font-bold text-accent">{ex.rest_time}s</span>
+                                        <div className="flex gap-1">
+                                            {[60, 90, 120].map(preset => (
+                                                <button
+                                                    key={preset}
+                                                    onClick={() => updateExerciseRest(exIdx, preset)}
+                                                    className={`px-2 py-0.5 rounded font-bold text-xs transition-colors ${
+                                                        ex.rest_time === preset
+                                                            ? 'bg-accent text-white'
+                                                            : 'bg-elevated hover:bg-hover text-muted'
+                                                    }`}
+                                                >
+                                                    {preset}s
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                                 <button onClick={() => removeExercise(exIdx)} className="text-dim hover:text-red-400 transition-colors self-start sm:self-center">
@@ -416,8 +437,10 @@ export default function CurrentWorkout() {
                                             <th className="py-2 px-2 w-12">Set</th>
                                             <th className="py-2 px-2">Weight (kg)</th>
                                             <th className="py-2 px-2">Reps</th>
-                                            <th className="py-2 px-2">e1RM</th>
-                                            <th className="py-2 px-2">Goal</th>
+                                            {showRpe && <th className="py-2 px-2 w-16">RPE</th>}
+                                            {show1rm && <th className="py-2 px-2 w-16">e1RM</th>}
+                                            <th className="py-2 px-2 text-center">Goal</th>
+                                            <th className="py-2 px-2 min-w-[100px]">Notes</th>
                                             <th className="py-2 px-2 text-right"></th>
                                         </tr>
                                     </thead>
@@ -429,8 +452,8 @@ export default function CurrentWorkout() {
                                                         type="button"
                                                         onClick={() => toggleSetDone(exIdx, setIdx)}
                                                         className={`w-6 h-6 rounded-md flex items-center justify-center transition-all border ${set.is_done
-                                                            ? 'bg-lime-400 border-lime-400 text-black'
-                                                            : 'border-subtle hover:border-lime-400 bg-transparent'
+                                                            ? 'bg-accent border-accent text-black'
+                                                            : 'border-subtle hover:border-accent bg-transparent'
                                                             }`}
                                                     >
                                                         {set.is_done && "✓"}
@@ -447,7 +470,7 @@ export default function CurrentWorkout() {
                                                         max={999}
                                                         step={0.1}
                                                         className="w-full"
-                                                        inputClassName="w-full bg-card border border-subtle rounded-lg py-1.5 px-3 text-sm focus:border-lime-400 focus:ring-0 transition-colors disabled:opacity-50"
+                                                        inputClassName="w-full bg-card border border-subtle rounded-lg py-1.5 px-3 text-sm focus:border-accent focus:ring-0 transition-colors disabled:opacity-50"
                                                     />
                                                 </td>
                                                 <td className="py-2 px-1">
@@ -460,19 +483,36 @@ export default function CurrentWorkout() {
                                                         max={999}
                                                         step={1}
                                                         className="w-full"
-                                                        inputClassName="w-full bg-card border border-subtle rounded-lg py-1.5 px-3 text-sm focus:border-lime-400 focus:ring-0 transition-colors disabled:opacity-50"
+                                                        inputClassName="w-full bg-card border border-subtle rounded-lg py-1.5 px-3 text-sm focus:border-accent focus:ring-0 transition-colors disabled:opacity-50"
                                                     />
                                                 </td>
-                                                <td className="py-2 px-2">
-                                                    {set.weight && set.repetitions ? (
-                                                        <span className="font-mono text-xs text-lime-400/80">
-                                                            {(Number(set.weight) * (1 + Number(set.repetitions) / 30)).toFixed(1)}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-dim text-xs">—</span>
-                                                    )}
-                                                </td>
-                                                <td className="py-2 px-2">
+                                                {showRpe && (
+                                                    <td className="py-2 px-1">
+                                                        <TransparentNumericInput
+                                                            value={set.rpe ?? ""}
+                                                            onChange={(val) => updateSet(exIdx, setIdx, "rpe", val)}
+                                                            disabled={set.is_done}
+                                                            placeholder="—"
+                                                            min={1}
+                                                            max={10}
+                                                            step={0.5}
+                                                            className="w-full"
+                                                            inputClassName="w-full bg-card border border-subtle rounded-lg py-1.5 px-2 text-sm focus:border-accent focus:ring-0 transition-colors disabled:opacity-50 text-center"
+                                                        />
+                                                    </td>
+                                                )}
+                                                {show1rm && (
+                                                    <td className="py-2 px-2">
+                                                        {set.weight && set.repetitions ? (
+                                                            <span className="font-mono text-xs text-accent/80">
+                                                                {(Number(set.weight) * (1 + Number(set.repetitions) / 30)).toFixed(1)}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-dim text-xs">—</span>
+                                                        )}
+                                                    </td>
+                                                )}
+                                                <td className="py-2 px-2 text-center">
                                                     {(() => {
                                                         const goal = goals[ex.exercise_id];
                                                         if (!goal) return <span className="text-dim text-xs">—</span>;
@@ -483,11 +523,21 @@ export default function CurrentWorkout() {
                                                         const diff = targetWeight - setWeight;
                                                         const achieved = diff <= 0;
                                                         return (
-                                                            <span className={`font-mono text-xs font-semibold ${achieved ? 'text-lime-400' : 'text-amber-400'}`}>
+                                                            <span className={`font-mono text-xs font-semibold ${achieved ? 'text-accent' : 'text-amber-400'}`}>
                                                                 {achieved ? '✓' : `-${diff.toFixed(1)} kg`}
                                                             </span>
                                                         );
                                                     })()}
+                                                </td>
+                                                <td className="py-2 px-2 min-w-[100px]">
+                                                    <input
+                                                        type="text"
+                                                        value={set.note}
+                                                        onChange={(e) => updateSet(exIdx, setIdx, "note", e.target.value)}
+                                                        disabled={set.is_done}
+                                                        placeholder="Note"
+                                                        className="w-full bg-transparent border-b border-subtle/50 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none py-1 disabled:opacity-50"
+                                                    />
                                                 </td>
                                                 <td className="py-2 px-2 text-right">
                                                     <button onClick={() => removeSet(exIdx, setIdx)} className="text-dim hover:text-red-400 font-bold text-lg">×</button>
@@ -515,10 +565,15 @@ export default function CurrentWorkout() {
 
                 {showExercisePicker && (
                     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
-                            <div className="p-4 border-b border-subtle flex justify-between items-center">
-                                <h2 className="text-xl font-bold uppercase italic text-lime-400">Select Exercise</h2>
-                                <button onClick={() => setShowExercisePicker(false)} className="text-dim hover:text-white">✕</button>
+                        <div className="relative w-full max-w-2xl max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
+                            <button
+                                onClick={() => setShowExercisePicker(false)}
+                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                            >
+                                Close
+                            </button>
+                            <div className="p-4 border-b border-subtle">
+                                <h2 className="text-xl font-bold uppercase italic text-accent">Select Exercise</h2>
                             </div>
                             <div className="flex-1 overflow-y-auto p-4">
                                 <ExercisePicker onSelect={handleAddExercise} />
@@ -529,20 +584,23 @@ export default function CurrentWorkout() {
 
                 {showRoutinePicker && (
                     <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-lg bg-card border border-subtle rounded-3xl p-6">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-bold uppercase italic text-lime-400">Load Routine</h2>
-                                <button onClick={() => setShowRoutinePicker(false)} className="text-dim hover:text-white">✕</button>
-                            </div>
+                        <div className="relative w-full max-w-lg bg-card border border-subtle rounded-3xl p-6">
+                            <button
+                                onClick={() => setShowRoutinePicker(false)}
+                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                            >
+                                Close
+                            </button>
+                            <h2 className="text-xl font-bold uppercase italic text-accent mb-6">Load Routine</h2>
                             <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                                 {routines.length === 0 && <p className="text-dim text-center">No routines found.</p>}
                                 {routines.map((r) => (
                                     <button
                                         key={r.id}
                                         onClick={() => loadRoutine(r.id)}
-                                        className="w-full text-left p-4 bg-surface hover:bg-elevated border border-subtle hover:border-lime-400/50 rounded-2xl transition-all group"
+                                        className="w-full text-left p-4 bg-surface hover:bg-elevated border border-subtle hover:border-accent/50 rounded-2xl transition-all group"
                                     >
-                                        <div className="font-bold text-body group-hover:text-lime-400 transition-colors">{r.name}</div>
+                                        <div className="font-bold text-body group-hover:text-accent transition-colors">{r.name}</div>
                                         <div className="text-xs text-dim mt-1">Click to load exercises</div>
                                     </button>
                                 ))}
@@ -553,7 +611,14 @@ export default function CurrentWorkout() {
 
                 {showSaveRoutineModal && (
                     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="relative w-full max-w-sm">
+                            <button
+                                onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }}
+                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                            >
+                                Close
+                            </button>
+                            <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                             <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
                                 Save as Routine
                             </h2>
@@ -565,14 +630,14 @@ export default function CurrentWorkout() {
                                 value={routineName}
                                 onChange={(e) => setRoutineName(e.target.value)}
                                 placeholder="Routine name"
-                                className="w-full bg-surface border border-subtle rounded-lg py-2.5 px-3 text-sm text-body placeholder:text-dim focus:border-lime-400 focus:ring-0 transition-colors mb-4"
+                                className="w-full bg-surface border border-subtle rounded-lg py-2.5 px-3 text-sm text-body placeholder:text-dim focus:border-accent focus:ring-0 transition-colors mb-4"
                                 autoFocus
                                 onKeyDown={(e) => { if (e.key === 'Enter') saveAsRoutine(); }}
                             />
                             <div className="space-y-3">
                                 <button
                                     onClick={saveAsRoutine}
-                                    className="w-full bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 transition-all"
+                                    className="w-full bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover transition-all"
                                 >
                                     Create Routine
                                 </button>
@@ -585,11 +650,19 @@ export default function CurrentWorkout() {
                             </div>
                         </div>
                     </div>
+                </div>
                 )}
 
                 {showFinishModal && (
                     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-                        <div className="w-full max-w-sm bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="relative w-full max-w-sm">
+                            <button
+                                onClick={() => setShowFinishModal(false)}
+                                className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
+                            >
+                                Close
+                            </button>
+                            <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                             <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
                                 Finish Workout
                             </h2>
@@ -599,7 +672,7 @@ export default function CurrentWorkout() {
                             <div className="space-y-3">
                                 <button
                                     onClick={() => { setShowFinishModal(false); saveWorkout(); }}
-                                    className="w-full bg-lime-400 text-black font-bold py-3 rounded-lg hover:bg-lime-300 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                    className="w-full bg-accent text-black font-bold py-3 rounded-lg hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98] transition-all"
                                 >
                                     Save Workout
                                 </button>
@@ -624,6 +697,7 @@ export default function CurrentWorkout() {
                             </div>
                         </div>
                     </div>
+                </div>
                 )}
             </div>
         </div>

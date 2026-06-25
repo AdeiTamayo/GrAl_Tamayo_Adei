@@ -18,6 +18,7 @@ const workoutRoutes = require('./routes/workouts');
 const prRoutes = require('./routes/prs');
 const goalRoutes = require('./routes/goals');
 const plannedWorkoutRoutes = require('./routes/plannedWorkouts');
+const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -54,6 +55,7 @@ app.use('/api/workouts', workoutRoutes);
 app.use('/api/prs', prRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/planned-workouts', plannedWorkoutRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // 404 fallback handler
 app.use((req, res) => {

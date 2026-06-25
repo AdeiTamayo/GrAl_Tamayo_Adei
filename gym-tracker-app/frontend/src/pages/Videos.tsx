@@ -14,6 +14,12 @@ export default function UserVideos() {
     const [filterDate, setFilterDate] = useState<string>("");
     const [sortOrder, setSortOrder] = useState<string>("desc");
 
+    // Pagination
+    const [videosPage, setVideosPage] = useState(1);
+    const pageSize = 9;
+    const totalPages = Math.max(1, Math.ceil(videos.length / pageSize));
+    const paginatedVideos = videos.slice((videosPage - 1) * pageSize, videosPage * pageSize);
+
     const token = localStorage.getItem("user_login_token");
 
     useEffect(() => {
@@ -24,6 +30,7 @@ export default function UserVideos() {
         }
 
         setLoading(true);
+        setVideosPage(1);
 
         const params = new URLSearchParams();
         if (filterType !== "all") params.append("type", filterType);
@@ -63,7 +70,7 @@ export default function UserVideos() {
             {/* TITLE SECTION */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-subtle pb-5">
                 <div>
-                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-lime-400">Your Videos</h1>
+                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Your Videos</h1>
                 </div>
 
                 {/* FILTER CONTROLS BAR */}
@@ -118,43 +125,67 @@ export default function UserVideos() {
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {videos.map(video => (
-                        <div
-                            key={video.id}
-                            className="bg-card border border-subtle/80 rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-hover/80 transition-all duration-200"
-                        >
-                            <div className="bg-black border border-subtle rounded-lg overflow-hidden relative aspect-[3/4] shadow-inner mb-3 flex items-center justify-center">
-                                <video
-                                    className="w-full h-full object-contain"
-                                    controls
-                                    preload="metadata"
-                                >
-                                    <source
-                                        src={`http://localhost:8000${video.processed_url}`}
-                                        type="video/mp4"
-                                    />
-                                </video>
-                            </div>
+                <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {paginatedVideos.map(video => (
+                            <div
+                                key={video.id}
+                                className="bg-card border border-subtle/80 rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-hover/80 transition-all duration-200"
+                            >
+                                <div className="bg-black border border-subtle rounded-lg overflow-hidden relative aspect-[3/4] shadow-inner mb-3 flex items-center justify-center">
+                                    <video
+                                        className="w-full h-full object-contain"
+                                        controls
+                                        preload="metadata"
+                                    >
+                                        <source
+                                            src={`http://localhost:8000${video.processed_url}`}
+                                            type="video/mp4"
+                                        />
+                                    </video>
+                                </div>
 
-                            {/* CARD DETAILS FOOTER */}
-                            <div className="pt-2 border-t border-subtle flex items-center justify-between gap-2">
-                                <div className="truncate">
-                                    <strong className="text-xs font-bold text-lime-400 uppercase tracking-wider block truncate">
-                                        {video.process_type}
-                                    </strong>
-                                    <span className="text-[10px] tracking-tight text-dim font-mono mt-0.5 block">
-                                        {new Date(video.created_at).toLocaleDateString(undefined, {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric'
-                                        })}
-                                    </span>
+                                {/* CARD DETAILS FOOTER */}
+                                <div className="pt-2 border-t border-subtle flex items-center justify-between gap-2">
+                                    <div className="truncate">
+                                        <strong className="text-xs font-bold text-accent uppercase tracking-wider block truncate">
+                                            {video.process_type}
+                                        </strong>
+                                        <span className="text-[10px] tracking-tight text-dim font-mono mt-0.5 block">
+                                            {new Date(video.created_at).toLocaleDateString(undefined, {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric'
+                                            })}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+                        ))}
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-subtle/60">
+                            <button
+                                onClick={() => setVideosPage((p) => Math.max(1, p - 1))}
+                                disabled={videosPage === 1}
+                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                            >
+                                &larr; Prev
+                            </button>
+                            <span className="text-xs text-muted font-medium">
+                                Page {videosPage} of {totalPages}
+                            </span>
+                            <button
+                                onClick={() => setVideosPage((p) => Math.min(totalPages, p + 1))}
+                                disabled={videosPage === totalPages}
+                                className="text-xs font-semibold text-dim hover:text-body disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1"
+                            >
+                                Next &rarr;
+                            </button>
                         </div>
-                    ))}
-                </div>
+                    )}
+                </>
             )}
         </div>
     );
@@ -177,7 +208,7 @@ function DateFilterButton({ value, onChange }: { value: string; onChange: (val: 
             <button
                 type="button"
                 onClick={() => setOpen(!open)}
-                className="w-full bg-surface border border-subtle rounded-lg px-4 py-3 text-left flex items-center justify-between gap-2 text-heading hover:border-hover transition-colors focus:border-lime-400 focus:outline-none"
+                className="w-full bg-surface border border-subtle rounded-lg px-4 py-3 text-left flex items-center justify-between gap-2 text-heading hover:border-hover transition-colors focus:border-accent focus:outline-none"
             >
                 <span>{value || "Any date"}</span>
                 <svg className={`w-3 h-3 text-dim transition-transform ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,11 +224,14 @@ function DateFilterButton({ value, onChange }: { value: string; onChange: (val: 
                 </button>
             )}
             {open && (
-                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150">
-                    <Calendar
-                        selectedDate={value || undefined}
-                        onSelect={(date) => { onChange(date); setOpen(false); }}
-                    />
+                <div className="absolute left-0 mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150 min-w-[280px]">
+                    <div className="relative border border-accent/50 rounded-xl bg-surface shadow-xl">
+                        <Calendar
+                            selectedDate={value || undefined}
+                            onSelect={(date) => { onChange(date); setOpen(false); }}
+                            className="!border-0 !shadow-none bg-surface"
+                        />
+                    </div>
                 </div>
             )}
         </div>

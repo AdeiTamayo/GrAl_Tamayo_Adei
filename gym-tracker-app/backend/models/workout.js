@@ -40,7 +40,8 @@ class Workout {
                     s.weight,
                     s.repetitions,
                     s.time AS set_time,
-                    s.note AS set_note
+                    s.note AS set_note,
+                    s.rpe AS set_rpe
                 FROM workout_exercises we
                 JOIN exercises e ON we.exercise_id = e.id
                 LEFT JOIN sets s ON we.id = s.workout_exercise_id
@@ -75,7 +76,8 @@ class Workout {
                         weight: row.weight,
                         repetitions: row.repetitions,
                         time: row.set_time,
-                        note: row.set_note
+                        note: row.set_note,
+                        rpe: row.set_rpe
                     });
                 }
             });
@@ -180,7 +182,7 @@ class Workout {
         }
     }
 
-    static async insertSet(workoutExerciseId, weight, reps, time, note) {
+    static async insertSet(workoutExerciseId, weight, reps, time, note, rpe) {
         try {
             const isMissing = (v) => v === null || v === undefined;
             if (isMissing(weight) && isMissing(reps) && isMissing(time)) {
@@ -196,8 +198,8 @@ class Workout {
             const setNumber = setNumRes.rows[0].next_set;
 
             const query = `
-                INSERT INTO sets (workout_exercise_id, set_number, weight, repetitions, time, note)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                INSERT INTO sets (workout_exercise_id, set_number, weight, repetitions, time, note, rpe)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
                 RETURNING *;
             `;
             const result = await pool.query(query, [
@@ -206,7 +208,8 @@ class Workout {
                 weight,
                 reps,
                 time,
-                note
+                note,
+                rpe || null
             ]);
             return result.rows[0];
         } catch (error) {
@@ -216,15 +219,15 @@ class Workout {
     }
 
     // Update a specific set
-    static async updateSet(setId, weight, reps, time) {
+    static async updateSet(setId, weight, reps, time, rpe) {
         try {
             const query = `
                 UPDATE sets
-                SET weight = $1, repetitions = $2, time = $3
-                WHERE id = $4
+                SET weight = $1, repetitions = $2, time = $3, rpe = $4
+                WHERE id = $5
                 RETURNING *;
             `;
-            const result = await pool.query(query, [weight, reps, time, setId]);
+            const result = await pool.query(query, [weight, reps, time, rpe || null, setId]);
             return result.rows[0];
         } catch (error) {
             console.error('[Workout Model] Error updating set:', error.message);

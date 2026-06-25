@@ -49,16 +49,16 @@ export default function Select({ value, onChange, options, placeholder = "Select
                 </svg>
             </button>
             {open && (
-                <ul className="absolute z-20 w-full mt-1 bg-card border border-subtle rounded-xl shadow-2xl overflow-y-auto max-h-90 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
+                <ul className="absolute z-20 w-full mt-1 bg-card border border-subtle rounded-xl shadow-2xl overflow-y-auto max-h-60 py-2 animate-in fade-in slide-in-from-top-1 duration-150">
                     {options.map(o => (
                         <li
                             key={o.value}
                             onClick={() => { onChange(o.value); setOpen(false); }}
-                            className={`px-4 py-2.5 cursor-pointer transition-colors text-sm flex justify-between items-center ${value === o.value ? "bg-lime-400/10 text-lime-400" : "text-muted hover:bg-surface hover:text-white"}`}
+                            className={`px-4 py-2.5 cursor-pointer transition-colors text-sm flex justify-between items-center ${value === o.value ? "bg-accent/10 text-accent" : "text-muted hover:bg-surface hover:text-white"}`}
                         >
                             <span>{o.label}</span>
                             {value === o.value && (
-                                <svg className="w-4 h-4 text-lime-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
                                 </svg>
                             )}
