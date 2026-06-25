@@ -123,7 +123,7 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                             onClick={() => onSelect?.(dateStr)}
                             className={`
                                 relative rounded-lg transition-all flex items-center justify-center
-                                ${compact ? 'aspect-[4/3] text-xs' : 'aspect-square text-sm font-semibold'}
+                                ${compact ? 'aspect-[4/4] text-xs' : 'aspect-square text-sm font-semibold'}
                                 ${isSelected
                                     ? 'bg-accent text-black font-bold'
                                     : isToday
@@ -136,12 +136,11 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                             {!isSelected && (event || hasGoal || plannedDates?.has(dateStr)) && (
                                 <span className={`absolute flex gap-[3px] items-center ${compact ? 'bottom-0.5' : 'bottom-1'}`}>
                                     {event && (
-                                        <span className={`rounded-full ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'} ${
-                                            event.status === 'completed' ? 'bg-accent' :
-                                            event.status === 'rest' ? 'bg-blue-400' :
-                                            event.status === 'missed' ? 'bg-rose-500' :
-                                            'bg-elevated'
-                                        }`} />
+                                        <span className={`rounded-full ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'} ${event.status === 'completed' ? 'bg-accent' :
+                                                event.status === 'rest' ? 'bg-blue-400' :
+                                                    event.status === 'missed' ? 'bg-rose-500' :
+                                                        'bg-elevated'
+                                            }`} />
                                     )}
                                     {hasGoal && !event?.status?.startsWith('completed') && (
                                         <span className={`rounded-full bg-amber-400 ${compact ? 'w-1 h-1' : 'w-1.5 h-1.5'}`} />
