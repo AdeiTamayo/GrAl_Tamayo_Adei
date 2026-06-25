@@ -51,10 +51,17 @@
 }
 
 @layer base {
+    * {
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
     body {
         color-scheme: var(--color-scheme);
         @apply bg-body text-body;
-        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+        @apply outline-none ring-2 ring-accent/50 ring-offset-2 ring-offset-bg-body;
     }
 
     ::-webkit-scrollbar {
@@ -73,7 +80,7 @@
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        @apply bg-zinc-600;
+        background: var(--bg-hover);
     }
 
     input[type="number"]::-webkit-inner-spin-button,
@@ -141,6 +148,8 @@
     .shadow-accent\/5 { --tw-shadow-color: rgba(var(--accent-rgb), 0.05); }
     .shadow-accent\/20 { --tw-shadow-color: rgba(var(--accent-rgb), 0.2); }
     .hover\:shadow-accent\/5:hover { --tw-shadow-color: rgba(var(--accent-rgb), 0.05); }
+    .ring-accent\/50 { --tw-ring-color: rgba(var(--accent-rgb), 0.5); }
+    .ring-offset-bg-body { --tw-ring-offset-color: var(--bg-body); }
 }
 
 @keyframes slide-in-left {

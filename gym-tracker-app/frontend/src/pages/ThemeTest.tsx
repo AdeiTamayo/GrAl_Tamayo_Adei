@@ -1,6 +1,6 @@
 export default function ThemeTest() {
     return (
-        <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
+        <div className="max-w-4xl mx-auto px-4 py-8 space-y-10 animate-in fade-in duration-200">
             <h1 className="font-display text-3xl font-bold tracking-tight uppercase italic text-accent">
                 Theme Contrast Test
             </h1>

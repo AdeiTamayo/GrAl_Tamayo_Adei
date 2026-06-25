@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import CloseButton from "./CloseButton";
 
 interface ModalProps {
     open: boolean;
@@ -34,12 +35,7 @@ export default function Modal({
             className={`fixed inset-0 z-[100] ${backdrop === "darker" ? "bg-black/80" : "bg-black/60"} backdrop-blur-sm flex items-center justify-center p-4 ${className}`}
         >
             <div className={`relative w-full ${maxWidthClasses[maxWidth] || maxWidthClasses.md} ${containerClassName}`}>
-                <button
-                    onClick={onClose}
-                    className="absolute top-2 right-2 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm hover:bg-accent hover:text-black transition-colors"
-                >
-                    Close
-                </button>
+                <CloseButton onClick={onClose} />
                 {children}
             </div>
         </div>

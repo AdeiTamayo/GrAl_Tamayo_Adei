@@ -11,6 +11,7 @@ import ConfirmModal from "../components/ConfirmModal";
 import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
 import ErrorBanner from "../components/ErrorBanner";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 
 interface PRSummary {
     id: number;
@@ -202,10 +203,10 @@ export default function PersonalRecords() {
         return [...prHistory].sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight))[0]?.id;
     }, [prHistory]);
 
-    if (loading) return <div className="p-8 text-muted font-medium animate-pulse">Loading Personal Records...</div>;
+    if (loading) return <div className="p-8"><LoadingSkeleton type="page" /></div>;
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
             <div>
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Personal Records</h1>
             </div>
@@ -231,7 +232,7 @@ export default function PersonalRecords() {
                     </Button>
 
                     <Modal open={showAddForm} onClose={() => setShowAddForm(false)} maxWidth="sm">
-                        <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                             <h3 className="font-display text-lg font-bold text-accent mb-4">Log a PR</h3>
                             <form onSubmit={createPR} className="flex flex-col gap-4">
                                 <button

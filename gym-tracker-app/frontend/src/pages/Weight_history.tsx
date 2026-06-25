@@ -11,6 +11,7 @@ import EditButton from "../components/EditButton";
 // 1. Import Recharts components
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import ErrorBanner from "../components/ErrorBanner";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 
 interface WeightEntry {
     id: number;
@@ -202,10 +203,10 @@ export default function WeightHistory() {
         }
     }
 
-    if (isLoading) return <div className="p-8 text-muted font-medium animate-pulse">Loading weight history...</div>;
+    if (isLoading) return <div className="p-8"><LoadingSkeleton type="page" /></div>;
 
     return (
-        <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+        <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
             <div>
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Weight History</h1>
             </div>

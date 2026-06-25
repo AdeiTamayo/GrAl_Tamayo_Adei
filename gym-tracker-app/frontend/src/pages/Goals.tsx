@@ -11,6 +11,7 @@ import EditButton from "../components/EditButton";
 import Calendar from "../components/Calendar";
 import DatePicker from "../components/DatePicker";
 import ErrorBanner from "../components/ErrorBanner";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 
 interface Goal {
     id: number;
@@ -199,10 +200,10 @@ export default function Goals() {
         setGoalsPage(1);
     }, [filteredGoals.length]);
 
-    if (isLoading) return <div className="p-8 text-muted font-medium animate-pulse">Loading goals...</div>;
+    if (isLoading) return <div className="p-8"><LoadingSkeleton type="card" count={3} /></div>;
 
     return (
-        <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+        <div className="max-w-6xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
             <div>
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Goals</h1>
             </div>
@@ -222,7 +223,7 @@ export default function Goals() {
                     </Button>
 
                     <Modal open={showGoalModal || editingGoalId !== null} onClose={resetForm} maxWidth="sm">
-                        <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                             <h3 className="font-display text-lg font-bold text-accent mb-4">
                                 {editingGoalId ? "Edit Goal" : "Add New Goal"}
                             </h3>

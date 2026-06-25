@@ -35,7 +35,7 @@ export default function Notification({ message, type = 'success', duration = 500
 
     return (
         <div
-            className={`fixed top-4 right-4 z-[200] max-w-sm w-full transition-all duration-300 ease-out
+            className={`fixed top-16 right-4 z-[200] max-w-sm w-full transition-all duration-300 ease-out
                 ${isVisible && !isExiting ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'}
                 ${isExiting ? 'opacity-0 translate-x-8' : ''}
             `}

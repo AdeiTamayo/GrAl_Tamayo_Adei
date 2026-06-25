@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Calendar from "../components/Calendar";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 import Button from "../components/Button";
 import DeleteButton from "../components/DeleteButton";
 import Modal from "../components/Modal";
@@ -195,10 +196,10 @@ export default function WorkoutCalendar() {
         setShowPlanModal(true);
     }
 
-    if (isLoading) return <div className="p-8 text-muted font-medium animate-pulse">Loading workout calendar...</div>;
+    if (isLoading) return <div className="p-8"><LoadingSkeleton type="page" /></div>;
 
     return (
-        <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+        <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
             <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Workout Calendar</h1>
             <p className="text-dim text-sm font-medium -mt-6">Click a day to see workouts and goal deadlines or schedule workouts.</p>
 

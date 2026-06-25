@@ -140,10 +140,10 @@ export default function Register() {
     const pwdStrength = getPasswordStrength(password);
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 py-12">
+        <div className="min-h-screen flex items-center justify-center p-4 py-12 animate-in fade-in duration-200">
             <form onSubmit={handleSubmit} className="bg-card border border-subtle rounded-xl p-6 sm:p-10 w-full max-w-2xl flex flex-col gap-6 shadow-2xl">
                 <div className="border-b border-subtle/80 pb-6 mb-2">
-                    <h2 className="text-4xl font-display text-body uppercase tracking-tight mb-2">Register</h2>
+                    <h2 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent mb-2">Register</h2>
                     <p className="text-muted font-medium">Create your account to start tracking your journey.</p>
                 </div>
 
@@ -159,7 +159,7 @@ export default function Register() {
                     <div className="space-y-4">
                         <h3 className="text-xs uppercase tracking-wider text-dim font-bold mb-2">Identify</h3>
                         <div>
-                            <label className="block text-sm font-semibold text-muted mb-2">Name (optional)</label>
+                            <label className="block text-xs font-semibold text-muted mb-1.5">Name (optional)</label>
                             <input
                                 type="text"
                                 value={name}
@@ -169,7 +169,7 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-muted mb-2">Surname (optional)</label>
+                            <label className="block text-xs font-semibold text-muted mb-1.5">Surname (optional)</label>
                             <input
                                 type="text"
                                 value={surname}
@@ -179,8 +179,8 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-semibold text-muted">Email</label>
+                            <div className="flex justify-between items-center mb-1.5">
+                                <label className="block text-xs font-semibold text-muted">Email</label>
                                 {email && !isEmailValid(email) && (
                                     <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Invalid Format</span>
                                 )}
@@ -200,8 +200,8 @@ export default function Register() {
                     <div className="space-y-4">
                         <h3 className="text-xs uppercase tracking-wider text-dim font-bold mb-2">Security</h3>
                         <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-semibold text-muted">Password</label>
+                            <div className="flex justify-between items-center mb-1.5">
+                                <label className="block text-xs font-semibold text-muted">Password</label>
                                 {password && (
                                     <span className={`text-[10px] font-bold uppercase tracking-wider ${pwdStrength.color}`}>
                                         Strength: {pwdStrength.label}
@@ -218,8 +218,8 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-semibold text-muted">Confirm Password</label>
+                            <div className="flex justify-between items-center mb-1.5">
+                                <label className="block text-xs font-semibold text-muted">Confirm Password</label>
                                 {confirmPassword && password !== confirmPassword && (
                                     <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Mismatch</span>
                                 )}
@@ -254,7 +254,7 @@ export default function Register() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-muted mb-2">Weight (kg)</label>
+                                <label className="block text-xs font-semibold text-muted mb-1.5">Weight (kg)</label>
                                 <TransparentNumericInput
                                     value={weight}
                                     onChange={setWeight}
@@ -266,7 +266,7 @@ export default function Register() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-semibold text-muted mb-2">Height (cm)</label>
+                                <label className="block text-xs font-semibold text-muted mb-1.5">Height (cm)</label>
                                 <TransparentNumericInput
                                     value={height}
                                     onChange={setHeight}
@@ -280,7 +280,7 @@ export default function Register() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-muted mb-2">Birth date</label>
+                                <label className="block text-xs font-semibold text-muted mb-1.5">Birth date</label>
                                 <DatePicker
                                     value={birthDate}
                                     onChange={setBirthDate}

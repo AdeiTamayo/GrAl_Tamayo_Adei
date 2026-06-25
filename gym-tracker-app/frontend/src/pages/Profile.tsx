@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import CloseButton from "../components/CloseButton";
+import ErrorBanner from "../components/ErrorBanner";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 import DatePicker from "../components/DatePicker";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import Select from "../components/Select";
@@ -178,38 +181,31 @@ export default function Profile() {
         return String(val);
     }
 
-    if (loading) return <p className="text-muted p-8">Loading...</p>;
+    if (loading) return <div className="p-8"><LoadingSkeleton type="card" count={3} /></div>;
 
     // Clean text error format for initial fetch failures
-    if (error && !profile) return <p className="text-rose-500 font-semibold p-8">{error}</p>;
+    if (error && !profile) return <div className="p-8"><ErrorBanner message={error} /></div>;
     if (!profile || !form) return null;
 
     return (
-        <div className="max-w-3xl mx-auto p-4 md:p-8 mt-4 md:mt-8 relative">
+        <div className="max-w-3xl mx-auto p-4 md:p-8 mt-4 md:mt-8 relative animate-in fade-in duration-200">
             <div className="bg-card border border-subtle rounded-xl p-6 md:p-10 shadow-xl">
                 {/* Header */}
                 <div className="flex items-center gap-4 pb-6 border-b border-subtle/80 mb-6">
                     <div>
-                        <h1 className="text-3xl font-display text-body uppercase tracking-tight">
+                        <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">
                             {profile.name} {profile.surname}
                         </h1>
                         <p className="text-muted font-medium mt-1">Manage your account details and preferences.</p>
                     </div>
                 </div>
 
-                {/* Status Messages Side by Side or Stacked without Boxes */}
-                <div className="flex flex-col gap-2 mb-6">
-                    {success && (
-                        <p className="text-sm font-semibold text-accent tracking-wide animate-in fade-in duration-300">
-                            {success}
-                        </p>
-                    )}
-                    {error && (
-                        <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">
-                            {error}
-                        </p>
-                    )}
-                </div>
+                {success && (
+                    <p className="text-sm font-semibold text-accent tracking-wide animate-in fade-in duration-300 mb-4">
+                        {success}
+                    </p>
+                )}
+                {error && <ErrorBanner message={error} />}
 
                 {/* Read-only Info */}
                 {!editing && (
@@ -240,7 +236,7 @@ export default function Profile() {
                             { label: "Birth date", field: "birth_date" as keyof UserProfile, type: "date" },
                         ].map(({ label, field, type }) => (
                             <div key={field}>
-                                <label className="block text-sm font-semibold text-muted mb-2">{label}</label>
+                                <label className="block text-xs font-semibold text-muted mb-1.5">{label}</label>
                                 {type === "number" ? (
                                     <TransparentNumericInput
                                         value={getFormValue(field)}
@@ -335,13 +331,8 @@ export default function Profile() {
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
                     <div className="relative w-full max-w-md">
-                        <button
-                            onClick={() => { setShowDeleteModal(false); setPasswordConfirm(""); }}
-                            className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                        >
-                            Close
-                        </button>
-                        <div className="w-full bg-card border border-subtle rounded-xl p-6 md:p-8 shadow-2xl">
+                        <CloseButton onClick={() => { setShowDeleteModal(false); setPasswordConfirm(""); }} />
+                        <div className="w-full bg-card border border-subtle rounded-2xl p-6 md:p-8 shadow-2xl">
                         <h2 className="text-xl font-display text-rose-500 uppercase tracking-tight mb-2">Delete Account Permanently</h2>
                         <p className="text-sm text-muted mb-6 leading-relaxed">
                             This action cannot be undone. Please type your password to confirm you want to delete your profile and wipe all logged application metrics.

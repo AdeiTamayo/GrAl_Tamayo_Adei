@@ -36,9 +36,9 @@ export default function Settings() {
     }
 
     return (
-        <div className="max-w-3xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+        <div className="max-w-3xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
             <div>
-                <h1 className="font-display text-3xl font-bold tracking-tight text-accent uppercase italic">
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">
                     Settings
                 </h1>
                 <p className="text-dim mt-1 text-sm">Manage your application preferences.</p>

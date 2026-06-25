@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
+import ErrorBanner from '../components/ErrorBanner';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 import Modal from '../components/Modal';
 import Pagination from '../components/Pagination';
 import Select from '../components/Select';
@@ -420,7 +422,7 @@ export default function Exercises() {
 
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-6">
+        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-6 animate-in fade-in duration-200">
             <div className="flex justify-between items-center">
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Exercises</h1>
                 {viewMode === 'list' && (
@@ -428,14 +430,9 @@ export default function Exercises() {
                 )}
             </div>
 
-            {/* Clean Status Messages without Box Borders */}
-            <div className="flex flex-col gap-1.5">
-                {loading && <p className="text-sm text-muted font-medium">Loading...</p>}
-                {error && viewMode !== 'edit' && (
-                    <p className="text-sm font-semibold text-rose-500 tracking-wide animate-in fade-in duration-300">{error}</p>
-                )}
-                {success && <p className="text-sm font-semibold text-accent tracking-wide animate-in fade-in duration-300">{success}</p>}
-            </div>
+            {loading && <LoadingSkeleton type="card" count={3} />}
+            {error && viewMode !== 'edit' && <ErrorBanner message={error} />}
+            {success && <p className="text-sm font-semibold text-accent tracking-wide animate-in fade-in duration-300">{success}</p>}
 
             <div className="flex flex-col sm:flex-row gap-4">
                 {viewMode === 'details' || viewMode === 'edit' ? (

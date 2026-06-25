@@ -330,7 +330,7 @@ export default function CurrentWorkout() {
     };
 
     return (
-        <div className="p-6 font-sans bg-body text-body min-h-screen">
+        <div className="p-6 font-sans bg-body text-body min-h-screen animate-in fade-in duration-200">
             <div className="max-w-4xl mx-auto">
                 <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
@@ -431,10 +431,10 @@ export default function CurrentWorkout() {
                                         <tr className="text-dim text-xs uppercase tracking-widest border-b border-subtle">
                                             <th className="py-2 px-2 w-12 text-center">Status</th>
                                             <th className="py-2 px-2 w-12">Set</th>
-                                            <th className="py-2 px-2">Weight (kg)</th>
-                                            <th className="py-2 px-2">Reps</th>
-                                            {showRpe && <th className="py-2 px-2 w-16">RPE</th>}
-                                            {show1rm && <th className="py-2 px-2 w-16">e1RM</th>}
+                                            <th className="py-2 px-2 text-right">Weight (kg)</th>
+                                            <th className="py-2 px-2 text-right">Reps</th>
+                                            {showRpe && <th className="py-2 px-2 w-16 text-center">RPE</th>}
+                                            {show1rm && <th className="py-2 px-2 w-16 text-center">e1RM</th>}
                                             <th className="py-2 px-2 text-center">Goal</th>
                                             <th className="py-2 px-2 min-w-[100px]">Notes</th>
                                             <th className="py-2 px-2 text-right"></th>
@@ -560,7 +560,7 @@ export default function CurrentWorkout() {
                 </div>
 
                 <Modal open={showExercisePicker} onClose={() => setShowExercisePicker(false)} maxWidth="2xl" backdrop="darker">
-                    <div className="max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-3xl flex flex-col">
+                    <div className="max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-2xl flex flex-col">
                         <div className="p-4 border-b border-subtle">
                             <h2 className="text-xl font-bold uppercase italic text-accent">Select Exercise</h2>
                         </div>
@@ -571,7 +571,7 @@ export default function CurrentWorkout() {
                 </Modal>
 
                 <Modal open={showRoutinePicker} onClose={() => setShowRoutinePicker(false)} maxWidth="lg" backdrop="darker">
-                    <div className="bg-card border border-subtle rounded-3xl p-6">
+                    <div className="bg-card border border-subtle rounded-2xl p-6">
                         <h2 className="text-xl font-bold uppercase italic text-accent mb-6">Load Routine</h2>
                         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                             {routines.length === 0 && <p className="text-dim text-center">No routines found.</p>}

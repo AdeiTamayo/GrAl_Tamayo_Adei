@@ -1,3 +1,5 @@
+import CloseButton from "./CloseButton";
+
 interface ConfirmModalProps {
     message: string;
     onConfirm: () => void;
@@ -11,12 +13,7 @@ export default function ConfirmModal({ message, onConfirm, onCancel, confirmLabe
     return (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="relative w-full max-w-sm">
-                <button
-                    onClick={onCancel}
-                    className="absolute -top-3 right-0 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm"
-                >
-                    Close
-                </button>
+                <CloseButton onClick={onCancel} />
                 <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                 <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">Confirm</h2>
                 <p className="text-sm text-muted mb-6">{message}</p>

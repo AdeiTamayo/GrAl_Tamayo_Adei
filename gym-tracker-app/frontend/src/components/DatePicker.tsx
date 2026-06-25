@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import Calendar from "./Calendar";
+import CloseButton from "./CloseButton";
 
 interface DatePickerProps {
     value: string;
@@ -54,13 +55,8 @@ export default function DatePicker({ value, onChange, placeholder = "Select date
             </button>
             {open && (
                 <div className={`absolute ${menuAlign === 'right' ? 'right-0' : 'left-0'} mt-1 z-30 animate-in fade-in slide-in-from-top-1 duration-150 min-w-[280px]`}>
-                    <div className="relative border border-accent/50 rounded-xl bg-surface shadow-xl">
-                        <button
-                            onClick={() => setOpen(false)}
-                            className="absolute -top-3 right-3 z-10 px-2.5 py-0.5 text-xs font-semibold text-accent bg-surface border border-accent/50 rounded-full shadow-sm"
-                        >
-                            Close
-                        </button>
+                    <div className="relative border border-accent/50 rounded-2xl bg-surface shadow-xl">
+                        <CloseButton onClick={() => setOpen(false)} />
                         <Calendar
                             selectedDate={value || undefined}
                             onSelect={(d) => { onChange(d); setOpen(false); }}

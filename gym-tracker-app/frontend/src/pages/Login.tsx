@@ -64,10 +64,10 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="min-h-[80vh] flex items-center justify-center p-4 animate-in fade-in duration-200">
             <form onSubmit={handleSubmit} className="bg-card border border-subtle rounded-xl p-6 sm:p-8 w-full max-w-md flex flex-col gap-5 shadow-2xl">
                 <div>
-                    <h2 className="text-3xl font-display text-body uppercase tracking-tight mb-1">Login</h2>
+                    <h2 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent mb-1">Login</h2>
                     <p className="text-muted text-sm">Welcome back to GymTracker.</p>
                 </div>
 
@@ -79,8 +79,8 @@ export default function Login() {
                 )}
 
                 <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="block text-sm font-semibold text-muted">Email</label>
+                    <div className="flex justify-between items-center mb-1.5">
+                        <label className="block text-xs font-semibold text-muted">Email</label>
                         {email && !isEmailValid(email) && (
                             <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Incorrect format</span>
                         )}
@@ -97,7 +97,7 @@ export default function Login() {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-muted mb-2">Password</label>
+                    <label className="block text-xs font-semibold text-muted mb-1.5">Password</label>
                     <input
                         type="password"
                         value={password}

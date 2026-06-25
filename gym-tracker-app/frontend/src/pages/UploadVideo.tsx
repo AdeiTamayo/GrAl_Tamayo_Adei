@@ -148,7 +148,7 @@ export default function UploadVideo() {
 
     return (
         <>
-            <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+            <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
             <div>
                 <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Video Analysis</h1>
             </div>

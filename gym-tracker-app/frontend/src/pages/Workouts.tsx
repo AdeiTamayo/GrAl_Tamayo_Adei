@@ -10,6 +10,7 @@ import DatePicker from '../components/DatePicker';
 import ConfirmModal from '../components/ConfirmModal';
 import DeleteButton from '../components/DeleteButton';
 import ErrorBanner from '../components/ErrorBanner';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 import { useNotification } from "../components/NotificationProvider";
 
 // ---- TYPES & INTERFACES ----
@@ -564,10 +565,10 @@ export default function WorkoutsManagement() {
         }
     };
 
-    if (isLoadingInit) return <p className="text-muted p-8">Loading...</p>;
+    if (isLoadingInit) return <LoadingSkeleton type="page" />;
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
+        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
             {/* Top Toolbar Level */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-subtle pb-5">
                 <div>
@@ -584,7 +585,7 @@ export default function WorkoutsManagement() {
                 </Button>
 
                 <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="sm">
-                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                         <h3 className="font-display text-lg font-bold text-accent mb-4">Create New Workout</h3>
                         <form onSubmit={createWorkout} className="flex flex-col gap-4">
                             <div>
@@ -817,7 +818,7 @@ export default function WorkoutsManagement() {
             )}
 
             <Modal open={showDetailsDropdown} onClose={() => setShowDetailsDropdown(false)} maxWidth="sm">
-                <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     <h3 className="font-display text-lg font-bold text-accent mb-4">Edit Core Metadata</h3>
                     <div className="flex flex-col gap-3">
                         <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all" />
@@ -832,7 +833,7 @@ export default function WorkoutsManagement() {
             </Modal>
 
             <Modal open={showSaveRoutineModal} onClose={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} maxWidth="sm">
-                <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     <h3 className="font-display text-lg font-bold text-accent mb-4">Save as Routine</h3>
                     <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name</label>
                     <input

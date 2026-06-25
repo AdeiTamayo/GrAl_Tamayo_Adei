@@ -81,7 +81,7 @@ export default function ExerciseHistory() {
     }, [history]);
 
     return (
-        <div className="p-6 font-sans bg-body text-body min-h-screen">
+        <div className="p-6 font-sans bg-body text-body min-h-screen animate-in fade-in duration-200">
             <div className="max-w-6xl mx-auto">
                 <header className="mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
