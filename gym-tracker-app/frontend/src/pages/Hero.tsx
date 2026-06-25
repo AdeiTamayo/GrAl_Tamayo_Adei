@@ -45,16 +45,6 @@ const secondaryNav = [
     { to: '/upload', label: 'Upload', desc: 'Upload a new video for analysis', icon: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' },
 ];
 
-function NavIcon({ path }: { path: string }) {
-    const found = [...primaryNav, ...secondaryNav].find(n => n.to === path);
-    if (!found) return null;
-    return (
-        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={found.icon} />
-        </svg>
-    );
-}
-
 export default function Hero() {
     const location = useLocation();
     const { user, email: stateEmail } = (location.state as LocationState) || {};
@@ -72,7 +62,7 @@ export default function Hero() {
     const [goalDates, setGoalDates] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
     const [dashboardError, setDashboardError] = useState<string | null>(null);
-    const [showMore, setShowMore] = useState(false);
+    const [showActions, setShowActions] = useState(false);
 
     const token = localStorage.getItem('user_login_token');
 
@@ -177,17 +167,6 @@ export default function Hero() {
                             </svg>
                             <span>Start Workout</span>
                         </Link>
-                        <Link to="/settings" className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors" aria-label="Settings">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                        </Link>
-                        <Link to="/profile" className="p-2 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors" aria-label="Profile">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                        </Link>
                     </div>
                 </header>
 
@@ -262,21 +241,7 @@ export default function Hero() {
                     </div>
                 </div>
 
-                <div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                        {primaryNav.map(link => (
-                            <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 border border-subtle rounded-xl px-4 py-3 hover:border-accent/40 hover:bg-elevated/40 transition-all hover:shadow-lg hover:shadow-accent/5 group">
-                                <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
-                                    <NavIcon path={link.to} />
-                                </div>
-                                <div>
-                                    <p className="font-display text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">{link.label}</p>
-                                    <p className="text-xs text-dim leading-relaxed group-hover:text-muted transition-colors">{link.desc}</p>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
+
 
                 {!loading && videos.length > 0 && (
                     <div>
@@ -302,38 +267,63 @@ export default function Hero() {
                     </div>
                 )}
 
-                <div>
-                    <button onClick={() => setShowMore(!showMore)} className="flex items-center gap-2 text-xs font-bold tracking-[0.15em] uppercase text-dim hover:text-body transition-colors mb-4">
-                        <span>More — {secondaryNav.length} sections</span>
-                        <svg className={`w-3.5 h-3.5 transition-transform ${showMore ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    {showMore && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
-                            {secondaryNav.map(link => (
-                                <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 border border-subtle rounded-xl px-4 py-3 hover:border-accent/40 hover:bg-elevated/40 transition-all hover:shadow-lg hover:shadow-accent/5 group">
-                                    <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
-                                        <NavIcon path={link.to} />
-                                    </div>
-                                    <div>
-                                        <p className="font-display text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">{link.label}</p>
-                                        <p className="text-xs text-dim leading-relaxed group-hover:text-muted transition-colors">{link.desc}</p>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
-                </div>
+
             </div>
 
-            <Link to="/active-workout" className="fixed bottom-4 left-4 right-4 md:hidden bg-accent text-black font-bold rounded-xl hover:bg-accent-hover active:scale-[0.98] border border-transparent px-6 py-3.5 transition-all text-center shadow-2xl shadow-accent/20 z-40 flex items-center justify-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Start Workout</span>
-            </Link>
+            <div className="fixed left-0 top-[57px] bottom-0 z-40 flex">
+                {showActions && (
+                    <div className="w-80 bg-card border-r border-subtle shadow-2xl overflow-y-auto animate-in fade-in slide-in-from-left-1 duration-150">
+                        <div className="p-5 space-y-5">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-bold tracking-[0.15em] uppercase text-heading">Modules</h3>
+                                <button
+                                    onClick={() => setShowActions(false)}
+                                    className="p-1.5 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Link to="/settings" className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors" aria-label="Settings">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </Link>
+                                <Link to="/profile" className="p-2.5 rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors" aria-label="Profile">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                </Link>
+                            </div>
+                            <div className="space-y-1.5">
+                                {[...primaryNav, ...secondaryNav].map(link => (
+                                    <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 border border-subtle rounded-lg px-4 py-3 hover:border-accent/40 hover:bg-elevated/40 transition-all group">
+                                        <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={(primaryNav.find(n => n.to === link.to) || secondaryNav.find(n => n.to === link.to))?.icon || ''} />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">{link.label}</p>
+                                            <p className="text-xs text-dim leading-relaxed">{link.desc}</p>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                <button
+                    onClick={() => setShowActions(!showActions)}
+                    className="self-start mt-20 bg-card border border-l-0 border-subtle rounded-r-xl shadow-lg px-2 py-6 text-xs font-bold tracking-[0.15em] uppercase text-dim hover:text-body hover:bg-elevated transition-colors"
+                    style={{ writingMode: 'vertical-rl' }}
+                >
+                    {showActions ? 'Close' : 'Modules'}
+                </button>
+            </div>
         </div>
     );
 }
