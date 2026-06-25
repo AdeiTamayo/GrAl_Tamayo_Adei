@@ -36,6 +36,7 @@ export default function WeightHistory() {
     const [currentPage, setCurrentPage] = useState(1);
     const [sortBy, setSortBy] = useState<'date' | 'weight'>('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    const [hidden, setHidden] = useState(false);
 
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(
@@ -309,7 +310,15 @@ export default function WeightHistory() {
                 {/* List */}
                 <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Entries</h2>
+                        <div className="flex items-center gap-3">
+                            <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Entries</h2>
+                            <button
+                                onClick={() => setHidden(h => !h)}
+                                className="text-xs font-semibold text-dim hover:text-body transition-colors"
+                            >
+                                {hidden ? `Show (${entries.length})` : 'Hide'}
+                            </button>
+                        </div>
                         <div className="flex items-center gap-2 text-xs">
                             <span className="text-dim">Sort by</span>
                             <div className="w-28">
@@ -332,7 +341,7 @@ export default function WeightHistory() {
                             </button>
                         </div>
                     </div>
-                    {entries.length === 0 ? (
+                    {hidden ? null : entries.length === 0 ? (
                         <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
                             <p className="text-dim font-medium italic">No weight entries yet.</p>
                         </div>

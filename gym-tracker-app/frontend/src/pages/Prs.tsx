@@ -5,7 +5,7 @@ import Button from "../components/Button";
 import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
 import TransparentNumericInput from "../components/TransparentNumericInput";
-import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
+import ExercisePicker from "../components/ExercisePicker";
 import DatePicker from "../components/DatePicker";
 import ConfirmModal from "../components/ConfirmModal";
 import DeleteButton from "../components/DeleteButton";
@@ -56,7 +56,6 @@ export default function PersonalRecords() {
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
     const [editRecord, setEditRecord] = useState<{ id: number; weight: number | ""; repetitions: number | ""; date: string; note: string } | null>(null);
 
-    // Removed useMemo to guarantee fresh authorization tokens on every network dispatch
     const getHeaders = () => ({
         "Content-Type": "application/json",
         "Authorization": `Bearer ${localStorage.getItem("user_login_token")}`
@@ -85,7 +84,6 @@ export default function PersonalRecords() {
             const res = await apiFetch(`/api/prs/${exerciseId}/history`, { headers: getHeaders() });
             const data = await res.json();
             if (data.success) {
-                // Ensure predictable ordering from latest to oldest for the timeline feed
                 const sortedHistory = (data.data as PRHistory[]).sort(
                     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
                 );
@@ -188,7 +186,6 @@ export default function PersonalRecords() {
         }
     }
 
-    // Chart explicitly needs chronological sorting (Oldest -> Newest)
     const chartData = useMemo(() => {
         return [...prHistory]
             .map(h => ({
@@ -199,7 +196,6 @@ export default function PersonalRecords() {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [prHistory]);
 
-    // Derived State: Find the absolute heaviest lift record to accurately assign labels
     const currentMaxRecordId = useMemo(() => {
         if (prHistory.length === 0) return null;
         return [...prHistory].sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight))[0]?.id;
@@ -210,36 +206,28 @@ export default function PersonalRecords() {
     return (
         <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8">
             <div>
-                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Personal Records </h1>
+                <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Personal Records</h1>
             </div>
             {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-lg font-medium text-sm">Error: {error}</div>}
 
             <div className="flex gap-6 items-start flex-col lg:flex-row">
-
-                {/* --- Left Column: PR Summary --- */}
                 <div className="flex-none w-full lg:w-[450px] space-y-6">
-
-                    {/* Add Manual PR Form */}
-                    <div className="bg-card border border-subtle rounded-xl p-7 shadow-xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Log a PR</h3>
-                            <Button
-                                onClick={() => {
-                                    setFormExerciseId("");
-                                    setFormExerciseName("");
-                                    setNewWeight("");
-                                    setNewReps("");
-                                    setNewDate("");
-                                    setNewNote("");
-                                    setShowAddForm(true);
-                                }}
-                                variant="primary"
-                                className="!px-4 !py-2"
-                            >
-                                Add PR
-                            </Button>
-                        </div>
-                    </div>
+                    <Button
+                        onClick={() => {
+                            setFormExerciseId("");
+                            setFormExerciseName("");
+                            setNewWeight("");
+                            setNewReps("");
+                            setNewDate("");
+                            setNewNote("");
+                            setShowAddForm(true);
+                        }}
+                        variant="primary"
+                        fullWidth
+                        className="!py-3"
+                    >
+                        Log a PR
+                    </Button>
 
                     <Modal open={showAddForm} onClose={() => setShowAddForm(false)} maxWidth="sm">
                         <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -365,7 +353,7 @@ export default function PersonalRecords() {
                     </div>
                 </div>
 
-                {/* --- Right Column: PR History Timeline --- */}
+                {/* Right Column: PR History Timeline */}
                 {selectedExerciseName && (
                     <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 lg:p-8 shadow-xl">
                         <div className="flex justify-between items-start mb-6">
@@ -373,7 +361,6 @@ export default function PersonalRecords() {
                             <Button onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} variant="secondary" className="!px-4 !py-2">Close</Button>
                         </div>
 
-                        {/* Progress Chart */}
                         <div className="h-64 md:h-80 w-full mb-10 bg-surface/30 rounded-2xl p-4 border border-subtle/50">
                             {chartData.length > 0 ? (
                                 <ResponsiveContainer width="100%" height="100%">

@@ -220,7 +220,7 @@ export default function Goals() {
                         Add New Goal
                     </Button>
 
-                    <Modal open={showGoalModal || editingGoalId !== null} onClose={() => { setShowGoalModal(false); if (!editingGoalId) resetForm(); }} maxWidth="sm">
+                    <Modal open={showGoalModal || editingGoalId !== null} onClose={resetForm} maxWidth="sm">
                         <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                             <h3 className="font-display text-lg font-bold text-accent mb-4">
                                 {editingGoalId ? "Edit Goal" : "Add New Goal"}
@@ -270,7 +270,6 @@ export default function Goals() {
                                 <DatePicker value={expectedDate} onChange={setExpectedDate} placeholder="Set due date (optional)" />
 
                                 <div className="flex gap-2 justify-end mt-1">
-                                    <Button type="button" onClick={() => { setShowGoalModal(false); if (editingGoalId) resetForm(); }} variant="secondary" className="px-4 py-2 text-xs rounded-lg">Cancel</Button>
                                     <Button type="submit" variant="primary" className="px-4 py-2 text-xs rounded-lg">
                                         {editingGoalId ? "Update Goal" : "Create Goal"}
                                     </Button>
