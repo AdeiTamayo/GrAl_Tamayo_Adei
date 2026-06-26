@@ -240,10 +240,11 @@ export default function Register() {
                         <h3 className="text-xs uppercase tracking-wider text-dim font-bold mb-2">Physical Details (Optional)</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
+                                <label className="block text-xs font-semibold text-muted mb-1.5">Gender</label>
                                 <Select
-                                    label="Gender"
                                     value={genderId}
                                     onChange={setGenderId}
+                                    buttonClassName="!px-3 !py-3 text-sm"
                                     options={[
                                         { value: "", label: "Select" },
                                         { value: "male", label: "Male" },

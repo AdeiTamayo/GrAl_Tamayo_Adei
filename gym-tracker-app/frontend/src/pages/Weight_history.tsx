@@ -311,16 +311,16 @@ export default function WeightHistory() {
 
                 {/* List */}
                 <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
-                    <div className="flex items-center justify-between mb-5">
-                        <div className="flex items-center gap-3">
-                            <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Entries</h2>
-                            <button
-                                onClick={() => setHidden(h => !h)}
-                                className="text-xs font-semibold text-dim hover:text-body transition-colors"
-                            >
-                                {hidden ? `Show (${entries.length})` : 'Hide'}
-                            </button>
-                        </div>
+                        <div className="flex items-center justify-between mb-5">
+                            <div className="flex items-center gap-3">
+                                <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Entries</h2>
+                                <button
+                                    onClick={() => setHidden(h => !h)}
+                                    className={`text-sm font-semibold px-3 py-1.5 rounded-lg border transition-colors ${hidden ? 'bg-surface border-accent/30 text-accent hover:bg-accent/10' : 'bg-surface/40 border-subtle/80 text-dim hover:text-body hover:border-hover'}`}
+                                >
+                                    {hidden ? `Show (${entries.length})` : 'Hide'}
+                                </button>
+                            </div>
                         <div className="flex items-center gap-2 text-xs">
                             <span className="text-dim">Sort by</span>
                             <div className="w-28">

@@ -8,7 +8,7 @@ export default function DeleteButton({ onClick, className = "" }: DeleteButtonPr
         <button
             type="button"
             onClick={onClick}
-            className={`p-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg border border-rose-500/20 transition-colors shrink-0 ${className}`}
+            className={`p-2 flex items-center justify-center bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-lg border border-rose-500/20 transition-colors shrink-0 ${className}`}
             title="Delete"
         >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">

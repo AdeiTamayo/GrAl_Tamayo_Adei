@@ -9,6 +9,7 @@ import ExercisePicker, { Exercise as ExerciseMeta } from '../components/Exercise
 import DatePicker from '../components/DatePicker';
 import ConfirmModal from '../components/ConfirmModal';
 import DeleteButton from '../components/DeleteButton';
+import CloseButton from '../components/CloseButton';
 import ErrorBanner from '../components/ErrorBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { useNotification } from "../components/NotificationProvider";
@@ -86,6 +87,9 @@ export default function WorkoutsManagement() {
     // Save as routine state
     const [showSaveRoutineModal, setShowSaveRoutineModal] = useState(false);
     const [routineName, setRoutineName] = useState("");
+
+    // Sidebar toggle
+    const [sidebarHidden, setSidebarHidden] = useState(false);
 
     // Search, filter, pagination
     const [searchQuery, setSearchQuery] = useState("");
@@ -626,9 +630,20 @@ export default function WorkoutsManagement() {
 
             <div className="flex gap-6 items-start flex-col xl:flex-row">
                 {/* Left Listing Sidebar */}
-                <div className="flex-none w-full xl:w-[400px]">
+                <div className={`flex-none w-full ${sidebarHidden ? 'hidden' : 'xl:w-[400px]'}`}>
                     <div className="bg-surface/60 border border-subtle rounded-xl p-5 shadow-md">
-                        <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase mb-4">Saved Logs List</h2>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase">Saved Logs List</h2>
+                            <button
+                                onClick={() => setSidebarHidden(true)}
+                                className="p-1.5 rounded-lg text-dim hover:text-body hover:bg-surface/80 transition-colors"
+                                title="Hide sidebar"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                                </svg>
+                            </button>
+                        </div>
 
                         {/* Search & Filter Bar */}
                         <div className="flex flex-col sm:flex-row gap-2 mb-4">
@@ -697,13 +712,37 @@ export default function WorkoutsManagement() {
                 </div>
 
                 {/* Right Interactive Workspace Panel */}
+                {sidebarHidden && !selectedWorkout && (
+                    <div className="flex-1 w-full text-center py-12">
+                        <button
+                            onClick={() => setSidebarHidden(false)}
+                            className="bg-surface border border-subtle rounded-xl px-6 py-3 text-sm font-semibold text-muted hover:text-body hover:border-hover transition-all inline-flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                            </svg>
+                            Show sidebar
+                        </button>
+                    </div>
+                )}
                 {selectedWorkout && (
                     <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative">
 
                         {/* Header Details Wrapper */}
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex-1 mr-4">
-                                <h2 className="font-display text-2xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
+                                {sidebarHidden && (
+                                    <button
+                                        onClick={() => setSidebarHidden(false)}
+                                        className="text-xs font-semibold text-dim hover:text-body transition-colors mb-2 block"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                                        </svg>
+
+                                    </button>
+                                )}
+                                <h2 className="font-display text-3xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
                                     {selectedWorkout.name}
                                 </h2>
                                 <p className="font-mono text-xs text-dim mt-1">{selectedWorkout.date?.substring(0, 10)}</p>
@@ -726,9 +765,7 @@ export default function WorkoutsManagement() {
                                     Save as Routine
                                 </Button>
 
-                                <button type="button" onClick={() => setSelectedWorkout(null)} className="px-2.5 py-0.5 text-xs font-semibold text-accent bg-card border border-accent/30 rounded-full shadow-sm hover:bg-accent hover:text-black transition-colors">
-                                    Close
-                                </button>
+                                <CloseButton onClick={() => setSelectedWorkout(null)} floating={false} />
                             </div>
                         </div>
 

@@ -1,4 +1,5 @@
 import CloseButton from "./CloseButton";
+import Button from "./Button";
 
 interface ConfirmModalProps {
     message: string;
@@ -18,22 +19,20 @@ export default function ConfirmModal({ message, onConfirm, onCancel, confirmLabe
                 <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">Confirm</h2>
                 <p className="text-sm text-muted mb-6">{message}</p>
                 <div className="space-y-3">
-                    <button
+                    <Button
                         onClick={() => { onConfirm(); onCancel(); }}
-                        className={`w-full font-bold py-3 rounded-lg transition-all ${
-                            variant === 'danger'
-                                ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20 hover:bg-rose-500 hover:text-white'
-                                : 'bg-accent text-black hover:bg-accent-hover'
-                        }`}
+                        variant={variant === 'danger' ? 'danger' : 'primary'}
+                        fullWidth
                     >
                         {confirmLabel}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={onCancel}
-                        className="w-full bg-elevated text-muted font-bold py-3 rounded-lg hover:bg-hover transition-all"
+                        variant="secondary"
+                        fullWidth
                     >
                         {cancelLabel}
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

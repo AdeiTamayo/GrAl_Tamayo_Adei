@@ -8,6 +8,7 @@ import ExercisePicker, { Exercise as ExerciseMeta } from '../components/Exercise
 import { apiFetch } from "../utils/api";
 import ConfirmModal from '../components/ConfirmModal';
 import DeleteButton from '../components/DeleteButton';
+import CloseButton from '../components/CloseButton';
 
 interface SetTemplate {
     id: number;
@@ -49,6 +50,9 @@ export default function RoutinesManagement() {
 
     const [error, setError] = useState<string | null>(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+    // Sidebar toggle
+    const [sidebarHidden, setSidebarHidden] = useState(false);
 
     // Pagination
     const [routinesPage, setRoutinesPage] = useState(1);
@@ -269,9 +273,20 @@ export default function RoutinesManagement() {
 
             <div className="flex gap-6 items-start flex-col xl:flex-row">
                 {/* Left Listing Sidebar */}
-                <div className="flex-none w-full xl:w-[400px]">
+                <div className={`flex-none w-full ${sidebarHidden ? 'hidden' : 'xl:w-[400px]'}`}>
                     <div className="bg-surface/60 border border-subtle rounded-xl p-5 shadow-md">
-                        <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase mb-4">Saved Templates Shelf</h2>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase">Saved Templates Shelf</h2>
+                            <button
+                                onClick={() => setSidebarHidden(true)}
+                                className="p-1.5 rounded-lg text-dim hover:text-body hover:bg-surface/80 transition-colors"
+                                title="Hide sidebar"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                                </svg>
+                            </button>
+                        </div>
                         {routines.length === 0 ? (
                             <div className="text-center py-10 bg-card/40 rounded-xl border border-subtle/60">
                                 <p className="text-dim text-sm font-medium italic px-4">No templates configured yet.</p>
@@ -310,12 +325,33 @@ export default function RoutinesManagement() {
                 </div>
 
                 {/* Right Interactive Workspace Panel */}
+                {sidebarHidden && !selectedRoutine && (
+                    <div className="flex-1 w-full text-center py-12">
+                        <button
+                            onClick={() => setSidebarHidden(false)}
+                            className="bg-surface border border-subtle rounded-xl px-6 py-3 text-sm font-semibold text-muted hover:text-body hover:border-hover transition-all inline-flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                            </svg>
+                            Show sidebar
+                        </button>
+                    </div>
+                )}
                 {selectedRoutine && (
                     <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative">
 
                         {/* Header Details Wrapper with Dropdown Flow Control */}
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex-1 mr-4">
+                                {sidebarHidden && (
+                                    <button
+                                        onClick={() => setSidebarHidden(false)}
+                                        className="text-xs font-semibold text-dim hover:text-body transition-colors mb-2 block"
+                                    >
+                                        &larr; List
+                                    </button>
+                                )}
                                 <h2 className="font-display text-2xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
                                     {selectedRoutine.name}
                                 </h2>
@@ -335,9 +371,7 @@ export default function RoutinesManagement() {
                                     Modify Details
                                 </Button>
 
-                                <Button type="button" onClick={() => setSelectedRoutine(null)} variant="secondary" className="px-3 py-1.5 text-xs font-medium">
-                                    Close
-                                </Button>
+                                <CloseButton onClick={() => setSelectedRoutine(null)} floating={false} />
                             </div>
                         </div>
 

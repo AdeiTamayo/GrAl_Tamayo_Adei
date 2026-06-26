@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import TransparentNumericInput from './TransparentNumericInput';
 import DeleteButton from './DeleteButton';
 
@@ -43,10 +43,26 @@ export default function EditableExerciseCard({
     const setsExist = sets.length > 0;
     const lastSet = setsExist ? sets[sets.length - 1] : null;
 
-    const gridSpacerCols = (() => {
-        const taken = 1 + 2 + 2 + 2 + (goalWeight ? 2 : 0) + (showNotesField ? (goalWeight ? 2 : 4) : 0) + 1;
-        return 12 - taken;
-    })();
+    // Standard column allocation map
+    const gridCols = useMemo(() => {
+        const base = { set: 1, weight: 2, reps: 2, time: 2, goal: 0, note: 0, del: 1 };
+        if (goalWeight) base.goal = 2;
+        if (showNotesField) base.note = goalWeight ? 2 : 4;
+
+        const taken = base.set + base.weight + base.reps + base.time + base.goal + base.note + base.del;
+        const remaining = 12 - taken;
+
+        if (remaining >= 10) { base.weight = 4; base.reps = 3; base.time = 3; }
+        else if (remaining >= 8) { base.weight = 3; base.reps = 3; base.time = 2; }
+
+        return base;
+    }, [goalWeight, showNotesField]);
+
+    // Calculate remaining spacer columns dynamically to avoid breaking the 12-column layout
+    const gridSpacerCols = useMemo(() => {
+        const total = gridCols.set + gridCols.weight + gridCols.reps + gridCols.time + gridCols.goal + gridCols.note + gridCols.del;
+        return 12 - total;
+    }, [gridCols]);
 
     // Local addition form element inputs
     const [newWeight, setNewWeight] = useState<string>("");
@@ -83,7 +99,7 @@ export default function EditableExerciseCard({
     };
 
     return (
-        <div className="bg-surface border border-subtle rounded-xl p-5 shadow-sm">
+        <div className="bg-surface border border-subtle rounded-xl p-6 shadow-md">
             {/* Component Action Bar Header */}
             <div className="flex justify-between items-center mb-5 pb-3 border-b border-subtle/60">
                 <h4 className="font-display font-bold text-body uppercase tracking-wide text-base">
@@ -93,7 +109,7 @@ export default function EditableExerciseCard({
                     <div className="flex items-center justify-center gap-2 mt-1 text-xs">
                         <span className="text-dim">Goal: {goalWeight} kg</span>
                         {(() => {
-                            const bestWeight = Math.max(...sets.map(s => s.weight ?? 0));
+                            const bestWeight = Math.max(...sets.map(s => s.weight ?? 0), 0);
                             if (bestWeight <= 0) return null;
                             const diff = goalWeight - bestWeight;
                             const achieved = diff <= 0;
@@ -121,23 +137,20 @@ export default function EditableExerciseCard({
                     <div className="space-y-2">
                         {/* Widescreen Columns Headers Metadata Labelings */}
                         <div className="hidden md:grid grid-cols-12 gap-3 px-2 text-[10px] font-mono font-bold uppercase tracking-widest text-dim pb-1">
-                            <div className="col-span-1">Set</div>
-                            <div className="col-span-2">Weight (kg)</div>
-                            <div className="col-span-2">Reps</div>
-                            <div className="col-span-2">Time (s)</div>
-                            {goalWeight && <div className="col-span-2">Goal</div>}
-                            {showNotesField && <div className={goalWeight ? "col-span-2" : "col-span-4"}>Note</div>}
-                            {gridSpacerCols > 0 && <div className={`col-span-${gridSpacerCols}`} />}
-                            <div className="col-span-1 text-right"></div>
+                            <div style={{ gridColumn: `span ${gridCols.set} / span ${gridCols.set}` }}>Set</div>
+                            <div style={{ gridColumn: `span ${gridCols.weight} / span ${gridCols.weight}` }}>Weight (kg)</div>
+                            <div style={{ gridColumn: `span ${gridCols.reps} / span ${gridCols.reps}` }}>Reps</div>
+                            <div style={{ gridColumn: `span ${gridCols.time} / span ${gridCols.time}` }}>Time (s)</div>
+                            {goalWeight && <div style={{ gridColumn: `span ${gridCols.goal} / span ${gridCols.goal}` }}>Goal</div>}
+                            {showNotesField && <div style={{ gridColumn: `span ${gridCols.note} / span ${gridCols.note}` }}>Note</div>}
+                            <div style={{ gridColumn: `span ${gridCols.del} / span ${gridCols.del}` }} className="text-right"></div>
                         </div>
 
                         {/* Metrics Data Loop Rows */}
                         <div className="space-y-2">
                             {sets.map((set) => (
                                 <div key={set.id} className="space-y-0">
-                                    <div
-                                        className="grid grid-cols-4 md:grid-cols-12 gap-2 md:gap-3 items-center bg-card/40 md:bg-transparent border border-subtle/40 md:border-none p-3 md:p-0 rounded-xl md:rounded-none group"
-                                    >
+                                    <div className="grid grid-cols-4 md:grid-cols-12 gap-2 md:gap-3 items-center bg-card/40 md:bg-transparent border border-subtle/40 md:border-none p-3 md:p-0 rounded-xl md:rounded-none group">
                                         {/* Set Index Metric Node */}
                                         <div className="col-span-4 md:col-span-1 flex items-center justify-between md:block border-b border-subtle/40 md:border-0 pb-2 md:pb-0 mb-1 md:mb-0">
                                             <span className="text-[10px] font-mono uppercase text-dim md:hidden">Set Count</span>
@@ -147,7 +160,7 @@ export default function EditableExerciseCard({
                                         </div>
 
                                         {/* Mass Weight Input Wrapper */}
-                                        <div className="col-span-2 md:col-span-2">
+                                        <div className="col-span-2" style={{ gridColumn: window.innerWidth >= 768 ? `span ${gridCols.weight} / span ${gridCols.weight}` : undefined }}>
                                             <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Weight</span>
                                             <TransparentNumericInput
                                                 value={set.weight ?? ""}
@@ -158,7 +171,7 @@ export default function EditableExerciseCard({
                                         </div>
 
                                         {/* Repeat Executions Wrapper */}
-                                        <div className="col-span-2 md:col-span-2">
+                                        <div className="col-span-2" style={{ gridColumn: window.innerWidth >= 768 ? `span ${gridCols.reps} / span ${gridCols.reps}` : undefined }}>
                                             <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Reps</span>
                                             <TransparentNumericInput
                                                 value={set.reps ?? ""}
@@ -169,7 +182,7 @@ export default function EditableExerciseCard({
                                         </div>
 
                                         {/* Temporal Duration Trackings */}
-                                        <div className="col-span-2 md:col-span-2">
+                                        <div className="col-span-2" style={{ gridColumn: window.innerWidth >= 768 ? `span ${gridCols.time} / span ${gridCols.time}` : undefined }}>
                                             <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Time (s)</span>
                                             <TransparentNumericInput
                                                 value={set.time ?? ""}
@@ -201,7 +214,7 @@ export default function EditableExerciseCard({
 
                                         {/* Readable Row Note Toggle Button */}
                                         {showNotesField && (
-                                            <div className={`col-span-2 ${goalWeight ? 'md:col-span-2' : 'md:col-span-4'}`}>
+                                            <div className="col-span-2" style={{ gridColumn: window.innerWidth >= 768 ? `span ${gridCols.note} / span ${gridCols.note}` : undefined }}>
                                                 <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Note</span>
                                                 {expandedNotes.has(set.id) ? (
                                                     <button
@@ -255,7 +268,8 @@ export default function EditableExerciseCard({
                                             </div>
                                         )}
 
-                                        {gridSpacerCols > 0 && <div className={`hidden md:block col-span-${gridSpacerCols}`} />}
+                                        {gridSpacerCols > 0 && <div className="hidden md:block" style={{ gridColumn: `span ${gridSpacerCols} / span ${gridSpacerCols}` }} />}
+
                                         {/* Row Destruction Trigger Action */}
                                         <div className="col-span-4 md:col-span-1 text-right mt-2 md:mt-0 pt-2 md:pt-0 border-t border-subtle/40 md:border-0">
                                             <DeleteButton onClick={() => onRemoveSet(set.id)} />

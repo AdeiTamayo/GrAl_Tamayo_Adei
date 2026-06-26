@@ -1,8 +1,15 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from './ThemeContext';
 
 export default function Navbar() {
     const { theme, toggleTheme } = useTheme();
+    const location = useLocation();
+    const isAuthenticated = !!localStorage.getItem('user_login_token');
+
+    if (!isAuthenticated && ['/', '/login', '/register'].includes(location.pathname)) {
+        return null;
+    }
+
     return (
         <nav className="px-6 py-4 border-b border-subtle bg-body/80 backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-7xl mx-auto flex items-center justify-between">

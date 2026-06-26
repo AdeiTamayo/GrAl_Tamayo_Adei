@@ -374,7 +374,7 @@ export default function CurrentWorkout() {
 
                 <div className="space-y-6">
                     {exercises.map((ex, exIdx) => (
-                        <div key={exIdx} className="bg-surface border border-subtle rounded-2xl p-5 shadow-sm">
+                        <div key={exIdx} className="bg-surface border border-subtle rounded-xl p-6 shadow-md">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                 <div>
                                     <h3 className="text-xl font-bold text-body">{ex.name}</h3>

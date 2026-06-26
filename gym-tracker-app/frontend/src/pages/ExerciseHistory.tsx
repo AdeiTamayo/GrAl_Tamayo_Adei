@@ -113,13 +113,13 @@ export default function ExerciseHistory() {
                 </Modal>
 
                 {!selectedExercise && (
-                    <div className="text-center py-20 bg-surface/30 rounded-3xl border border-subtle border-dashed">
+                    <div className="text-center py-20 bg-surface/30 rounded-xl border border-subtle border-dashed">
                         <p className="text-dim text-lg">Choose an exercise to view your progress charts.</p>
                     </div>
                 )}
 
                 {fetchError && (
-                    <div className="text-center py-8 bg-rose-500/10 rounded-3xl border border-rose-500/20 mb-6">
+                    <div className="text-center py-8 bg-rose-500/10 rounded-xl border border-rose-500/20 mb-6">
                         <p className="text-rose-400 text-lg font-medium">{fetchError}</p>
                         {fetchError.includes("Cannot connect") && (
                             <p className="text-dim text-sm mt-2">Start the backend with <code className="text-accent">cd backend && node server.js</code></p>
@@ -131,7 +131,7 @@ export default function ExerciseHistory() {
                 )}
 
                 {selectedExercise && history.length === 0 && !isLoading && !fetchError && (
-                    <div className="text-center py-20 bg-surface/30 rounded-3xl border border-subtle border-dashed">
+                    <div className="text-center py-20 bg-surface/30 rounded-xl border border-subtle border-dashed">
                         <p className="text-dim text-lg">No session data found for this exercise yet.</p>
                         <p className="text-dim text-sm mt-2">Save a workout containing this exercise to see your progress.</p>
                     </div>
@@ -146,7 +146,7 @@ export default function ExerciseHistory() {
                 {selectedExercise && history.length > 0 && (
                     <div className="grid grid-cols-1 gap-10">
                         {/* Max Weight Chart */}
-                        <div className="bg-card border border-subtle p-6 rounded-3xl shadow-xl">
+                        <div className="bg-card border border-subtle p-6 rounded-xl shadow-xl">
                             <h2 className="text-xl font-bold mb-6 text-muted flex items-center gap-2">
                                 <span className="w-2 h-6 bg-accent rounded-full"></span>
                                 Max Weight (kg)
@@ -175,7 +175,7 @@ export default function ExerciseHistory() {
                         </div>
 
                         {/* Total Volume Chart */}
-                        <div className="bg-card border border-subtle p-6 rounded-3xl shadow-xl">
+                        <div className="bg-card border border-subtle p-6 rounded-xl shadow-xl">
                             <h2 className="text-xl font-bold mb-6 text-muted flex items-center gap-2">
                                 <span className="w-2 h-6 bg-blue-400 rounded-full"></span>
                                 Total Volume (kg × reps)
