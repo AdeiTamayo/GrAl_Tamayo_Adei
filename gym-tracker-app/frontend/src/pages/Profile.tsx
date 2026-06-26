@@ -191,13 +191,14 @@ export default function Profile() {
         <div className="max-w-3xl mx-auto p-4 md:p-8 mt-4 md:mt-8 relative animate-in fade-in duration-200">
             <div className="bg-card border border-subtle rounded-xl p-6 md:p-10 shadow-xl">
                 {/* Header */}
-                <div className="flex items-center gap-4 pb-6 border-b border-subtle/80 mb-6">
+                <div className="flex justify-between items-start gap-4 pb-6 border-b border-subtle/80 mb-6">
                     <div>
                         <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">
                             {profile.name} {profile.surname}
                         </h1>
                         <p className="text-muted font-medium mt-1">Manage your account details and preferences.</p>
                     </div>
+                    <CloseButton onClick={() => navigate("/")} floating={false} />
                 </div>
 
                 {success && (
