@@ -41,9 +41,9 @@ export default function Modal({
 
     return (
         <div
-            className={`fixed inset-0 z-[100] ${backdrop === "darker" ? "bg-black/80" : "bg-black/60"} backdrop-blur-sm flex items-center justify-center p-4 ${className}`}
+            className={`fixed inset-0 z-[100] ${backdrop === "darker" ? "bg-black/80" : "bg-black/60"} backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200 ${className}`}
         >
-            <div className={`relative w-full ${maxWidthClasses[maxWidth] || maxWidthClasses.md} ${containerClassName}`}>
+            <div className={`relative w-full ${maxWidthClasses[maxWidth] || maxWidthClasses.md} animate-in fade-in zoom-in-95 duration-200 ${containerClassName}`}>
                 <CloseButton onClick={onClose} />
                 {children}
             </div>

@@ -630,7 +630,7 @@ export default function WorkoutsManagement() {
 
             <div className="flex gap-6 items-start flex-col xl:flex-row">
                 {/* Left Listing Sidebar */}
-                <div className={`flex-none w-full ${sidebarHidden ? 'hidden' : 'xl:w-[400px]'}`}>
+                <div className={`flex-none w-full animate-in fade-in duration-200 ${sidebarHidden ? 'hidden' : 'xl:w-[400px]'}`}>
                     <div className="bg-surface/60 border border-subtle rounded-xl p-5 shadow-md">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase">Saved Logs List</h2>
@@ -726,7 +726,7 @@ export default function WorkoutsManagement() {
                     </div>
                 )}
                 {selectedWorkout && (
-                    <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative">
+                    <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative animate-in fade-in slide-in-from-right-4 duration-300">
 
                         {/* Header Details Wrapper */}
                         <div className="flex justify-between items-start mb-6">

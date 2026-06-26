@@ -358,7 +358,7 @@ export default function PersonalRecords() {
 
                 {/* Right Column: PR History Timeline */}
                 {selectedExerciseName && (
-                    <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 lg:p-8 shadow-xl">
+                    <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 lg:p-8 shadow-xl animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="flex justify-between items-start mb-6">
                             <h2 className="font-display text-2xl font-bold text-accent tracking-wide uppercase">{selectedExerciseName} Progress</h2>
                             <CloseButton onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} floating={false} />

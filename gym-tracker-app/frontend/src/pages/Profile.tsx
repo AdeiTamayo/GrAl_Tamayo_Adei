@@ -333,7 +333,7 @@ export default function Profile() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
                     <div className="relative w-full max-w-md">
                         <CloseButton onClick={() => { setShowDeleteModal(false); setPasswordConfirm(""); }} />
-                        <div className="w-full bg-card border border-subtle rounded-2xl p-6 md:p-8 shadow-2xl">
+                        <div className="w-full bg-card border border-subtle rounded-2xl p-6 md:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                         <h2 className="text-xl font-display text-rose-500 uppercase tracking-tight mb-2">Delete Account Permanently</h2>
                         <p className="text-sm text-muted mb-6 leading-relaxed">
                             This action cannot be undone. Please type your password to confirm you want to delete your profile and wipe all logged application metrics.

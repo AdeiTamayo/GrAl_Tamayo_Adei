@@ -273,7 +273,7 @@ export default function RoutinesManagement() {
 
             <div className="flex gap-6 items-start flex-col xl:flex-row">
                 {/* Left Listing Sidebar */}
-                <div className={`flex-none w-full ${sidebarHidden ? 'hidden' : 'xl:w-[400px]'}`}>
+                <div className={`flex-none w-full animate-in fade-in duration-200 ${sidebarHidden ? 'hidden' : 'xl:w-[400px]'}`}>
                     <div className="bg-surface/60 border border-subtle rounded-xl p-5 shadow-md">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase">Saved Templates Shelf</h2>
@@ -339,7 +339,7 @@ export default function RoutinesManagement() {
                     </div>
                 )}
                 {selectedRoutine && (
-                    <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative">
+                    <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative animate-in fade-in slide-in-from-right-4 duration-300">
 
                         {/* Header Details Wrapper with Dropdown Flow Control */}
                         <div className="flex justify-between items-start mb-6">
@@ -349,7 +349,9 @@ export default function RoutinesManagement() {
                                         onClick={() => setSidebarHidden(false)}
                                         className="text-xs font-semibold text-dim hover:text-body transition-colors mb-2 block"
                                     >
-                                        &larr; List
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                                        </svg>
                                     </button>
                                 )}
                                 <h2 className="font-display text-2xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
@@ -401,20 +403,20 @@ export default function RoutinesManagement() {
                                         onRemoveExercise={() => removeExercise(ex.item_id)}
                                         onAddSet={async (w, r, t) => {
                                             try {
-                                            const num = (ex.sets?.length || 0) + 1;
-                                            await apiFetch(`/api/routines/exercises/${ex.item_id}/sets`, {
-                                                method: "POST", headers, body: JSON.stringify({ set_number: num, planned_weight: w, planned_reps: r, planned_time: t })
-                                            });
-                                            fetchRoutineById(selectedRoutine.id);
-                                        } catch (err: any) {
+                                                const num = (ex.sets?.length || 0) + 1;
+                                                await apiFetch(`/api/routines/exercises/${ex.item_id}/sets`, {
+                                                    method: "POST", headers, body: JSON.stringify({ set_number: num, planned_weight: w, planned_reps: r, planned_time: t })
+                                                });
+                                                fetchRoutineById(selectedRoutine.id);
+                                            } catch (err: any) {
                                                 setError(err.message || "Failed to add set");
                                             }
                                         }}
                                         onRemoveSet={async (id) => {
                                             try {
-                                            await apiFetch(`/api/routines/sets/${id}`, { method: "DELETE", headers });
-                                            fetchRoutineById(selectedRoutine.id);
-                                        } catch (err: any) {
+                                                await apiFetch(`/api/routines/sets/${id}`, { method: "DELETE", headers });
+                                                fetchRoutineById(selectedRoutine.id);
+                                            } catch (err: any) {
                                                 setError(err.message || "Failed to remove set");
                                             }
                                         }}
