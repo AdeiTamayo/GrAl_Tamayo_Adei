@@ -503,7 +503,18 @@ export default function Exercises() {
                         )}
 
                         <div className="flex gap-4 mt-8 pt-4 border-t border-subtle">
-                            <Button type="button" variant="secondary" onClick={() => setViewMode('edit')}>Edit Exercise</Button>
+                            <Button type="button" variant="secondary" onClick={() => {
+                                if (selectedExercise) {
+                                    setFormName(selectedExercise.name);
+                                    setFormBodyPart(selectedExercise.bodyPart || '');
+                                    setFormTarget(selectedExercise.target || '');
+                                    setFormEquipment(selectedExercise.equipment || '');
+                                    setFormCategory(selectedExercise.category || '');
+                                    setFormDifficulty(selectedExercise.difficulty || 'beginner');
+                                    setSelectedSecondaryMuscles(selectedExercise.secondary_muscles || []);
+                                }
+                                setViewMode('edit');
+                            }}>Edit Exercise</Button>
                             <Button type="button" variant="primary" onClick={() => navigate(`/exercise-history?exerciseId=${selectedExercise.id}&exerciseName=${encodeURIComponent(selectedExercise.name)}`)}>View History</Button>
                             <DeleteButton onClick={() => setDeleteConfirmId(selectedExercise.id)} />
                         </div>
@@ -943,16 +954,16 @@ function ExerciseForm({
                     name="instructions"
                     defaultValue={ex?.instructions?.join('\n') || ''}
                     rows={4}
-                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors overflow-y-auto resize-y"
                 />
             </div>
 
             <div className="flex gap-2 pt-1">
-                <Button type="submit" variant="secondary" fullWidth disabled={saving} className="text-xs py-2">
-                    {saving ? 'Saving...' : isEdit ? 'Update Exercise' : 'Save Custom Exercise'}
-                </Button>
                 <Button type="button" variant="secondary" fullWidth onClick={onCancel} className="text-xs py-2">
                     Cancel
+                </Button>
+                <Button type="submit" variant="primary" fullWidth disabled={saving} className="text-xs py-2">
+                    {saving ? 'Saving...' : isEdit ? 'Update Exercise' : 'Save Custom Exercise'}
                 </Button>
             </div>
         </form>

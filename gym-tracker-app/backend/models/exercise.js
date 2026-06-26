@@ -105,8 +105,8 @@ class Exercise {
                     category = $7,
                     description = $8,
                     instructions = $9
-                WHERE id = $10 AND is_custom = true
-                RETURNING *;
+            WHERE id = $10
+            RETURNING *;
             
             `;
 
