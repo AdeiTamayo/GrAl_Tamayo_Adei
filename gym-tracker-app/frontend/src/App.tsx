@@ -18,6 +18,7 @@ import CompareWorkouts from './pages/CompareWorkouts';
 import ExerciseHistory from './pages/ExerciseHistory';
 import ThemeTest from './pages/ThemeTest';
 import ActiveWorkoutBanner from './components/ActiveWorkoutBanner';
+import ProtectedRoute from './components/ProtectedRoute';
 import { useWorkout } from './components/WorkoutContext';
 
 function AppContent() {
@@ -28,23 +29,23 @@ function AppContent() {
       <div className={isWorkoutActive ? 'pb-20' : ''}>
         <Routes>
           <Route path="/" element={<Hero />} />
-          <Route path="/active-workout" element={<CurrentWorkout />} />
-          <Route path="/compare-workouts" element={<CompareWorkouts />} />
-          <Route path="/exercise-history" element={<ExerciseHistory />} />
-          <Route path="/upload" element={<UploadVideo />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/workouts" element={<Workouts />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/exercises" element={<Exercises />} />
-          <Route path="/goals" element={<Goals />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/videos" element={<Video />} />
-          <Route path="/prs" element={<Pr />} />
-          <Route path="/routines" element={<Routine />} />
-          <Route path="/Weight_history" element={<WeightHistory />} />
-          <Route path="/workout-calendar" element={<WorkoutCalendar />} />
-          <Route path="/theme-test" element={<ThemeTest />} />
+          <Route path="/active-workout" element={<ProtectedRoute><CurrentWorkout /></ProtectedRoute>} />
+          <Route path="/compare-workouts" element={<ProtectedRoute><CompareWorkouts /></ProtectedRoute>} />
+          <Route path="/exercise-history" element={<ProtectedRoute><ExerciseHistory /></ProtectedRoute>} />
+          <Route path="/upload" element={<ProtectedRoute><UploadVideo /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/workouts" element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
+          <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
+          <Route path="/videos" element={<ProtectedRoute><Video /></ProtectedRoute>} />
+          <Route path="/prs" element={<ProtectedRoute><Pr /></ProtectedRoute>} />
+          <Route path="/routines" element={<ProtectedRoute><Routine /></ProtectedRoute>} />
+          <Route path="/Weight_history" element={<ProtectedRoute><WeightHistory /></ProtectedRoute>} />
+          <Route path="/workout-calendar" element={<ProtectedRoute><WorkoutCalendar /></ProtectedRoute>} />
+          <Route path="/theme-test" element={<ProtectedRoute><ThemeTest /></ProtectedRoute>} />
         </Routes>
       </div>
       <ActiveWorkoutBanner />

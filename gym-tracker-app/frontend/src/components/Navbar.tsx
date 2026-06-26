@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from './ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Navbar() {
     const { theme, toggleTheme } = useTheme();
+    const { isAuthenticated } = useAuth();
     const location = useLocation();
-    const isAuthenticated = !!localStorage.getItem('user_login_token');
 
     if (!isAuthenticated && ['/', '/login', '/register'].includes(location.pathname)) {
         return null;

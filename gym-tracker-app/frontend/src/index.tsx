@@ -9,6 +9,7 @@ import NotificationProvider from './components/NotificationProvider';
 import WorkoutProvider from './components/WorkoutContext';
 import ThemeProvider from './components/ThemeContext';
 import SettingsProvider from './components/SettingsContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -20,10 +21,12 @@ root.render(
         <NotificationProvider>
           <SettingsProvider>
           <WorkoutProvider>
+            <AuthProvider>
             <BrowserRouter>
               < Navbar />
               <App />
             </BrowserRouter >
+            </AuthProvider>
           </WorkoutProvider>
           </SettingsProvider>
         </NotificationProvider>

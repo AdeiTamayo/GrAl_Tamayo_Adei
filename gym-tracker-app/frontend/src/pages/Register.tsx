@@ -2,11 +2,13 @@ import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import { useAuth } from "../contexts/AuthContext";
 import DatePicker from "../components/DatePicker";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import Select from "../components/Select";
 
 export default function Register() {
+    const { login } = useAuth();
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
     const [email, setEmail] = useState("");
@@ -111,8 +113,7 @@ export default function Register() {
                 const loginData = await loginResponse.json();
 
                 if (loginData.success && loginData.token) {
-                    localStorage.setItem('user_login_token', loginData.token);
-                    localStorage.setItem('email', loginData.user.email);
+                    login(loginData.token, loginData.user.email);
 
                     navigate("/", {
                         replace: true,

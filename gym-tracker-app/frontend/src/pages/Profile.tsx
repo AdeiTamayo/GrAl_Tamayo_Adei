@@ -8,6 +8,7 @@ import LoadingSkeleton from "../components/LoadingSkeleton";
 import DatePicker from "../components/DatePicker";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import Select from "../components/Select";
+import { useAuth } from "../contexts/AuthContext";
 
 interface UserProfile {
     name: string;
@@ -34,6 +35,7 @@ export default function Profile() {
     const [passwordConfirm, setPasswordConfirm] = useState("");
 
     const navigate = useNavigate();
+    const { logout: authLogout } = useAuth();
 
     useEffect(() => { getProfile(); }, []);
 
@@ -125,8 +127,7 @@ export default function Profile() {
             const result = await response.json();
             if (!result.success) throw new Error(result.error || "Incorrect password or server error.");
 
-            localStorage.removeItem('user_login_token');
-            localStorage.removeItem('email');
+            authLogout();
             navigate("/");
 
         } catch (err: any) {
@@ -139,8 +140,7 @@ export default function Profile() {
     }
 
     function logout() {
-        localStorage.removeItem('user_login_token');
-        localStorage.removeItem('email');
+        authLogout();
         navigate("/");
     }
 

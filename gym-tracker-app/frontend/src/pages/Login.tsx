@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Login() {
+    const { login } = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("");
@@ -41,8 +43,7 @@ export default function Login() {
 
             if (data.success) {
                 if (data.token) {
-                    localStorage.setItem('user_login_token', data.token);
-                    localStorage.setItem('email', data.user.email);
+                    login(data.token, data.user.email);
                 }
                 navigate("/", {
                     replace: true,
