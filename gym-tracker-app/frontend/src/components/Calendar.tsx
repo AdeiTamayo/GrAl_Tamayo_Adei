@@ -80,7 +80,7 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
     const monthName = new Date(viewDate.year, viewDate.month).toLocaleString('default', { month: 'long' });
 
     return (
-        <div className={`bg-card border border-subtle rounded-xl shadow-xl backdrop-blur-md ${compact ? 'p-2.5' : 'p-4'} ${className}`}>
+        <div className={`bg-card border border-accent/30 rounded-2xl shadow-xl backdrop-blur-md ${compact ? 'p-2.5' : 'p-4'} ${className}`}>
             <div className={`flex items-center justify-between ${compact ? 'mb-2' : 'mb-4'}`}>
                 <button onClick={prevMonth} className={`rounded-lg hover:bg-elevated text-muted hover:text-body transition-colors ${compact ? 'p-1' : 'p-2'}`} aria-label="Previous month">
                     <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,13 +122,13 @@ export default function Calendar({ selectedDate, onSelect, events = {}, goalDate
                             key={dateStr}
                             onClick={() => onSelect?.(dateStr)}
                             className={`
-                                relative rounded-lg transition-all flex items-center justify-center
+                                relative rounded-xl transition-all flex items-center justify-center border-2
                                 ${compact ? 'aspect-[4/4] text-xs' : 'aspect-square text-sm font-semibold'}
                                 ${isSelected
-                                    ? 'bg-accent text-black font-bold'
+                                    ? 'bg-accent text-black font-bold border-accent'
                                     : isToday
-                                        ? 'bg-accent/10 text-accent border border-accent/30'
-                                        : 'text-muted hover:bg-elevated hover:text-body'
+                                        ? 'bg-accent/10 text-accent border-accent/50'
+                                        : 'border-transparent text-muted hover:bg-elevated hover:text-body'
                                 }
                             `}
                         >
