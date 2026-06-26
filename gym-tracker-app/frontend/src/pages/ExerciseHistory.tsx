@@ -30,6 +30,8 @@ export default function ExerciseHistory() {
                 id: Number(exerciseIdParam),
                 name: decodeURIComponent(exerciseNameParam),
             } as ExerciseMeta);
+        } else {
+            setShowPicker(true);
         }
     }, [exerciseIdParam, exerciseNameParam]);
 
@@ -73,12 +75,26 @@ export default function ExerciseHistory() {
     const formatData = useMemo(() => {
         return history.map(h => ({
             ...h,
-            // Extract YYYY-MM-DD string directly to avoid timezone shifts
             dateLabel: typeof h.date === 'string' ? h.date.split('T')[0] : new Date(h.date).toLocaleDateString('en-CA'),
             max_weight: parseFloat(String(h.max_weight || 0)),
             total_volume: parseFloat(String(h.total_volume || 0))
         }));
     }, [history]);
+
+    const chartDomains = useMemo(() => {
+        const compute = (values: number[]) => {
+            if (values.length === 0) return [0, 100];
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            if (min === max) return [Math.floor(min * 0.9), Math.ceil(max * 1.1)];
+            const range = max - min;
+            return [min - range * 0.1, max + range * 0.1];
+        };
+        return {
+            weight: compute(formatData.map(d => d.max_weight)),
+            volume: compute(formatData.map(d => d.total_volume))
+        };
+    }, [formatData]);
 
     return (
         <div className="p-6 font-sans bg-body text-body min-h-screen animate-in fade-in duration-200">
@@ -156,7 +172,7 @@ export default function ExerciseHistory() {
                                     <LineChart data={formatData} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1f1f22" vertical={false} />
                                         <XAxis dataKey="dateLabel" stroke="#52525b" fontSize={12} tickMargin={10} />
-                                        <YAxis stroke="#52525b" fontSize={12} tickMargin={10} />
+                                        <YAxis stroke="#52525b" fontSize={12} tickMargin={10} domain={chartDomains.weight} />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px' }}
                                             itemStyle={{ color: 'var(--accent)' }}
@@ -185,7 +201,7 @@ export default function ExerciseHistory() {
                                     <LineChart data={formatData} margin={{ top: 20, right: 20, left: 10, bottom: 10 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1f1f22" vertical={false} />
                                         <XAxis dataKey="dateLabel" stroke="#52525b" fontSize={12} tickMargin={10} />
-                                        <YAxis stroke="#52525b" fontSize={12} tickMargin={10} />
+                                        <YAxis stroke="#52525b" fontSize={12} tickMargin={10} domain={chartDomains.volume} />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px' }}
                                             itemStyle={{ color: '#60a5fa' }}
