@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
@@ -48,6 +49,7 @@ export default function CompareWorkouts() {
 
     useEffect(() => { window.scrollTo(0, 0); }, []);
 
+    const navigate = useNavigate();
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({
         Authorization: `Bearer ${token}`,
@@ -129,11 +131,18 @@ export default function CompareWorkouts() {
         return { totalVolumeA, totalVolumeB, totalSetsA, totalSetsB };
     }, [workoutA, workoutB, commonExercises]);
 
-    const renderDiff = (valA: number, valB: number, decimals = 1) => {
+    const renderDiff = (valA: number, valB: number, decimals = 1, showPct = false) => {
         const diff = valB - valA;
-        if (diff === 0) return <span className="text-dim">-</span>;
+        if (diff === 0) return <span className="text-dim">—</span>;
         const sign = diff > 0 ? "+" : "";
-        return <span className="text-muted font-mono">{sign}{diff.toFixed(decimals)}</span>;
+        const color = diff > 0 ? "text-emerald-400" : "text-rose-400";
+        const arrow = diff > 0 ? "" : "";
+        const pct = valA !== 0 ? ((diff / valA) * 100) : 0;
+        return (
+            <span className={`${color} font-mono`}>
+                {arrow} {sign}{diff.toFixed(decimals)}{showPct ? ` (${sign}${pct.toFixed(1)}%)` : ""}
+            </span>
+        );
     };
 
     const resetComparison = () => {
@@ -146,12 +155,11 @@ export default function CompareWorkouts() {
 
     return (
         <div className="p-6 font-sans bg-body text-body min-h-screen animate-in fade-in duration-200">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-6xl mx-auto relative">
                 <header className="mb-10 text-center">
                     <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">
                         Workout Comparison
                     </h1>
-                    <p className="text-muted mt-2">Select two workouts to see your progress side by side.</p>
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -174,7 +182,7 @@ export default function CompareWorkouts() {
 
                     {/* Workout B Picker */}
                     <div className="space-y-2">
-                        <label className="text-xs uppercase font-bold text-dim tracking-widest pl-1">Workout B (More Recent)</label>
+                        <label className="text-xs uppercase font-bold text-dim tracking-widest pl-1">Workout B</label>
                         <button
                             type="button"
                             onClick={() => setShowPickerB(true)}
@@ -253,32 +261,56 @@ export default function CompareWorkouts() {
                             <div className="text-xs uppercase tracking-widest text-dim font-bold mb-2">Common Exercises</div>
                             <div className="text-3xl font-black text-accent">{commonExercises.length}</div>
                         </div>
-                        <div className="bg-card border border-subtle rounded-xl p-5 text-center">
-                            <div className="text-xs uppercase tracking-widest text-dim font-bold mb-2">Total Volume</div>
-                            <div className="flex justify-center gap-4 mt-2">
-                                <div>
-                                    <div className="text-[10px] text-dim uppercase">{workoutA.date}</div>
-                                    <div className="text-sm font-bold font-mono text-blue-400">{summaryStats.totalVolumeA.toFixed(0)}</div>
+
+                        {[{
+                            label: "Total Volume",
+                            valA: summaryStats.totalVolumeA,
+                            valB: summaryStats.totalVolumeB,
+                            format: (v: number) => v.toFixed(0),
+                            colorA: "text-blue-400",
+                            colorB: "text-accent",
+                        }, {
+                            label: "Total Sets",
+                            valA: summaryStats.totalSetsA,
+                            valB: summaryStats.totalSetsB,
+                            format: (v: number) => String(v),
+                            colorA: "text-blue-400",
+                            colorB: "text-accent",
+                        }].map(stat => {
+                            const total = stat.valA + stat.valB;
+                            const pctA = total > 0 ? (stat.valA / total) * 100 : 50;
+                            const diff = stat.valB - stat.valA;
+                            const diffPct = stat.valA !== 0 ? (diff / stat.valA) * 100 : 0;
+                            const sign = diff > 0 ? "+" : "";
+                            const diffColor = diff > 0 ? "text-emerald-400" : diff < 0 ? "text-rose-400" : "text-dim";
+                            const arrow = diff > 0 ? "" : diff < 0 ? "" : "";
+                            return (
+                                <div key={stat.label} className="bg-card border border-subtle rounded-xl p-5">
+                                    <div className="text-xs uppercase tracking-widest text-dim font-bold mb-3 text-center">
+                                        {stat.label}
+                                    </div>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <div className="text-center flex-1">
+                                            <div className="text-[10px] text-dim uppercase">A — {workoutA.date}</div>
+                                            <div className={`text-sm font-bold font-mono ${stat.colorA}`}>
+                                                {stat.format(stat.valA)}
+                                            </div>
+                                        </div>
+                                        <div className="text-center flex-1">
+                                            <div className="text-[10px] text-dim uppercase">B — {workoutB.date}</div>
+                                            <div className={`text-sm font-bold font-mono ${stat.colorB}`}>
+                                                {stat.format(stat.valB)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-center text-xs font-mono">
+                                        <span className={diffColor}>
+                                            {arrow} {sign}{diff.toFixed(0)} ({sign}{diffPct.toFixed(1)}%)
+                                        </span>
+                                    </div>
                                 </div>
-                                <div>
-                                    <div className="text-[10px] text-dim uppercase">{workoutB.date}</div>
-                                    <div className="text-sm font-bold font-mono text-accent">{summaryStats.totalVolumeB.toFixed(0)}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="bg-card border border-subtle rounded-xl p-5 text-center">
-                            <div className="text-xs uppercase tracking-widest text-dim font-bold mb-2">Total Sets</div>
-                            <div className="flex justify-center gap-4 mt-2">
-                                <div>
-                                    <div className="text-[10px] text-dim uppercase">{workoutA.date}</div>
-                                    <div className="text-sm font-bold font-mono text-blue-400">{summaryStats.totalSetsA}</div>
-                                </div>
-                                <div>
-                                    <div className="text-[10px] text-dim uppercase">{workoutB.date}</div>
-                                    <div className="text-sm font-bold font-mono text-accent">{summaryStats.totalSetsB}</div>
-                                </div>
-                            </div>
-                        </div>
+                            );
+                        })}
                     </div>
                 )}
 
@@ -303,14 +335,14 @@ export default function CompareWorkouts() {
                                         <thead>
                                             <tr className="text-dim text-xs uppercase tracking-widest border-b border-subtle">
                                                 <th className="py-3 px-3 w-16">Set</th>
-                                                <th className="py-3 px-3 w-1/3">
-                                                    <span className="text-body">{workoutA.date}</span>
+                                                <th className="py-3 px-3 w-[26%]">
+                                                    <span className="text-body">A — {workoutA.date}</span>
                                                 </th>
-                                                <th className="py-3 px-3 w-1/3">
-                                                    <span className="text-body">{workoutB.date}</span>
+                                                <th className="py-3 px-3 w-[26%]">
+                                                    <span className="text-body">B — {workoutB.date}</span>
                                                 </th>
-                                                <th className="py-3 px-3 w-16">Weight</th>
-                                                <th className="py-3 px-3 w-16">Reps</th>
+                                                <th className="py-3 px-3 w-28">Weight</th>
+                                                <th className="py-3 px-3 w-28">Reps</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -349,6 +381,29 @@ export default function CompareWorkouts() {
                                                     </td>
                                                 </tr>
                                             ))}
+                                            {/* Totals row */}
+                                            {(() => {
+                                                const totalVolA = ex.setComparisons.reduce((s, sc) => s + ((sc.weightA ?? 0) * (sc.repsA ?? 0)), 0);
+                                                const totalVolB = ex.setComparisons.reduce((s, sc) => s + ((sc.weightB ?? 0) * (sc.repsB ?? 0)), 0);
+                                                return (
+                                                    <tr className="border-t-2 border-subtle bg-surface/30 font-semibold">
+                                                        <td className="py-3 px-3 font-mono text-accent text-xs uppercase tracking-wider">Total</td>
+                                                        <td className="py-3 px-3">
+                                                            <span className="font-mono text-body">Vol: {totalVolA.toFixed(0)}</span>
+                                                        </td>
+                                                        <td className="py-3 px-3">
+                                                            <span className="font-mono text-body">Vol: {totalVolB.toFixed(0)}</span>
+                                                        </td>
+                                                        <td className="py-3 px-3 font-mono text-sm">
+                                                            {totalVolA > 0 || totalVolB > 0
+                                                                ? renderDiff(totalVolA, totalVolB)
+                                                                : <span className="text-dim">-</span>
+                                                            }
+                                                        </td>
+                                                        <td className="py-3 px-3" />
+                                                    </tr>
+                                                );
+                                            })()}
                                         </tbody>
                                     </table>
                                 </div>
