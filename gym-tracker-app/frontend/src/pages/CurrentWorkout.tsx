@@ -281,7 +281,9 @@ export default function CurrentWorkout() {
             const routineId = data.data.id;
             let exCount = 0;
 
+            let exIdx = 0;
             for (const ex of exercises) {
+                exIdx++;
                 const reps = ex.sets.map(s => Number(s.repetitions) || 0).filter(r => r > 0);
                 const avgReps = reps.length > 0 ? Math.round(reps.reduce((a, b) => a + b, 0) / reps.length) : 10;
                 const weights = ex.sets.map(s => Number(s.weight) || 0).filter(w => w > 0);
@@ -292,6 +294,7 @@ export default function CurrentWorkout() {
                     headers,
                     body: JSON.stringify({
                         exercise_id: ex.exercise_id,
+                        exercise_order: exIdx,
                         planned_sets: ex.sets.length,
                         planned_reps: avgReps,
                         planned_weight: avgWeight,

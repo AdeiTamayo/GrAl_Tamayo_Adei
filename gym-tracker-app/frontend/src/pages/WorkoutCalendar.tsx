@@ -201,7 +201,6 @@ export default function WorkoutCalendar() {
     return (
         <div className="max-w-5xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
             <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Workout Calendar</h1>
-            <p className="text-dim text-sm font-medium -mt-6">Click a day to see workouts and goal deadlines or schedule workouts.</p>
 
             <div className="flex gap-6 items-start flex-col lg:flex-row">
                 <div className="flex-none w-full lg:w-[380px]">

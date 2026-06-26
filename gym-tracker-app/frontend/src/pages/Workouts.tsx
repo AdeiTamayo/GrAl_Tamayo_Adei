@@ -532,6 +532,7 @@ export default function WorkoutsManagement() {
                     headers,
                     body: JSON.stringify({
                         exercise_id: ex.exercise_id,
+                        exercise_order: ex.exercise_order,
                         planned_sets: ex.sets.length,
                         planned_reps: avgReps,
                         planned_weight: avgWeight,
