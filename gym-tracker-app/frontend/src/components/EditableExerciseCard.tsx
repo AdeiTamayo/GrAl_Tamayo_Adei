@@ -43,26 +43,26 @@ export default function EditableExerciseCard({
     const setsExist = sets.length > 0;
     const lastSet = setsExist ? sets[sets.length - 1] : null;
 
-    // Standard column allocation map
+    // Distribute available space evenly among all content fields
     const gridCols = useMemo(() => {
-        const base = { set: 1, weight: 2, reps: 2, time: 2, goal: 0, note: 0, del: 1 };
-        if (goalWeight) base.goal = 2;
-        if (showNotesField) base.note = goalWeight ? 2 : 4;
+        const fixed = { set: 1, del: 1 };
+        const remaining = 12 - fixed.set - fixed.del;
 
-        const taken = base.set + base.weight + base.reps + base.time + base.goal + base.note + base.del;
-        const remaining = 12 - taken;
+        const flexFields = ['weight', 'reps', 'time'];
+        if (goalWeight) flexFields.push('goal');
+        if (showNotesField) flexFields.push('note');
 
-        if (remaining >= 10) { base.weight = 4; base.reps = 3; base.time = 3; }
-        else if (remaining >= 8) { base.weight = 3; base.reps = 3; base.time = 2; }
+        const perField = Math.floor(remaining / flexFields.length);
+        let extra = remaining - perField * flexFields.length;
 
-        return base;
+        const result: Record<string, number> = { ...fixed };
+        for (const field of flexFields) {
+            result[field] = perField + (extra > 0 ? 1 : 0);
+            if (extra > 0) extra--;
+        }
+
+        return result;
     }, [goalWeight, showNotesField]);
-
-    // Calculate remaining spacer columns dynamically to avoid breaking the 12-column layout
-    const gridSpacerCols = useMemo(() => {
-        const total = gridCols.set + gridCols.weight + gridCols.reps + gridCols.time + gridCols.goal + gridCols.note + gridCols.del;
-        return 12 - total;
-    }, [gridCols]);
 
     // Local addition form element inputs
     const [newWeight, setNewWeight] = useState<string>("");
@@ -267,8 +267,6 @@ export default function EditableExerciseCard({
                                                 )}
                                             </div>
                                         )}
-
-                                        {gridSpacerCols > 0 && <div className="hidden md:block" style={{ gridColumn: `span ${gridSpacerCols} / span ${gridSpacerCols}` }} />}
 
                                         {/* Row Destruction Trigger Action */}
                                         <div className="col-span-4 md:col-span-1 text-right mt-2 md:mt-0 pt-2 md:pt-0 border-t border-subtle/40 md:border-0">
