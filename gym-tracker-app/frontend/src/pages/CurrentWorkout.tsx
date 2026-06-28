@@ -10,6 +10,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useNotification } from "../components/NotificationProvider";
 import { useWorkout } from "../components/WorkoutContext";
 import { useSettings } from "../components/SettingsContext";
+import Input from "../components/Input";
+import Card from "../components/Card";
 
 interface Routine {
     id: number;
@@ -563,18 +565,18 @@ export default function CurrentWorkout() {
                 </div>
 
                 <Modal open={showExercisePicker} onClose={() => setShowExercisePicker(false)} maxWidth="2xl" backdrop="darker">
-                    <div className="max-h-[80vh] overflow-hidden bg-card border border-subtle rounded-2xl flex flex-col">
+                    <Card variant="default" padding="none" className="max-h-[80vh] overflow-hidden rounded-2xl flex flex-col">
                         <div className="p-4 border-b border-subtle">
                             <h2 className="text-xl font-bold uppercase italic text-accent">Select Exercise</h2>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4">
                             <ExercisePicker onSelect={handleAddExercise} />
                         </div>
-                    </div>
+                    </Card>
                 </Modal>
 
                 <Modal open={showRoutinePicker} onClose={() => setShowRoutinePicker(false)} maxWidth="lg" backdrop="darker">
-                    <div className="bg-card border border-subtle rounded-2xl p-6">
+                    <Card variant="default" padding="lg">
                         <h2 className="text-xl font-bold uppercase italic text-accent mb-6">Load Routine</h2>
                         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
                             {routines.length === 0 && <p className="text-dim text-center">No routines found.</p>}
@@ -589,23 +591,23 @@ export default function CurrentWorkout() {
                                 </button>
                             ))}
                         </div>
-                    </div>
+                    </Card>
                 </Modal>
 
                 <Modal open={showSaveRoutineModal} onClose={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} maxWidth="sm" backdrop="darker">
-                    <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <Card variant="default" padding="lg" className="shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
                         Save as Routine
                     </h2>
                     <p className="text-sm text-muted mb-6">
                         Create a routine from {exercises.length} exercise{exercises.length !== 1 ? 's' : ''}.
                     </p>
-                    <input
+                    <Input
                         type="text"
                         value={routineName}
                         onChange={(e) => setRoutineName(e.target.value)}
                         placeholder="Routine name"
-                        className="w-full bg-surface border border-subtle rounded-lg py-2.5 px-3 text-sm text-body placeholder:text-dim focus:border-accent focus:ring-0 transition-colors mb-4"
+                        className="mb-4"
                         autoFocus
                         onKeyDown={(e) => { if (e.key === 'Enter') saveAsRoutine(); }}
                     />
@@ -617,11 +619,11 @@ export default function CurrentWorkout() {
                             Cancel
                         </Button>
                     </div>
-                </div>
+                </Card>
                 </Modal>
 
                 <Modal open={showFinishModal} onClose={() => setShowFinishModal(false)} maxWidth="sm" backdrop="darker">
-                    <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <Card variant="default" padding="lg" className="shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
                         Finish Workout
                     </h2>
@@ -642,7 +644,7 @@ export default function CurrentWorkout() {
                             Cancel
                         </Button>
                     </div>
-                </div>
+                </Card>
                 </Modal>
             </div>
         </div>

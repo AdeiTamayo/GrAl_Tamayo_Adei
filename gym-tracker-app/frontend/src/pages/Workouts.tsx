@@ -13,6 +13,9 @@ import CloseButton from '../components/CloseButton';
 import ErrorBanner from '../components/ErrorBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import { useNotification } from "../components/NotificationProvider";
+import Input from '../components/Input';
+import Card from '../components/Card';
+import EmptyState from '../components/EmptyState';
 
 // ---- TYPES & INTERFACES ----
 interface SetEntry {
@@ -590,17 +593,16 @@ export default function WorkoutsManagement() {
                 </Button>
 
                 <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="sm">
-                    <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                         <h3 className="font-display text-lg font-bold text-accent mb-4">Create New Workout</h3>
                         <form onSubmit={createWorkout} className="flex flex-col gap-4">
                             <div>
                                 <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Workout Name</label>
-                                <input
+                                <Input
                                     type="text"
                                     value={newWorkoutName}
                                     onChange={(e) => setNewWorkoutName(e.target.value)}
                                     required
-                                    className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all"
                                 />
                             </div>
                             <div>
@@ -609,11 +611,10 @@ export default function WorkoutsManagement() {
                             </div>
                             <div>
                                 <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Notes (Optional)</label>
-                                <input
+                                <Input
                                     type="text"
                                     value={newWorkoutNote}
                                     onChange={(e) => setNewWorkoutNote(e.target.value)}
-                                    className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
                                 />
                             </div>
                             <div className="flex gap-2 justify-end mt-1">
@@ -621,7 +622,7 @@ export default function WorkoutsManagement() {
                                 <Button type="submit" variant="primary" className="px-4 py-2 text-xs">Confirm & Save</Button>
                             </div>
                         </form>
-                    </div>
+                    </Card>
                 </Modal>
             </div>
 
@@ -632,7 +633,7 @@ export default function WorkoutsManagement() {
             <div className="flex gap-6 items-start flex-col xl:flex-row">
                 {/* Left Listing Sidebar */}
                 <div className={`flex-none w-full animate-in fade-in duration-200 ${sidebarHidden ? 'hidden' : 'xl:w-[400px]'}`}>
-                    <div className="bg-surface/60 border border-subtle rounded-xl p-5 shadow-md">
+                    <Card variant="surface" padding="md" className="shadow-md">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase">Saved Logs List</h2>
                             <button
@@ -648,12 +649,13 @@ export default function WorkoutsManagement() {
 
                         {/* Search & Filter Bar */}
                         <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                            <input
+                            <Input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search by name..."
-                                className="flex-1 border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
+                                inputSize="sm"
+                                className="flex-1"
                             />
                             <div className="flex gap-2 items-center">
                                 <DatePicker
@@ -677,9 +679,7 @@ export default function WorkoutsManagement() {
                         </div>
 
                         {filteredWorkouts.length === 0 ? (
-                            <div className="text-center py-10 bg-card/40 rounded-xl border border-subtle/60">
-                                <p className="text-dim text-sm font-medium italic px-4">{workouts.length === 0 ? "No sessions logged yet." : "No workouts match your filters."}</p>
-                            </div>
+                            <EmptyState message={workouts.length === 0 ? "No sessions logged yet." : "No workouts match your filters."} />
                         ) : (
                             <>
                                 <ul className="space-y-2.5 list-none p-0 m-0">
@@ -709,7 +709,7 @@ export default function WorkoutsManagement() {
                                 />
                             </>
                         )}
-                    </div>
+                    </Card>
                 </div>
 
                 {/* Right Interactive Workspace Panel */}
@@ -719,15 +719,12 @@ export default function WorkoutsManagement() {
                             onClick={() => setSidebarHidden(false)}
                             className="bg-surface border border-subtle rounded-xl px-6 py-3 text-sm font-semibold text-muted hover:text-body hover:border-hover transition-all inline-flex items-center gap-2"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                            </svg>
-                            Show sidebar
+                            Show workouts
                         </button>
                     </div>
                 )}
                 {selectedWorkout && (
-                    <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative animate-in fade-in slide-in-from-right-4 duration-300">
+                    <Card variant="surface" padding="lg" className="flex-1 w-full shadow-md space-y-6 relative animate-in fade-in slide-in-from-right-4 duration-300">
 
                         {/* Header Details Wrapper */}
                         <div className="flex justify-between items-start mb-6">
@@ -830,7 +827,7 @@ export default function WorkoutsManagement() {
                                 </Modal>
                             </div>
                         </div>
-                    </div>
+                    </Card>
                 )}
             </div>
 
@@ -856,30 +853,30 @@ export default function WorkoutsManagement() {
             )}
 
             <Modal open={showDetailsDropdown} onClose={() => setShowDetailsDropdown(false)} maxWidth="sm">
-                <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     <h3 className="font-display text-lg font-bold text-accent mb-4">Edit Core Metadata</h3>
                     <div className="flex flex-col gap-3">
-                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all" />
+                        <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" />
                         <DatePicker value={editDate} onChange={setEditDate} />
-                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all" />
+                        <Input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" />
                     </div>
                     <div className="flex gap-2 justify-end mt-4">
                         <Button type="button" onClick={() => setShowDetailsDropdown(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
                         <Button type="button" onClick={saveWorkoutEdit} variant="primary" className="px-4 py-2 text-xs">Save Changes</Button>
                     </div>
-                </div>
+                </Card>
             </Modal>
 
             <Modal open={showSaveRoutineModal} onClose={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} maxWidth="sm">
-                <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     <h3 className="font-display text-lg font-bold text-accent mb-4">Save as Routine</h3>
                     <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name</label>
-                    <input
+                    <Input
                         type="text"
                         value={routineName}
                         onChange={(e) => setRoutineName(e.target.value)}
                         placeholder="e.g. Push Day"
-                        className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all mb-4"
+                        className="mb-4"
                         autoFocus
                     />
                     <div className="flex gap-3 justify-end">
@@ -900,7 +897,7 @@ export default function WorkoutsManagement() {
                             Create Routine
                         </Button>
                     </div>
-                </div>
+                </Card>
             </Modal>
         </div>
     );

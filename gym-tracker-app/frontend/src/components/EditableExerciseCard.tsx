@@ -39,6 +39,13 @@ export default function EditableExerciseCard({
     const [showNoteForm, setShowNoteForm] = useState(false);
     const [addError, setAddError] = useState("");
     const [expandedNotes, setExpandedNotes] = useState<Set<number>>(new Set());
+    const [isMd, setIsMd] = useState(window.innerWidth >= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMd(window.innerWidth >= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const setsExist = sets.length > 0;
     const lastSet = setsExist ? sets[sets.length - 1] : null;
@@ -160,7 +167,7 @@ export default function EditableExerciseCard({
                                         </div>
 
                                         {/* Mass Weight Input Wrapper */}
-                                        <div className="col-span-2" style={{ gridColumn: window.innerWidth >= 768 ? `span ${gridCols.weight} / span ${gridCols.weight}` : undefined }}>
+                                        <div className="col-span-2" style={{ gridColumn: isMd ? `span ${gridCols.weight} / span ${gridCols.weight}` : undefined }}>
                                             <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Weight</span>
                                             <TransparentNumericInput
                                                 value={set.weight ?? ""}
@@ -171,7 +178,7 @@ export default function EditableExerciseCard({
                                         </div>
 
                                         {/* Repeat Executions Wrapper */}
-                                        <div className="col-span-2" style={{ gridColumn: window.innerWidth >= 768 ? `span ${gridCols.reps} / span ${gridCols.reps}` : undefined }}>
+                                        <div className="col-span-2" style={{ gridColumn: isMd ? `span ${gridCols.reps} / span ${gridCols.reps}` : undefined }}>
                                             <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Reps</span>
                                             <TransparentNumericInput
                                                 value={set.reps ?? ""}
@@ -182,7 +189,7 @@ export default function EditableExerciseCard({
                                         </div>
 
                                         {/* Temporal Duration Trackings */}
-                                        <div className="col-span-2" style={{ gridColumn: window.innerWidth >= 768 ? `span ${gridCols.time} / span ${gridCols.time}` : undefined }}>
+                                        <div className="col-span-2" style={{ gridColumn: isMd ? `span ${gridCols.time} / span ${gridCols.time}` : undefined }}>
                                             <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Time (s)</span>
                                             <TransparentNumericInput
                                                 value={set.time ?? ""}
@@ -214,7 +221,7 @@ export default function EditableExerciseCard({
 
                                         {/* Readable Row Note Toggle Button */}
                                         {showNotesField && (
-                                            <div className="col-span-2" style={{ gridColumn: window.innerWidth >= 768 ? `span ${gridCols.note} / span ${gridCols.note}` : undefined }}>
+                                            <div className="col-span-2" style={{ gridColumn: isMd ? `span ${gridCols.note} / span ${gridCols.note}` : undefined }}>
                                                 <span className="text-[9px] font-mono uppercase text-dim block mb-1 md:hidden">Note</span>
                                                 {expandedNotes.has(set.id) ? (
                                                     <button

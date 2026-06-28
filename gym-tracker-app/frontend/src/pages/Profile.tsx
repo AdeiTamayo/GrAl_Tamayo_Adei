@@ -8,6 +8,8 @@ import LoadingSkeleton from "../components/LoadingSkeleton";
 import DatePicker from "../components/DatePicker";
 import TransparentNumericInput from "../components/TransparentNumericInput";
 import Select from "../components/Select";
+import Input from "../components/Input";
+import Card from "../components/Card";
 import { useAuth } from "../contexts/AuthContext";
 
 interface UserProfile {
@@ -189,7 +191,7 @@ export default function Profile() {
 
     return (
         <div className="max-w-3xl mx-auto p-4 md:p-8 mt-4 md:mt-8 relative animate-in fade-in duration-200">
-            <div className="bg-card border border-subtle rounded-xl p-6 md:p-10 shadow-xl">
+            <Card variant="default" padding="lg" className="md:p-10 shadow-xl">
                 {/* Header */}
                 <div className="flex justify-between items-start gap-4 pb-6 border-b border-subtle/80 mb-6">
                     <div>
@@ -218,10 +220,10 @@ export default function Profile() {
                             { label: "Birthdate", value: formatBirthDate(profile.birth_date) },
                             { label: "Gender", value: profile.gender ?? "—" },
                         ].map(({ label, value }) => (
-                            <div key={label} className="bg-surface/50 border border-subtle/50 rounded-lg p-4 flex flex-col gap-1">
+                            <Card key={label} variant="surface" padding="sm" className="flex flex-col gap-1">
                                 <strong className="text-xs uppercase tracking-wider text-dim">{label}</strong>
                                 <span className="text-body font-medium text-lg">{value}</span>
-                            </div>
+                            </Card>
                         ))}
                     </div>
                 )}
@@ -254,11 +256,11 @@ export default function Profile() {
                                         buttonClassName="!px-3 !py-3 text-sm"
                                     />
                                 ) : (
-                                    <input
+                                    <Input
                                         type={type}
                                         value={getFormValue(field)}
                                         onChange={e => handleChange(field, e.target.value)}
-                                        className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors [color-scheme:dark]"
+                                        inputSize="md"
                                     />
                                 )}
                             </div>
@@ -326,14 +328,14 @@ export default function Profile() {
                         </>
                     )}
                 </div>
-            </div>
+            </Card>
 
             {/* --- Confirm Account Deletion Modal --- */}
             {showDeleteModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
                     <div className="relative w-full max-w-md">
                         <CloseButton onClick={() => { setShowDeleteModal(false); setPasswordConfirm(""); }} />
-                        <div className="w-full bg-card border border-subtle rounded-2xl p-6 md:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                        <Card variant="default" padding="lg" className="md:p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                         <h2 className="text-xl font-display text-rose-500 uppercase tracking-tight mb-2">Delete Account Permanently</h2>
                         <p className="text-sm text-muted mb-6 leading-relaxed">
                             This action cannot be undone. Please type your password to confirm you want to delete your profile and wipe all logged application metrics.
@@ -344,13 +346,13 @@ export default function Profile() {
                                 <label className="block text-xs uppercase tracking-wider text-dim font-semibold mb-2">
                                     Account Password
                                 </label>
-                                <input
+                                <Input
                                     type="password"
                                     required
                                     placeholder="••••••••"
                                     value={passwordConfirm}
                                     onChange={(e) => setPasswordConfirm(e.target.value)}
-                                    className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-rose-500 transition-colors"
+                                    inputSize="md"
                                 />
                             </div>
 
@@ -373,7 +375,7 @@ export default function Profile() {
                                 </Button>
                             </div>
                         </form>
-                    </div>
+                    </Card>
                 </div>
             </div>
             )}

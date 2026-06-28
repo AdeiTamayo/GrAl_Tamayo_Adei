@@ -12,6 +12,9 @@ import Calendar from "../components/Calendar";
 import DatePicker from "../components/DatePicker";
 import ErrorBanner from "../components/ErrorBanner";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import Card from "../components/Card";
+import EmptyState from "../components/EmptyState";
+import Badge from "../components/Badge";
 
 interface Goal {
     id: number;
@@ -223,7 +226,7 @@ export default function Goals() {
                     </Button>
 
                     <Modal open={showGoalModal || editingGoalId !== null} onClose={resetForm} maxWidth="sm">
-                        <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <Card variant="elevated" padding="lg" className="animate-in fade-in zoom-in-95 duration-150">
                             <h3 className="font-display text-lg font-bold text-accent mb-4">
                                 {editingGoalId ? "Edit Goal" : "Add New Goal"}
                             </h3>
@@ -277,7 +280,7 @@ export default function Goals() {
                                     </Button>
                                 </div>
                             </form>
-                        </div>
+                        </Card>
                     </Modal>
 
                     <div>
@@ -292,7 +295,7 @@ export default function Goals() {
                 </div>
 
                 {/* List of goals */}
-                <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
+                <Card variant="elevated" padding="lg" className="flex-1 w-full">
                     <div className="flex items-center justify-between mb-5">
                         <div className="flex items-center gap-3">
                             <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Current Goals</h2>
@@ -319,13 +322,9 @@ export default function Goals() {
                         <div className="text-xs text-dim font-medium mb-4">Showing goals due on <span className="text-body">{new Date(selectedCalendarDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span></div>
                     )}
                     {!goals || goals.length === 0 ? (
-                        <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
-                            <p className="text-dim font-medium italic">No goals set yet. Time to aim high.</p>
-                        </div>
+                        <EmptyState message="No goals set yet. Time to aim high." />
                     ) : filteredGoals.length === 0 ? (
-                        <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
-                            <p className="text-dim font-medium italic">No goals due on this day.</p>
-                        </div>
+                        <EmptyState message="No goals due on this day." />
                     ) : goalsOpen && (
                         <>
                             <ul className="space-y-3">
@@ -339,17 +338,11 @@ export default function Goals() {
                                                     const fulfilled = isGoalFulfilled(g);
                                                     const pr = prData[g.exercise_id];
                                                     return fulfilled ? (
-                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent bg-accent/10 border border-accent/20 rounded-full px-2.5 py-0.5">
-                                                            ✓
-                                                        </span>
+                                                        <Badge variant="accent">✓</Badge>
                                                     ) : pr ? (
-                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-full px-2.5 py-0.5">
-                                                            {Math.max(0, Number(g.target_weight) - pr.weight).toFixed(1)} kg to go
-                                                        </span>
+                                                        <Badge variant="warning">{Math.max(0, Number(g.target_weight) - pr.weight).toFixed(1)} kg to go</Badge>
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-dim bg-elevated border border-subtle rounded-full px-2.5 py-0.5">
-                                                            No PR registered yet
-                                                        </span>
+                                                        <Badge variant="default">No PR registered yet</Badge>
                                                     );
                                                 })()}
                                             </div>
@@ -371,7 +364,7 @@ export default function Goals() {
                             />
                         </>
                     )}
-                </div>
+                </Card>
             </div>
         </div>
     );

@@ -9,6 +9,9 @@ import { apiFetch } from "../utils/api";
 import ConfirmModal from '../components/ConfirmModal';
 import DeleteButton from '../components/DeleteButton';
 import CloseButton from '../components/CloseButton';
+import Input from '../components/Input';
+import Card from '../components/Card';
+import EmptyState from '../components/EmptyState';
 
 interface SetTemplate {
     id: number;
@@ -234,28 +237,26 @@ export default function RoutinesManagement() {
                 </Button>
 
                 <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="sm">
-                    <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                         <h3 className="font-display text-lg font-bold text-accent mb-4">Create New Routine</h3>
                         <form onSubmit={handleCreateRoutine} className="flex flex-col gap-4">
                             <div>
                                 <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name *</label>
-                                <input
+                                <Input
                                     type="text"
                                     value={newRoutineName}
                                     onChange={(e) => setNewRoutineName(e.target.value)}
                                     required
                                     placeholder="e.g., Heavy Push Day"
-                                    className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all"
                                 />
                             </div>
                             <div>
                                 <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Notes (Optional)</label>
-                                <input
+                                <Input
                                     type="text"
                                     placeholder="Focus on progressive overload mechanics"
                                     value={newRoutineNote}
                                     onChange={(e) => setNewRoutineNote(e.target.value)}
-                                    className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body placeholder:text-dim focus:border-accent focus:outline-none transition-all"
                                 />
                             </div>
                             <div className="flex gap-2 justify-end mt-1">
@@ -263,7 +264,7 @@ export default function RoutinesManagement() {
                                 <Button type="submit" variant="primary" className="px-4 py-2 text-xs">Create Routine</Button>
                             </div>
                         </form>
-                    </div>
+                    </Card>
                 </Modal>
             </div>
 
@@ -274,7 +275,7 @@ export default function RoutinesManagement() {
             <div className="flex gap-6 items-start flex-col xl:flex-row">
                 {/* Left Listing Sidebar */}
                 <div className={`flex-none w-full animate-in fade-in duration-200 ${sidebarHidden ? 'hidden' : 'xl:w-[400px]'}`}>
-                    <div className="bg-surface/60 border border-subtle rounded-xl p-5 shadow-md">
+                    <Card variant="surface" padding="md" className="shadow-md">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase">Saved Templates Shelf</h2>
                             <button
@@ -288,9 +289,7 @@ export default function RoutinesManagement() {
                             </button>
                         </div>
                         {routines.length === 0 ? (
-                            <div className="text-center py-10 bg-card/40 rounded-xl border border-subtle/60">
-                                <p className="text-dim text-sm font-medium italic px-4">No templates configured yet.</p>
-                            </div>
+                            <EmptyState message="No templates configured yet." />
                         ) : (
                             <>
                                 <ul className="space-y-2.5 list-none p-0 m-0">
@@ -321,7 +320,7 @@ export default function RoutinesManagement() {
                                 />
                             </>
                         )}
-                    </div>
+                    </Card>
                 </div>
 
                 {/* Right Interactive Workspace Panel */}
@@ -339,7 +338,7 @@ export default function RoutinesManagement() {
                     </div>
                 )}
                 {selectedRoutine && (
-                    <div className="flex-1 w-full bg-surface border border-subtle rounded-xl p-6 shadow-md space-y-6 relative animate-in fade-in slide-in-from-right-4 duration-300">
+                    <Card variant="surface" padding="lg" className="flex-1 w-full shadow-md space-y-6 relative animate-in fade-in slide-in-from-right-4 duration-300">
 
                         {/* Header Details Wrapper with Dropdown Flow Control */}
                         <div className="flex justify-between items-start mb-6">
@@ -465,7 +464,7 @@ export default function RoutinesManagement() {
                                 onClose={() => setShowPicker(false)}
                             />
                         </Modal>
-                    </div>
+                    </Card>
                 )}
             </div>
 
@@ -479,17 +478,17 @@ export default function RoutinesManagement() {
             )}
 
             <Modal open={showDetailsDropdown} onClose={() => setShowDetailsDropdown(false)} maxWidth="sm">
-                <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                     <h3 className="font-display text-lg font-bold text-accent mb-4">Edit Core Metadata</h3>
                     <div className="flex flex-col gap-3">
-                        <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all" />
-                        <input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" className="w-full border border-subtle bg-surface rounded-xl px-4 py-2.5 text-sm text-body focus:border-accent focus:outline-none transition-all" />
+                        <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Routine template name" />
+                        <Input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Template description notes" />
                     </div>
                     <div className="flex gap-2 justify-end mt-4">
                         <Button type="button" onClick={() => setShowDetailsDropdown(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
                         <Button type="button" onClick={saveRoutineEdit} variant="primary" className="px-4 py-2 text-xs">Save Changes</Button>
                     </div>
-                </div>
+                </Card>
             </Modal>
         </div>
     );

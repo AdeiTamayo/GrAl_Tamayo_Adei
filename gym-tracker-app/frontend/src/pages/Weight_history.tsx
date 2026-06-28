@@ -3,7 +3,7 @@ import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
-import TransparentNumericInput from "../components/TransparentNumericInput";
+import Input from "../components/Input";
 import DatePicker from "../components/DatePicker";
 import Select from "../components/Select";
 import DeleteButton from "../components/DeleteButton";
@@ -12,6 +12,8 @@ import EditButton from "../components/EditButton";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import ErrorBanner from "../components/ErrorBanner";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import Card from '../components/Card';
+import EmptyState from '../components/EmptyState';
 
 interface WeightEntry {
     id: number;
@@ -213,7 +215,7 @@ export default function WeightHistory() {
 
             {error && <ErrorBanner message={error} />}
 
-            <div className="w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
+            <Card variant="default" padding="lg" className="shadow-xl">
                 <h3 className="font-display text-lg font-bold text-heading tracking-wide uppercase mb-4">
                     Progress Overview
                 </h3>
@@ -260,13 +262,9 @@ export default function WeightHistory() {
                         </ResponsiveContainer>
                     </div>
                 ) : (
-                    <div className="h-[250px] w-full flex items-center justify-center bg-surface/30 rounded-lg border border-subtle/50">
-                        <p className="text-dim font-medium italic text-sm">
-                            Add weight entries to see your progress chart.
-                        </p>
-                    </div>
+                    <EmptyState message="Add weight entries to see your progress chart." className="h-[250px]" />
                 )}
-            </div>
+            </Card>
 
             <div className="flex gap-6 items-start flex-col md:flex-row">
                 {/* Form */}
@@ -282,20 +280,20 @@ export default function WeightHistory() {
                 </div>
 
                 <Modal open={showAddModal} onClose={() => { resetForm(); }} maxWidth="sm">
-                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                    <Card variant="default" padding="lg" className="shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                         <h3 className="font-display text-lg font-bold text-accent mb-4">
                             {editingId ? "Edit Weight Entry" : "Add Weight Entry"}
                         </h3>
                         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                            <TransparentNumericInput
-                                placeholder="Weight (kg)"
+                            <Input
+                                type="number"
                                 value={weight}
-                                onChange={(val) => setWeight(val === "" ? "" : Number(val))}
-                                className="w-full"
-                                inputClassName="px-4 py-3 text-body placeholder:text-dim bg-surface border-subtle"
+                                onChange={(e) => setWeight(e.target.value === "" ? "" : Number(e.target.value))}
+                                placeholder="Weight (kg)"
                                 step={0.1}
                                 min={0}
                                 max={500}
+                                inputSize="lg"
                             />
                             <DatePicker value={date} onChange={setDate} />
 
@@ -306,19 +304,35 @@ export default function WeightHistory() {
                                 </Button>
                             </div>
                         </form>
-                    </div>
+                    </Card>
                 </Modal>
 
                 {/* List */}
-                <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 shadow-xl">
+                <Card variant="default" padding="lg" className={`flex-1 w-full shadow-xl ${hidden ? 'flex items-center justify-center !p-3' : ''}`}>
+                    {hidden ? (
+                        <button
+                            onClick={() => setHidden(false)}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-subtle bg-surface/40 text-dim hover:text-body hover:border-hover transition-colors text-xs"
+                            title="Show entries"
+                        >
+                            <svg className="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                            </svg>
+                            <span>{entries.length} entries</span>
+                        </button>
+                    ) : (
+                    <>
                         <div className="flex items-center justify-between mb-5">
                             <div className="flex items-center gap-3">
                                 <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Entries</h2>
                                 <button
-                                    onClick={() => setHidden(h => !h)}
-                                    className={`text-sm font-semibold px-3 py-1.5 rounded-lg border transition-colors ${hidden ? 'bg-surface border-accent/30 text-accent hover:bg-accent/10' : 'bg-surface/40 border-subtle/80 text-dim hover:text-body hover:border-hover'}`}
+                                    onClick={() => setHidden(true)}
+                                    className="text-sm font-semibold px-2 py-1 rounded-lg border transition-colors bg-surface/40 border-subtle/80 text-dim hover:text-body hover:border-hover"
+                                    title="Hide entries"
                                 >
-                                    {hidden ? `Show (${entries.length})` : 'Hide'}
+                                    <svg className="w-4 h-4 -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                                    </svg>
                                 </button>
                             </div>
                         <div className="flex items-center gap-2 text-xs">
@@ -343,10 +357,8 @@ export default function WeightHistory() {
                             </button>
                         </div>
                     </div>
-                    {hidden ? null : entries.length === 0 ? (
-                        <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
-                            <p className="text-dim font-medium italic">No weight entries yet.</p>
-                        </div>
+                    {entries.length === 0 ? (
+                        <EmptyState message="No weight entries yet." />
                     ) : (
                         <>
                             <ul className="space-y-3">
@@ -383,9 +395,11 @@ export default function WeightHistory() {
                                 onPageChange={setCurrentPage}
                                 compact
                             />
+                            </>
+                        )}
                         </>
                     )}
-                </div>
+                </Card>
             </div>
         </div>
     );

@@ -13,6 +13,10 @@ import EditButton from "../components/EditButton";
 import CloseButton from "../components/CloseButton";
 import ErrorBanner from "../components/ErrorBanner";
 import LoadingSkeleton from "../components/LoadingSkeleton";
+import Input from "../components/Input";
+import Card from "../components/Card";
+import EmptyState from "../components/EmptyState";
+import Badge from "../components/Badge";
 
 interface PRSummary {
     id: number;
@@ -233,7 +237,7 @@ export default function PersonalRecords() {
                     </Button>
 
                     <Modal open={showAddForm} onClose={() => setShowAddForm(false)} maxWidth="sm">
-                        <div className="bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                             <h3 className="font-display text-lg font-bold text-accent mb-4">Log a PR</h3>
                             <form onSubmit={createPR} className="flex flex-col gap-4">
                                 <button
@@ -277,12 +281,12 @@ export default function PersonalRecords() {
                                     />
                                 </div>
                                 <DatePicker value={newDate} onChange={setNewDate} placeholder="Select date" />
-                                <input
+                                <Input
                                     type="text"
                                     placeholder="Note (optional)"
                                     value={newNote}
                                     onChange={e => setNewNote(e.target.value)}
-                                    className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                                    inputSize="lg"
                                 />
                                 <div className="flex gap-2 justify-end mt-1">
                                     <Button type="button" onClick={() => setShowAddForm(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
@@ -291,10 +295,10 @@ export default function PersonalRecords() {
                                     </Button>
                                 </div>
                             </form>
-                        </div>
+                        </Card>
                     </Modal>
 
-                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-xl">
+                    <Card padding="lg" className="shadow-xl">
                         <div className="flex items-center justify-between mb-5">
                             <h2 className="font-display text-lg font-bold text-heading tracking-wide uppercase">Current Best PRs</h2>
                             <button
@@ -306,9 +310,7 @@ export default function PersonalRecords() {
                         </div>
                         {prsOpen && (
                             prSummary.length === 0 ? (
-                                <div className="text-center py-10 bg-surface/50 rounded-lg border border-subtle/80">
-                                    <p className="text-dim font-medium italic">No PRs recorded yet. Go lift something heavy!</p>
-                                </div>
+                                <EmptyState message="No PRs recorded yet. Go lift something heavy!" />
                             ) : (
                                 <>
                                     <ul className="space-y-3 list-none">
@@ -325,10 +327,10 @@ export default function PersonalRecords() {
                                                         <strong className="text-lg font-bold text-accent capitalize">{pr.exercise_name}</strong>
                                                         <div className="text-sm text-dim font-medium mt-1">{pr.date?.substring(0, 10)}</div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <span className="text-xl font-bold text-body">{pr.weight} kg</span>
-                                                        <div className="text-sm text-muted font-medium mt-1">{pr.repetitions} reps</div>
-                                                    </div>
+                                                        <div className="text-right">
+                                                            <span className="text-xl font-bold text-body">{pr.weight} kg</span>
+                                                            <div className="text-sm text-muted font-medium mt-1">{pr.repetitions} reps</div>
+                                                </div>
                                                 </div>
                                                 <button
                                                     type="button"
@@ -353,12 +355,12 @@ export default function PersonalRecords() {
                                 </>
                             )
                         )}
-                    </div>
+                    </Card>
                 </div>
 
                 {/* Right Column: PR History Timeline */}
                 {selectedExerciseName && (
-                    <div className="flex-1 w-full bg-card border border-subtle rounded-xl p-6 lg:p-8 shadow-xl animate-in fade-in slide-in-from-right-4 duration-300">
+                    <Card padding="lg" className="flex-1 w-full lg:p-8 shadow-xl animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="flex justify-between items-start mb-6">
                             <h2 className="font-display text-2xl font-bold text-accent tracking-wide uppercase">{selectedExerciseName} Progress</h2>
                             <CloseButton onClick={() => { setSelectedExerciseName(null); setSelectedExerciseId(null); }} floating={false} />
@@ -416,9 +418,7 @@ export default function PersonalRecords() {
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-sm font-bold text-muted uppercase tracking-wider">{history.date?.substring(0, 10)}</span>
                                                 {history.id === currentMaxRecordId && (
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded-full">
-                                                        All-Time Best
-                                                    </span>
+                                                    <Badge variant="accent">All-Time Best</Badge>
                                                 )}
                                             </div>
                                             <div className="text-xl font-bold text-body">
@@ -440,7 +440,7 @@ export default function PersonalRecords() {
                                 </li>
                             ))}
                         </ul>
-                    </div>
+                    </Card>
                 )}
             </div>
 
@@ -454,7 +454,7 @@ export default function PersonalRecords() {
             )}
 
             <Modal open={!!editRecord} onClose={() => setEditRecord(null)} maxWidth="sm" backdrop="darker">
-                <div className="w-full bg-card border border-subtle rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                <Card variant="default" padding="lg" className="w-full rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                 <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-4">Edit PR</h2>
                 <div className="space-y-4">
                     <TransparentNumericInput
@@ -474,12 +474,12 @@ export default function PersonalRecords() {
                         step={1} min={0} max={999}
                     />
                     <DatePicker value={editRecord?.date ?? ""} onChange={(date) => editRecord && setEditRecord({ ...editRecord, date })} placeholder="Select date" />
-                    <input
+                    <Input
                         type="text"
                         placeholder="Note (optional)"
                         value={editRecord?.note ?? ""}
                         onChange={e => editRecord && setEditRecord({ ...editRecord, note: e.target.value })}
-                        className="w-full border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                        inputSize="lg"
                     />
                     <div className="space-y-3 pt-2">
                         <Button onClick={updatePR} variant="primary" fullWidth>
@@ -490,7 +490,7 @@ export default function PersonalRecords() {
                         </Button>
                     </div>
                 </div>
-            </div>
+            </Card>
             </Modal>
         </div>
     );

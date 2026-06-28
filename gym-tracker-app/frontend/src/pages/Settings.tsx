@@ -4,6 +4,8 @@ import { useTheme } from "../components/ThemeContext";
 import { useSettings } from "../components/SettingsContext";
 import Button from "../components/Button";
 import TransparentNumericInput from "../components/TransparentNumericInput";
+import Toggle from '../components/Toggle';
+import Card from '../components/Card';
 
 export default function Settings() {
     const navigate = useNavigate();
@@ -44,7 +46,7 @@ export default function Settings() {
                 <p className="text-dim mt-1 text-sm">Manage your application preferences.</p>
             </div>
 
-            <div className="bg-card border border-subtle rounded-xl p-6 md:p-8 shadow-xl space-y-8">
+            <Card variant="default" padding="lg" className="md:p-8 shadow-xl space-y-8">
                 <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-1">
                     Preferences
                 </h2>
@@ -62,33 +64,21 @@ export default function Settings() {
                 <div className="border-t border-subtle pt-6 space-y-6">
                     <h3 className="text-sm font-bold text-body uppercase tracking-wide">Workout Display</h3>
 
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-body">RPE Field</p>
-                            <p className="text-xs text-dim">Show Rate of Perceived Exertion input per set</p>
-                        </div>
-                        <button
-                            onClick={() => handleToggle('show_rpe', !settings.show_rpe)}
-                            disabled={saving || loading}
-                            className={`relative w-11 h-6 rounded-full transition-colors ${settings.show_rpe ? 'bg-accent' : 'bg-elevated border border-subtle'} disabled:opacity-50`}
-                        >
-                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.show_rpe ? 'translate-x-5' : ''}`} />
-                        </button>
-                    </div>
+                    <Toggle
+                        enabled={settings.show_rpe}
+                        onChange={(v) => handleToggle('show_rpe', v)}
+                        disabled={saving || loading}
+                        label="RPE Field"
+                        description="Show Rate of Perceived Exertion input per set"
+                    />
 
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-body">Estimated 1RM</p>
-                            <p className="text-xs text-dim">Show estimated one-rep max column in workouts</p>
-                        </div>
-                        <button
-                            onClick={() => handleToggle('show_1rm', !settings.show_1rm)}
-                            disabled={saving || loading}
-                            className={`relative w-11 h-6 rounded-full transition-colors ${settings.show_1rm ? 'bg-accent' : 'bg-elevated border border-subtle'} disabled:opacity-50`}
-                        >
-                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settings.show_1rm ? 'translate-x-5' : ''}`} />
-                        </button>
-                    </div>
+                    <Toggle
+                        enabled={settings.show_1rm}
+                        onChange={(v) => handleToggle('show_1rm', v)}
+                        disabled={saving || loading}
+                        label="Estimated 1RM"
+                        description="Show estimated one-rep max column in workouts"
+                    />
                 </div>
 
                 <div className="border-t border-subtle pt-6">
@@ -112,7 +102,7 @@ export default function Settings() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </Card>
 
             <div className="flex justify-center pt-4">
                 <Button

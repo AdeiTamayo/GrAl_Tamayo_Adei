@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import Input from "../components/Input";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Login() {
@@ -86,25 +87,25 @@ export default function Login() {
                             <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Incorrect format</span>
                         )}
                     </div>
-                    <input
+                    <Input
                         type="email"
                         value={email}
                         required
                         onChange={e => setEmail(e.target.value)}
-                        className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors placeholder:text-dim ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-accent"
-                            }`}
+                        inputSize="lg"
                         placeholder="your@email.com"
+                        className={email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : ""}
                     />
                 </div>
 
                 <div>
                     <label className="block text-xs font-semibold text-muted mb-1.5">Password</label>
-                    <input
+                    <Input
                         type="password"
                         value={password}
                         required
                         onChange={e => setPassword(e.target.value)}
-                        className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors placeholder:text-dim"
+                        inputSize="lg"
                         placeholder="••••••••"
                     />
                 </div>

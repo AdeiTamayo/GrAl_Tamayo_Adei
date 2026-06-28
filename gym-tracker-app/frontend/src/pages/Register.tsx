@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
+import Input from "../components/Input";
 import { useAuth } from "../contexts/AuthContext";
 import DatePicker from "../components/DatePicker";
 import TransparentNumericInput from "../components/TransparentNumericInput";
@@ -161,21 +162,21 @@ export default function Register() {
                         <h3 className="text-xs uppercase tracking-wider text-dim font-bold mb-2">Identify</h3>
                         <div>
                             <label className="block text-xs font-semibold text-muted mb-1.5">Name (optional)</label>
-                            <input
+                            <Input
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors"
+                                inputSize="lg"
                             />
                         </div>
 
                         <div>
                             <label className="block text-xs font-semibold text-muted mb-1.5">Surname (optional)</label>
-                            <input
+                            <Input
                                 type="text"
                                 value={surname}
                                 onChange={(e) => setSurname(e.target.value)}
-                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors "
+                                inputSize="lg"
                             />
                         </div>
 
@@ -186,13 +187,13 @@ export default function Register() {
                                     <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Invalid Format</span>
                                 )}
                             </div>
-                            <input
+                            <Input
                                 type="email"
                                 value={email}
                                 required
                                 onChange={(e) => setEmail(e.target.value)}
-                                className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors ${email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-accent"
-                                    }`}
+                                inputSize="lg"
+                                className={email && !isEmailValid(email) ? "border-rose-500/50 focus:border-rose-500" : ""}
                             />
                         </div>
                     </div>
@@ -209,12 +210,12 @@ export default function Register() {
                                     </span>
                                 )}
                             </div>
-                            <input
+                            <Input
                                 type="password"
                                 value={password}
                                 required
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-surface border border-subtle rounded-lg p-3 text-body focus:outline-none focus:border-accent transition-colors"
+                                inputSize="lg"
                             />
                         </div>
 
@@ -225,13 +226,13 @@ export default function Register() {
                                     <span className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">Mismatch</span>
                                 )}
                             </div>
-                            <input
+                            <Input
                                 type="password"
                                 value={confirmPassword}
                                 required
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className={`w-full bg-surface border rounded-lg p-3 text-body focus:outline-none transition-colors ${confirmPassword && password !== confirmPassword ? "border-rose-500/50 focus:border-rose-500" : "border-subtle focus:border-accent"
-                                    }`}
+                                inputSize="lg"
+                                className={confirmPassword && password !== confirmPassword ? "border-rose-500/50 focus:border-rose-500" : ""}
                             />
                         </div>
                     </div>

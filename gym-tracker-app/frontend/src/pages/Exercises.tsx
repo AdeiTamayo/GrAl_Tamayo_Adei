@@ -9,6 +9,11 @@ import Pagination from '../components/Pagination';
 import Select from '../components/Select';
 import ConfirmModal from '../components/ConfirmModal';
 import DeleteButton from '../components/DeleteButton';
+import Input from '../components/Input';
+import Textarea from '../components/Textarea';
+import Card from '../components/Card';
+import EmptyState from '../components/EmptyState';
+import Badge from '../components/Badge';
 
 type Exercise = {
     id: number;
@@ -439,9 +444,9 @@ export default function Exercises() {
                     <Button type="button" variant="secondary" onClick={backToList}>&larr; Back to List</Button>
                 ) : (
                     <div className="flex gap-4 w-full flex-col sm:flex-row">
-                        <input
+                        <Input
                             type="text" name="search" placeholder="Search exercises..." value={filters.search} onChange={handleFilterChange}
-                            className="w-full sm:w-1/5 border border-subtle bg-surface rounded-lg px-4 py-3 text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                            inputSize="lg" className="sm:w-1/5"
                         />
                         <Select
                             value={filters.muscles}
@@ -479,7 +484,7 @@ export default function Exercises() {
 
             <div>
                 {viewMode === 'details' && selectedExercise ? (
-                    <div className="bg-card border border-subtle rounded-xl p-6 shadow-xl space-y-4">
+                    <Card variant="default" padding="lg" className="shadow-xl space-y-4">
                         <h2 className="font-display text-2xl font-bold text-body tracking-wide uppercase">{selectedExercise.name}</h2>
                         <div className="flex flex-wrap gap-4 text-muted mb-6 bg-surface/50 p-4 rounded-lg">
                             <span><strong>Body Part:</strong> {selectedExercise.bodyPart}</span>
@@ -518,7 +523,7 @@ export default function Exercises() {
                             <Button type="button" variant="primary" onClick={() => navigate(`/exercise-history?exerciseId=${selectedExercise.id}&exerciseName=${encodeURIComponent(selectedExercise.name)}`)}>View History</Button>
                             <DeleteButton onClick={() => setDeleteConfirmId(selectedExercise.id)} />
                         </div>
-                    </div>
+                    </Card>
                 ) : viewMode === 'edit' && selectedExercise ? (
                     <ExerciseForm
                         ex={selectedExercise}
@@ -701,25 +706,25 @@ function ExerciseForm({
 
             <div>
                 <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Exercise Name *</label>
-                <input
+                <Input
                     type="text"
                     name="name"
                     required
                     value={formName}
                     onChange={e => setFormName(e.target.value)}
-                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                    inputSize="sm"
                 />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                     <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Body Part</label>
-                    <input
+                    <Input
                         type="text"
                         name="bodyPart"
                         value={formBodyPart}
                         onChange={e => setFormBodyPart(e.target.value)}
-                        className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                        inputSize="sm"
                     />
                 </div>
 
@@ -739,11 +744,12 @@ function ExerciseForm({
                     <div className="mt-2">
                         {showNewMuscle ? (
                             <div className="relative">
-                                <input
+                                <Input
                                     type="text"
                                     name="new_target_muscle"
                                     placeholder="Create new muscle..."
-                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
+                                    inputSize="sm"
+                                    className="pr-8"
                                     autoFocus
                                 />
                                 <button
@@ -783,11 +789,12 @@ function ExerciseForm({
                     <div className="mt-2">
                         {showNewEquipment ? (
                             <div className="relative">
-                                <input
+                                <Input
                                     type="text"
                                     name="new_equipment"
                                     placeholder="Create new equipment..."
-                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
+                                    inputSize="sm"
+                                    className="pr-8"
                                     autoFocus
                                 />
                                 <button
@@ -827,11 +834,12 @@ function ExerciseForm({
                     <div className="mt-2">
                         {showNewCategory ? (
                             <div className="relative">
-                                <input
+                                <Input
                                     type="text"
                                     name="new_category"
                                     placeholder="Create new category..."
-                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
+                                    inputSize="sm"
+                                    className="pr-8"
                                     autoFocus
                                 />
                                 <button
@@ -891,10 +899,11 @@ function ExerciseForm({
                     <div className="mt-2">
                         {showNewSecondary ? (
                             <div className="relative">
-                                <input
+                                <Input
                                     type="text"
                                     placeholder="Create new secondary muscle..."
-                                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors pr-8"
+                                    inputSize="sm"
+                                    className="pr-8"
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') {
                                             e.preventDefault();
@@ -928,11 +937,10 @@ function ExerciseForm({
                     </div>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                         {selectedSecondaryMuscles.map(muscle => (
-                            <div key={muscle} className="flex items-center gap-1 bg-elevated px-2 py-0.5 rounded-full text-heading text-xs">
-                                <span>{muscle}</span>
+                            <Badge key={muscle} variant="default" removable onRemove={() => setSelectedSecondaryMuscles(prev => prev.filter(m => m !== muscle))}>
+                                {muscle}
                                 <input type="hidden" name="secondary_muscles" value={muscle} />
-                                <button type="button" className="text-muted hover:text-rose-500 font-bold" onClick={() => setSelectedSecondaryMuscles(prev => prev.filter(m => m !== muscle))}>✕</button>
-                            </div>
+                            </Badge>
                         ))}
                     </div>
                 </div>
@@ -940,21 +948,22 @@ function ExerciseForm({
 
             <div>
                 <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Description</label>
-                <textarea
+                <Textarea
                     name="description"
                     defaultValue={ex?.description || ''}
                     rows={3}
-                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors"
+                    inputSize="sm"
                 />
             </div>
 
             <div>
                 <label className="block text-[10px] font-bold text-dim uppercase tracking-widest mb-1">Instructions (one per line) *</label>
-                <textarea
+                <Textarea
                     name="instructions"
                     defaultValue={ex?.instructions?.join('\n') || ''}
                     rows={4}
-                    className="w-full border border-subtle bg-surface rounded-xl px-3 py-2 text-xs text-body placeholder:text-dim focus:border-accent focus:outline-none transition-colors overflow-y-auto resize-y"
+                    inputSize="sm"
+                    className="overflow-y-auto"
                 />
             </div>
 
