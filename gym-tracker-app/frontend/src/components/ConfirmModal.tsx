@@ -20,7 +20,7 @@ export default function ConfirmModal({ message, onConfirm, onCancel, confirmLabe
                 <p className="text-sm text-muted mb-6">{message}</p>
                 <div className="space-y-3">
                     <Button
-                        onClick={() => { onConfirm(); onCancel(); }}
+                        onClick={onConfirm}
                         variant={variant === 'danger' ? 'danger' : 'primary'}
                         fullWidth
                     >

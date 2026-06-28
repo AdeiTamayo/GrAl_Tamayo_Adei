@@ -26,7 +26,8 @@ export default function Register() {
 
     const navigate = useNavigate();
 
-    function toNullableNumber(value: string | number) {
+    function toNullableNumber(value: string | number | undefined) {
+        if (value == null) return null;
         if (typeof value === "number") return value;
         return value.trim() === "" ? null : Number(value);
     }
@@ -214,6 +215,7 @@ export default function Register() {
                                 type="password"
                                 value={password}
                                 required
+                                maxLength={128}
                                 onChange={(e) => setPassword(e.target.value)}
                                 inputSize="lg"
                             />

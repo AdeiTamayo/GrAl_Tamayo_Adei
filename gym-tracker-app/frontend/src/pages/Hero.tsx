@@ -75,50 +75,57 @@ export default function Hero() {
 
         const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-        Promise.all([
-            apiFetch('/api/dashboard/stats', { headers }).then(r => r.json()),
-            apiFetch('/api/workouts', { headers }).then(r => r.json()),
-            apiFetch('/api/videos?sort=desc', { headers }).then(r => r.json()),
-            apiFetch('/api/user/weights', { headers }).then(r => r.json()),
-            apiFetch('/api/planned-workouts', { headers }).then(r => r.json()),
-            apiFetch('/api/goals', { headers }).then(r => r.json()),
-        ])
-            .then(([statsData, workoutData, videoData, weightData, plannedData, goalsData]) => {
-                if (statsData.success) {
-                    setWorkoutCount(statsData.data.workoutCount);
-                    setWeeklyVolume(statsData.data.weeklyVolume);
-                    setCurrentStreak(statsData.data.currentStreak);
-                }
-                if (workoutData.success) {
-                    const w = workoutData.data || [];
-                    setAllWorkouts(w);
-                    setRecentWorkouts(w.slice(0, 5));
-                }
-                if (videoData.success) {
-                    setVideos((videoData.videos || []).slice(0, 3));
-                }
-                if (weightData.success) {
-                    const entries: WeightEntry[] = weightData.data || [];
-                    entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-                    if (entries.length > 0) setLatestWeight(entries[0]);
-                }
-                if (plannedData.success) {
-                    const dates = new Set<string>();
-                    (plannedData.data || []).forEach((p: any) => {
-                        if (p.date) dates.add(p.date.substring(0, 10));
-                    });
-                    setPlannedDates(dates);
-                }
-                if (goalsData.success) {
-                    const dates = new Set<string>();
-                    (goalsData.goals || []).forEach((g: any) => {
-                        if (g.expected_date) dates.add(g.expected_date.substring(0, 10));
-                    });
-                    setGoalDates(dates);
-                }
-            })
-            .catch((err) => { setDashboardError("Failed to load dashboard data."); console.error(err); })
-            .finally(() => setLoading(false));
+        async function fetchDashboard() {
+            const results = await Promise.allSettled([
+                apiFetch('/api/dashboard/stats', { headers }).then(r => r.json()),
+                apiFetch('/api/workouts', { headers }).then(r => r.json()),
+                apiFetch('/api/videos?sort=desc', { headers }).then(r => r.json()),
+                apiFetch('/api/user/weights', { headers }).then(r => r.json()),
+                apiFetch('/api/planned-workouts', { headers }).then(r => r.json()),
+                apiFetch('/api/goals', { headers }).then(r => r.json()),
+            ]);
+
+            const [statsData, workoutData, videoData, weightData, plannedData, goalsData] = results.map(r =>
+                r.status === 'fulfilled' ? r.value : null
+            );
+
+            if (statsData?.success) {
+                setWorkoutCount(statsData.data.workoutCount);
+                setWeeklyVolume(statsData.data.weeklyVolume);
+                setCurrentStreak(statsData.data.currentStreak);
+            }
+            if (workoutData?.success) {
+                const w = workoutData.data || [];
+                setAllWorkouts(w);
+                setRecentWorkouts(w.slice(0, 5));
+            }
+            if (videoData?.success) {
+                setVideos((videoData.videos || []).slice(0, 3));
+            }
+            if (weightData?.success) {
+                const entries: WeightEntry[] = weightData.data || [];
+                entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                if (entries.length > 0) setLatestWeight(entries[0]);
+            }
+            if (plannedData?.success) {
+                const dates = new Set<string>();
+                (plannedData.data || []).forEach((p: any) => {
+                    if (p.date) dates.add(p.date.substring(0, 10));
+                });
+                setPlannedDates(dates);
+            }
+            if (goalsData?.success) {
+                const dates = new Set<string>();
+                (goalsData.goals || []).forEach((g: any) => {
+                    if (g.expected_date) dates.add(g.expected_date.substring(0, 10));
+                });
+                setGoalDates(dates);
+            }
+
+            setLoading(false);
+        }
+
+        fetchDashboard().catch(err => { setDashboardError("Failed to load dashboard data."); console.error(err); });
     }, [isLoggedIn, token]);
 
     const workoutEvents = useMemo(() => {

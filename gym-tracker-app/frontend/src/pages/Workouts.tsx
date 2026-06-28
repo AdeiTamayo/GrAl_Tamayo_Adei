@@ -269,6 +269,7 @@ export default function WorkoutsManagement() {
 
     async function saveWorkoutEdit() {
         if (!selectedWorkout) return;
+        if (!editName.trim()) { setError("Workout name cannot be empty."); return; }
 
         try {
             const res = await apiFetch("/api/workouts/" + selectedWorkout.id, {

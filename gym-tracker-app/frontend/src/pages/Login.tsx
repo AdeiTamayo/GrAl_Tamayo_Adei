@@ -26,7 +26,7 @@ export default function Login() {
 
         // Sare-deia egin aurretik e-maila egiaztatu alferrikako eskaerak saihesteko
         if (!isEmailValid(email)) {
-            setMessage("Mesedez, sartu baliozko e-mail helbide bat.");
+            setMessage("Please enter a valid email address.");
             setIsLoading(false);
             return;
         }
@@ -104,6 +104,7 @@ export default function Login() {
                         type="password"
                         value={password}
                         required
+                        maxLength={128}
                         onChange={e => setPassword(e.target.value)}
                         inputSize="lg"
                         placeholder="••••••••"

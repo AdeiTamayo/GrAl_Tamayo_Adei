@@ -154,6 +154,7 @@ export default function RoutinesManagement() {
 
     async function saveRoutineEdit() {
         if (!selectedRoutine) return;
+        if (!editName.trim()) { setError("Routine name cannot be empty."); return; }
         try {
             setError(null);
             const res = await apiFetch(`/api/routines/${selectedRoutine.id}`, {

@@ -96,8 +96,10 @@ class User {
                 UPDATE users 
                 SET name=$1, surname=$2, email=$3, gender=$4, weight=$5, height=$6, birth_date=$7
                 WHERE id=$8
+                RETURNING *;
             `;
-            await pool.query(query, [name, surname, email, gender, weight, height, birth_date, id]);
+            const result = await pool.query(query, [name, surname, email, gender, weight, height, birth_date, id]);
+            return result.rows[0];
         } catch (error) {
             console.error('[User Model] Error updating user:', error.message);
             throw error;
