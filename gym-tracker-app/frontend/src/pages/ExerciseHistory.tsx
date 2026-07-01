@@ -174,8 +174,9 @@ export default function ExerciseHistory() {
                                         <XAxis dataKey="dateLabel" stroke="#52525b" fontSize={12} tickMargin={10} />
                                         <YAxis stroke="#52525b" fontSize={12} tickMargin={10} domain={chartDomains.weight} />
                                         <Tooltip
-                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px' }}
+                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px', color: '#f4f4f5' }}
                                             itemStyle={{ color: 'var(--accent)' }}
+                                            labelStyle={{ color: '#f4f4f5' }}
                                         />
                                         <Line
                                             type="monotone"
@@ -203,8 +204,9 @@ export default function ExerciseHistory() {
                                         <XAxis dataKey="dateLabel" stroke="#52525b" fontSize={12} tickMargin={10} />
                                         <YAxis stroke="#52525b" fontSize={12} tickMargin={10} domain={chartDomains.volume} />
                                         <Tooltip
-                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px' }}
+                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px', color: '#f4f4f5' }}
                                             itemStyle={{ color: '#60a5fa' }}
+                                            labelStyle={{ color: '#f4f4f5' }}
                                         />
                                         <Line
                                             type="monotone"

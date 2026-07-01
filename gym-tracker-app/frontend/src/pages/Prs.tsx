@@ -387,8 +387,9 @@ export default function PersonalRecords() {
                                             unit="kg"
                                         />
                                         <Tooltip
-                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px', fontSize: '14px' }}
+                                            contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '12px', fontSize: '14px', color: '#f4f4f5' }}
                                             itemStyle={{ color: 'var(--accent)' }}
+                                            labelStyle={{ color: '#f4f4f5' }}
                                         />
                                         <Line
                                             type="monotone"

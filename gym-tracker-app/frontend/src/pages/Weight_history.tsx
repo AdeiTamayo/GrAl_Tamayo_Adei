@@ -247,7 +247,8 @@ export default function WeightHistory() {
                                         color: '#f4f4f5'
                                     }}
                                     itemStyle={{ color: 'var(--accent)' }}
-                                    labelClassName="text-dim text-xs font-semibold"
+                                    labelStyle={{ color: '#f4f4f5' }}
+                                    labelClassName="text-xs font-semibold"
                                     formatter={(value) => [`${value} kg`, 'Weight']}
                                 />
                                 <Line
