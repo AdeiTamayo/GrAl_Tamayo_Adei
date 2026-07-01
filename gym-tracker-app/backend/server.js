@@ -93,7 +93,11 @@ app.use((err, req, res, next) => {
     });
 });
 
-app.listen(port, () => {
-    console.log(`\n=== Server Ready ===`);
-    console.log(`[Server] Running on http://localhost:${port}`);
-});
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`\n=== Server Ready ===`);
+        console.log(`[Server] Running on http://localhost:${port}`);
+    });
+}
+
+module.exports = app;
