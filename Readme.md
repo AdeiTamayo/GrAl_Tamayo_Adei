@@ -1,7 +1,5 @@
 # Gradu Amaierako Lana
 
-**Izena:** Smart gym Tracker: Barraren ibilbidea eta ariketen forma aztertzeko eta entrenamenduak kudeatzeko ikusmen konputazionaleko sistema bat  
-
 **Egilea:** Adei Tamayo Ugalde
 
 **Zuzendaria:** Naiara Aginako Bengoa
@@ -14,16 +12,19 @@
 
 ## Deskribapena
 
-Smart Gym Tracker aplikazioak ariketen bideoak aztertzen ditu ikusmen konputazionalaren bidez, barraren ibilbidea eta teknika ebaluatzeko. Erabiltzaileek beren entrenamenduak gorde, bideoak igo eta emaitzen analisi bisualak ikus ditzakete. Sistema honek FastAPI + React + PostgreSQL arkitektura erabiltzen du eta barbell tracking modulua OpenCV eta MediaPipe bidez inplementatzen da.
+Aplikazioak ariketen bideoak aztertzen ditu ikusmen konputazionalaren bidez, barraren ibilbidea eta teknika ebaluatzeko. Erabiltzaileek beren entrenamenduak gorde, bideoak igo eta emaitzen analisi bisualak ikus ditzakete. Sistema honek Express.js (Node.js) + React + PostgreSQL arkitektura erabiltzen du eta barbell tracking modulua OpenCV eta MediaPipe bidez inplementatzen da.
 
 ## Teknologiak / Osagaiak
 
-| Kategoria | Teknologiak / Osagaiak |
+| Kategoria | Teknologiak |
 |---|---|
-| Ordenagailu ikusmena | Python, TypeScript, OpenCV, MediaPipe |
-| Backend-a (API) | FastAPI |
+| Backend (API) | Express.js (Node.js) |
+| Frontend | React, TypeScript, Tailwind CSS, React Router, Recharts |
+| Ikusmen konputazionala | Python, OpenCV, MediaPipe, NumPy, SciPy |
 | Datu-basea | PostgreSQL |
-| Front-End (nabagatzaileko bertsioa) | React |
-| Back-End (nabagatzaileko bertsioa) | TypeScript |
+| Autentifikazioa | JWT, bcrypt |
+| Fitxategi kargak | Multer |
+| HTTP bezeroa | Axios |
+| Testing | Jest, Supertest, React Testing Library |
 | Bertsio-kontrola | Git, GitHub |
 | Dokumentazioa | LaTeX |
