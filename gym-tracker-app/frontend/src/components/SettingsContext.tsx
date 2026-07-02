@@ -4,6 +4,8 @@ import { apiFetch } from '../utils/api';
 interface Settings {
     show_rpe: boolean;
     show_1rm: boolean;
+    show_goals: boolean;
+    show_rest_time: boolean;
     default_rest_time: number;
 }
 
@@ -16,6 +18,8 @@ interface SettingsContextValue {
 const defaultSettings: Settings = {
     show_rpe: true,
     show_1rm: true,
+    show_goals: true,
+    show_rest_time: true,
     default_rest_time: 60,
 };
 
@@ -50,11 +54,13 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
                     setSettings({
                         show_rpe: data.data.show_rpe !== undefined ? data.data.show_rpe : defaultSettings.show_rpe,
                         show_1rm: data.data.show_1rm !== undefined ? data.data.show_1rm : defaultSettings.show_1rm,
+                        show_goals: data.data.show_goals !== undefined ? data.data.show_goals : defaultSettings.show_goals,
+                        show_rest_time: data.data.show_rest_time !== undefined ? data.data.show_rest_time : defaultSettings.show_rest_time,
                         default_rest_time: data.data.default_rest_time || defaultSettings.default_rest_time,
                     });
                 }
             })
-            .catch(() => {})
+            .catch(() => { })
             .finally(() => setLoading(false));
     }, [token]);
 
@@ -75,6 +81,8 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
             setSettings({
                 show_rpe: result.data.show_rpe !== undefined ? result.data.show_rpe : settings.show_rpe,
                 show_1rm: result.data.show_1rm !== undefined ? result.data.show_1rm : settings.show_1rm,
+                show_goals: result.data.show_goals !== undefined ? result.data.show_goals : settings.show_goals,
+                show_rest_time: result.data.show_rest_time !== undefined ? result.data.show_rest_time : settings.show_rest_time,
                 default_rest_time: result.data.default_rest_time || settings.default_rest_time,
             });
         } else {

@@ -48,12 +48,27 @@ export default function CurrentWorkout() {
     const { settings } = useSettings();
     const showRpe = settings?.show_rpe !== false;
     const show1rm = settings?.show_1rm !== false;
+    const showGoals = settings?.show_goals !== false;
+    const showRestTime = settings?.show_rest_time !== false;
     const [showExercisePicker, setShowExercisePicker] = useState(false);
     const [routines, setRoutines] = useState<Routine[]>([]);
     const [showRoutinePicker, setShowRoutinePicker] = useState(false);
     const [showFinishModal, setShowFinishModal] = useState(false);
     const [showSaveRoutineModal, setShowSaveRoutineModal] = useState(false);
     const [routineName, setRoutineName] = useState("");
+
+    const getLoadedRestTime = (exercise: any) => {
+        const parsedExerciseTime = Number(exercise.planned_time);
+        if (Number.isFinite(parsedExerciseTime) && parsedExerciseTime > 0) {
+            return parsedExerciseTime;
+        }
+
+        const setTime = (exercise.sets || [])
+            .map((set: any) => Number(set.planned_time))
+            .find((time: number) => Number.isFinite(time) && time > 0);
+
+        return setTime || 60;
+    };
 
     // Goals state
     const [goals, setGoals] = useState<Record<number, { target_weight: string; target_reps: number }>>({});
@@ -126,8 +141,8 @@ export default function CurrentWorkout() {
                 const routine = data.data;
                 setWorkoutName(routine.name);
                 const loadedExercises = routine.exercises.map((ex: any) => {
-                    const exerciseRest = parseInt(ex.planned_time) || 60;
                     const hasSets = ex.sets && ex.sets.length > 0;
+                    const exerciseRest = getLoadedRestTime(ex);
                     return {
                         exercise_id: ex.exercise_id || ex.id,
                         name: ex.exercise_name || ex.name,
@@ -137,13 +152,15 @@ export default function CurrentWorkout() {
                             weight: s.planned_weight || "",
                             repetitions: s.planned_reps || "",
                             note: "",
-                            is_done: false
+                            is_done: false,
+                            rest_time: Number(s.planned_time) > 0 ? Number(s.planned_time) : exerciseRest,
                         })) : Array.from({ length: ex.planned_sets || 1 }, (_, i) => ({
                             set_number: i + 1,
                             weight: ex.planned_weight || "",
                             repetitions: ex.planned_reps || "",
                             note: "",
-                            is_done: false
+                            is_done: false,
+                            rest_time: exerciseRest,
                         }))
                     };
                 });
@@ -220,13 +237,13 @@ export default function CurrentWorkout() {
                         const setRes = await apiFetch(`/api/workouts/exercises/${workoutExerciseId}/sets`, {
                             method: "POST",
                             headers,
-                                body: JSON.stringify({
-                                    weight: set.weight || 0,
-                                    reps: set.repetitions || 0,
-                                    time: ex.rest_time,
-                                    note: set.note || null,
-                                    rpe: set.rpe || null
-                                })
+                            body: JSON.stringify({
+                                weight: set.weight || 0,
+                                reps: set.repetitions || 0,
+                                time: set.rest_time ?? ex.rest_time,
+                                note: set.note || null,
+                                rpe: set.rpe || null
+                            })
                         });
                         const setData = await setRes.json();
                         if (setData.success) {
@@ -300,7 +317,7 @@ export default function CurrentWorkout() {
                         planned_sets: ex.sets.length,
                         planned_reps: avgReps,
                         planned_weight: avgWeight,
-                        planned_time: ex.rest_time
+                        planned_time: ex.sets[0]?.rest_time ?? ex.rest_time
                     })
                 });
                 const exData = await exRes.json();
@@ -316,7 +333,7 @@ export default function CurrentWorkout() {
                                     set_number: i + 1,
                                     planned_weight: Number(s.weight) || 0,
                                     planned_reps: Number(s.repetitions) || 0,
-                                    planned_time: 0
+                                    planned_time: s.rest_time ?? ex.rest_time
                                 })
                             });
                         }
@@ -362,7 +379,7 @@ export default function CurrentWorkout() {
                     </div>
                 </header>
 
-                {isRestTimerActive && (
+                {isRestTimerActive && showRestTime && (
                     <div className="bg-surface border border-subtle p-4 rounded-xl mb-6 flex flex-wrap items-center gap-3 shadow-lg">
                         <span className="font-bold uppercase tracking-wider text-accent text-sm">Rest</span>
                         <span className="font-mono text-2xl font-black text-accent">{formatTime(restTime)}</span>
@@ -384,6 +401,7 @@ export default function CurrentWorkout() {
                                 <div>
                                     <h3 className="text-xl font-bold text-body">{ex.name}</h3>
                                     {(() => {
+                                        if (!showGoals) return null;
                                         const goal = goals[ex.exercise_id];
                                         if (!goal) return null;
                                         const targetWeight = Number(goal.target_weight);
@@ -405,25 +423,26 @@ export default function CurrentWorkout() {
                                         );
                                     })()}
                                     {/* Inline Exercise rest presets */}
-                                    <div className="flex items-center gap-2 mt-1 text-muted text-sm flex-wrap">
-                                        <span>Target Rest:</span>
-                                        <span className="font-mono font-bold text-accent">{ex.rest_time}s</span>
-                                        <div className="flex gap-1">
-                                            {[60, 90, 120].map(preset => (
-                                                <button
-                                                    key={preset}
-                                                    onClick={() => updateExerciseRest(exIdx, preset)}
-                                                    className={`px-2 py-0.5 rounded font-bold text-xs transition-colors ${
-                                                        ex.rest_time === preset
-                                                            ? 'bg-accent text-white'
-                                                            : 'bg-elevated hover:bg-hover text-muted'
-                                                    }`}
-                                                >
-                                                    {preset}s
-                                                </button>
-                                            ))}
+                                    {showRestTime && (
+                                        <div className="flex items-center gap-2 mt-1 text-muted text-sm flex-wrap">
+                                            <span>Target Rest:</span>
+                                            <span className="font-mono font-bold text-accent">{ex.rest_time}s</span>
+                                            <div className="flex gap-1">
+                                                {[60, 90, 120].map(preset => (
+                                                    <button
+                                                        key={preset}
+                                                        onClick={() => updateExerciseRest(exIdx, preset)}
+                                                        className={`px-2 py-0.5 rounded font-bold text-xs transition-colors ${ex.rest_time === preset
+                                                                ? 'bg-accent text-white'
+                                                                : 'bg-elevated hover:bg-hover text-muted'
+                                                            }`}
+                                                    >
+                                                        {preset}s
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                                 <button onClick={() => removeExercise(exIdx)} className="text-dim hover:text-red-400 transition-colors self-start sm:self-center">
                                     Remove
@@ -436,6 +455,7 @@ export default function CurrentWorkout() {
                                         <tr className="text-dim text-xs uppercase tracking-widest border-b border-subtle">
                                             <th className="py-2 px-2 w-12 text-center">Status</th>
                                             <th className="py-2 px-2 w-12">Set</th>
+                                            {showRestTime && <th className="py-2 px-2 w-16 text-center">Rest</th>}
                                             <th className="py-2 px-2 text-right">Weight (kg)</th>
                                             <th className="py-2 px-2 text-right">Reps</th>
                                             {showRpe && <th className="py-2 px-2 w-16 text-center">RPE</th>}
@@ -461,6 +481,11 @@ export default function CurrentWorkout() {
                                                     </button>
                                                 </td>
                                                 <td className="py-3 px-2 font-mono text-muted">{set.set_number}</td>
+                                                {showRestTime && (
+                                                    <td className="py-3 px-2 font-mono text-dim text-[10px] align-top">
+                                                        {set.rest_time ? `${set.rest_time}s` : ""}
+                                                    </td>
+                                                )}
                                                 <td className="py-2 px-1">
                                                     <TransparentNumericInput
                                                         value={set.weight}
@@ -513,23 +538,25 @@ export default function CurrentWorkout() {
                                                         )}
                                                     </td>
                                                 )}
-                                                <td className="py-2 px-2 text-center">
-                                                    {(() => {
-                                                        const goal = goals[ex.exercise_id];
-                                                        if (!goal) return <span className="text-dim text-xs">—</span>;
-                                                        const targetWeight = Number(goal.target_weight);
-                                                        if (!targetWeight) return <span className="text-dim text-xs">—</span>;
-                                                        const setWeight = Number(set.weight) || 0;
-                                                        if (!setWeight) return <span className="text-dim text-xs">—</span>;
-                                                        const diff = targetWeight - setWeight;
-                                                        const achieved = diff <= 0;
-                                                        return (
-                                                            <span className={`font-mono text-xs font-semibold ${achieved ? 'text-accent' : 'text-amber-400'}`}>
-                                                                {achieved ? '✓' : `-${diff.toFixed(1)} kg`}
-                                                            </span>
-                                                        );
-                                                    })()}
-                                                </td>
+                                                {showGoals && (
+                                                    <td className="py-2 px-2 text-center">
+                                                        {(() => {
+                                                            const goal = goals[ex.exercise_id];
+                                                            if (!goal) return <span className="text-dim text-xs">—</span>;
+                                                            const targetWeight = Number(goal.target_weight);
+                                                            if (!targetWeight) return <span className="text-dim text-xs">—</span>;
+                                                            const setWeight = Number(set.weight) || 0;
+                                                            if (!setWeight) return <span className="text-dim text-xs">—</span>;
+                                                            const diff = targetWeight - setWeight;
+                                                            const achieved = diff <= 0;
+                                                            return (
+                                                                <span className={`font-mono text-xs font-semibold ${achieved ? 'text-accent' : 'text-amber-400'}`}>
+                                                                    {achieved ? '✓' : `-${diff.toFixed(1)} kg`}
+                                                                </span>
+                                                            );
+                                                        })()}
+                                                    </td>
+                                                )}
                                                 <td className="py-2 px-2 min-w-[100px]">
                                                     <input
                                                         type="text"
@@ -596,55 +623,55 @@ export default function CurrentWorkout() {
 
                 <Modal open={showSaveRoutineModal} onClose={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} maxWidth="sm" backdrop="darker">
                     <Card variant="default" padding="lg" className="shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                    <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
-                        Save as Routine
-                    </h2>
-                    <p className="text-sm text-muted mb-6">
-                        Create a routine from {exercises.length} exercise{exercises.length !== 1 ? 's' : ''}.
-                    </p>
-                    <Input
-                        type="text"
-                        value={routineName}
-                        onChange={(e) => setRoutineName(e.target.value)}
-                        placeholder="Routine name"
-                        className="mb-4"
-                        autoFocus
-                        onKeyDown={(e) => { if (e.key === 'Enter') saveAsRoutine(); }}
-                    />
-                    <div className="space-y-3">
-                        <Button onClick={saveAsRoutine} variant="primary" fullWidth>
-                            Create Routine
-                        </Button>
-                        <Button onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} variant="secondary" fullWidth>
-                            Cancel
-                        </Button>
-                    </div>
-                </Card>
+                        <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
+                            Save as Routine
+                        </h2>
+                        <p className="text-sm text-muted mb-6">
+                            Create a routine from {exercises.length} exercise{exercises.length !== 1 ? 's' : ''}.
+                        </p>
+                        <Input
+                            type="text"
+                            value={routineName}
+                            onChange={(e) => setRoutineName(e.target.value)}
+                            placeholder="Routine name"
+                            className="mb-4"
+                            autoFocus
+                            onKeyDown={(e) => { if (e.key === 'Enter') saveAsRoutine(); }}
+                        />
+                        <div className="space-y-3">
+                            <Button onClick={saveAsRoutine} variant="primary" fullWidth>
+                                Create Routine
+                            </Button>
+                            <Button onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} variant="secondary" fullWidth>
+                                Cancel
+                            </Button>
+                        </div>
+                    </Card>
                 </Modal>
 
                 <Modal open={showFinishModal} onClose={() => setShowFinishModal(false)} maxWidth="sm" backdrop="darker">
                     <Card variant="default" padding="lg" className="shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                    <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
-                        Finish Workout
-                    </h2>
-                    <p className="text-sm text-muted mb-6">
-                        Duration: {formatTime(elapsedTime)}
-                    </p>
-                    <div className="space-y-3">
-                        <Button onClick={() => { setShowFinishModal(false); saveWorkout(); }} variant="primary" fullWidth>
-                            Save Workout
-                        </Button>
-                        <Button onClick={() => { setShowFinishModal(false); setShowSaveRoutineModal(true); }} variant="secondary" fullWidth>
-                            Save as Routine
-                        </Button>
-                        <Button onClick={() => { setShowFinishModal(false); resetWorkout(); navigate("/"); }} variant="danger" fullWidth>
-                            Delete Workout
-                        </Button>
-                        <Button onClick={() => setShowFinishModal(false)} variant="secondary" fullWidth>
-                            Cancel
-                        </Button>
-                    </div>
-                </Card>
+                        <h2 className="font-display text-lg font-bold text-body uppercase tracking-wide mb-2">
+                            Finish Workout
+                        </h2>
+                        <p className="text-sm text-muted mb-6">
+                            Duration: {formatTime(elapsedTime)}
+                        </p>
+                        <div className="space-y-3">
+                            <Button onClick={() => { setShowFinishModal(false); saveWorkout(); }} variant="primary" fullWidth>
+                                Save Workout
+                            </Button>
+                            <Button onClick={() => { setShowFinishModal(false); setShowSaveRoutineModal(true); }} variant="secondary" fullWidth>
+                                Save as Routine
+                            </Button>
+                            <Button onClick={() => { setShowFinishModal(false); resetWorkout(); navigate("/"); }} variant="danger" fullWidth>
+                                Delete Workout
+                            </Button>
+                            <Button onClick={() => setShowFinishModal(false)} variant="secondary" fullWidth>
+                                Cancel
+                            </Button>
+                        </div>
+                    </Card>
                 </Modal>
             </div>
         </div>

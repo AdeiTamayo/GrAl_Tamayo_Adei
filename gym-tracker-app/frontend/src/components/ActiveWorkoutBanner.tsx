@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkout } from './WorkoutContext';
+import { useSettings } from './SettingsContext';
 import Button from './Button';
 import { formatTime } from '../utils/helpers';
 
 export default function ActiveWorkoutBanner() {
     const { isWorkoutActive, elapsedTime, activeExerciseName, workoutName, isRestTimerActive, restTime } = useWorkout();
+    const { settings } = useSettings();
     const navigate = useNavigate();
 
     if (!isWorkoutActive) return null;
@@ -27,7 +29,7 @@ export default function ActiveWorkoutBanner() {
                     {formatTime(elapsedTime)}
                 </div>
 
-                {isRestTimerActive && (
+                {isRestTimerActive && settings.show_rest_time && (
                     <div className="text-amber-400 font-mono text-xs font-bold tabular-nums bg-amber-400/10 px-2 py-0.5 rounded shrink-0">
                         Rest {formatTime(restTime)}
                     </div>

@@ -148,9 +148,9 @@ exports.updateRoutineExercise = async (req, res) => {
     try {
         const itemId = req.params.item_id;
         const userId = req.userId;
-        const { exercise_order, planned_sets, planned_reps, planned_weight, note } = req.body;
+        const { exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note } = req.body;
 
-        const updatedExercise = await Routines.updateRoutineExercise(itemId, userId, exercise_order, planned_sets, planned_reps, planned_weight, note);
+        const updatedExercise = await Routines.updateRoutineExercise(itemId, userId, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note);
 
         if (!updatedExercise) {
             return res.status(404).json({ success: false, error: 'Routine exercise not found or unauthorized' });

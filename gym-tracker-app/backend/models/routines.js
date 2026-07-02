@@ -124,7 +124,7 @@ class Routine {
         }
     }
 
-    static async updateRoutineExercise(itemId, userId, exercise_order, planned_sets, planned_reps, planned_weight, note) {
+    static async updateRoutineExercise(itemId, userId, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note) {
         try {
             const query = `
                 UPDATE routine_exercises re
@@ -133,12 +133,13 @@ class Routine {
                     planned_sets = COALESCE($4, planned_sets), 
                     planned_reps = COALESCE($5, planned_reps), 
                     planned_weight = COALESCE($6, planned_weight), 
-                    note = COALESCE($7, note)
+                    planned_time = COALESCE($7, planned_time),
+                    note = COALESCE($8, note)
                 FROM routines r
                 WHERE re.routine_id = r.id AND re.id = $1 AND r.user_id = $2
                 RETURNING re.*;
             `;
-            const values = [itemId, userId, exercise_order, planned_sets, planned_reps, planned_weight, note];
+            const values = [itemId, userId, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note];
             const result = await pool.query(query, values);
             return result.rows[0];
         } catch (error) {

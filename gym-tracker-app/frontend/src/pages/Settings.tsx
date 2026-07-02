@@ -13,7 +13,7 @@ export default function Settings() {
     const { settings, loading, updateSettings } = useSettings();
     const [saving, setSaving] = useState(false);
 
-    async function handleToggle(field: 'show_rpe' | 'show_1rm', value: boolean) {
+    async function handleToggle(field: 'show_rpe' | 'show_1rm' | 'show_goals' | 'show_rest_time', value: boolean) {
         setSaving(true);
         try {
             await updateSettings({ [field]: value });
@@ -78,6 +78,22 @@ export default function Settings() {
                         disabled={saving || loading}
                         label="Estimated 1RM"
                         description="Show estimated one-rep max column in workouts"
+                    />
+
+                    <Toggle
+                        enabled={settings.show_goals}
+                        onChange={(v) => handleToggle('show_goals', v)}
+                        disabled={saving || loading}
+                        label="Goals"
+                        description="Show goal indicators in active workouts"
+                    />
+
+                    <Toggle
+                        enabled={settings.show_rest_time}
+                        onChange={(v) => handleToggle('show_rest_time', v)}
+                        disabled={saving || loading}
+                        label="Rest Time"
+                        description="Show rest timer, presets, and per-set rest values"
                     />
                 </div>
 

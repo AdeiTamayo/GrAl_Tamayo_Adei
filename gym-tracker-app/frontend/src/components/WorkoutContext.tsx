@@ -8,6 +8,7 @@ interface SetEntry {
     note: string;
     is_done: boolean;
     rpe?: number | string;
+    rest_time?: number;
 }
 
 interface ActiveExercise {
@@ -121,7 +122,7 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
             exercise_id: exercise.id,
             name: exercise.name,
             rest_time: rest,
-            sets: [{ set_number: 1, weight: "", repetitions: "", note: "", is_done: false, rpe: "" }]
+            sets: [{ set_number: 1, weight: "", repetitions: "", note: "", is_done: false, rpe: "", rest_time: rest }]
         }]);
     }, [settings?.default_rest_time]);
 
@@ -138,6 +139,7 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
                     note: "",
                     is_done: false,
                     rpe: "",
+                    rest_time: lastSet?.rest_time ?? updated[exerciseIndex].rest_time,
                 }]
             };
             return updated;
@@ -154,7 +156,7 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
             updated[exerciseIndex] = { ...updated[exerciseIndex], sets: newSets };
 
             if (currentSet.is_done) {
-                const exerciseRestDuration = updated[exerciseIndex].rest_time;
+                const exerciseRestDuration = currentSet.rest_time ?? updated[exerciseIndex].rest_time;
                 setRestDuration(exerciseRestDuration);
                 setRestTime(exerciseRestDuration);
                 setRestStartTime(Date.now());

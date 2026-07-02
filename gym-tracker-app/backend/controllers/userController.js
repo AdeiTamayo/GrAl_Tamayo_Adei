@@ -332,8 +332,8 @@ exports.getSettings = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
     try {
-        const { show_rpe, show_1rm, default_rest_time } = req.body;
-        const settings = await User.updateSettings(req.userId, { show_rpe, show_1rm, default_rest_time });
+        const { show_rpe, show_1rm, show_goals, show_rest_time, default_rest_time } = req.body;
+        const settings = await User.updateSettings(req.userId, { show_rpe, show_1rm, show_goals, show_rest_time, default_rest_time });
         return res.status(200).json({ success: true, data: settings });
     } catch (error) {
         console.error('[Settings] Error updating:', error.message);

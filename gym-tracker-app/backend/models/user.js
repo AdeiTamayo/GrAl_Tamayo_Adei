@@ -290,7 +290,7 @@ class User {
 
     static async updateSettings(userId, data) {
         try {
-            const { show_rpe, show_1rm, default_rest_time } = data;
+            const { show_rpe, show_1rm, show_goals, show_rest_time, default_rest_time } = data;
 
             // Ensure a row exists first
             await pool.query(
@@ -309,6 +309,14 @@ class User {
             if (show_1rm !== undefined) {
                 sets.push(`show_1rm = $${idx++}`);
                 params.push(show_1rm);
+            }
+            if (show_goals !== undefined) {
+                sets.push(`show_goals = $${idx++}`);
+                params.push(show_goals);
+            }
+            if (show_rest_time !== undefined) {
+                sets.push(`show_rest_time = $${idx++}`);
+                params.push(show_rest_time);
             }
             if (default_rest_time !== undefined) {
                 sets.push(`default_rest_time = $${idx++}`);
