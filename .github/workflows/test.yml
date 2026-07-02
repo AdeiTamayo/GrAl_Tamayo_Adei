@@ -17,17 +17,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: gym-tracker-app/frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: frontend
+        working-directory: gym-tracker-app/frontend
 
       - name: Run frontend tests
         run: npm test -- --watchAll=false
-        working-directory: frontend
+        working-directory: gym-tracker-app/frontend
         env:
           CI: true
 
@@ -41,16 +41,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
-          cache-dependency-path: backend/package-lock.json
+          cache-dependency-path: gym-tracker-app/backend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: backend
+        working-directory: gym-tracker-app/backend
 
       - name: Run backend tests
         run: npm test
-        working-directory: backend
+        working-directory: gym-tracker-app/backend
         env:
           CI: true
