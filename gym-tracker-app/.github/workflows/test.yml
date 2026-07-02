@@ -2,9 +2,9 @@ name: Run Tests
 
 on:
   push:
-    branches: [main, master, Online_deployment]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 jobs:
   frontend:
