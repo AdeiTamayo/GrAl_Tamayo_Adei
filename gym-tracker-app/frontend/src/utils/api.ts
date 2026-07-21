@@ -14,7 +14,6 @@ export async function apiFetch(input: string, init?: RequestInit) {
     return fetch(apiUrl(input), {
         ...init,
         headers: {
-            "ngrok-skip-browser-warning": "true",
             ...(init?.headers as Record<string, string>),
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },

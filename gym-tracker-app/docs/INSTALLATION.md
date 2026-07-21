@@ -153,13 +153,16 @@ The backend includes SQL migrations in `backend/migrations/`.
 Apply them to your PostgreSQL database in order:
 
 1. `001_create_users_table.sql`
-2. `002_create_videos_table.sql`
-3. `003_create_exercise_table.sql`
-4. `004_create_pr_table.sql`
-5. `005_create_workouts_table.sql`
-6. `006_create_sets_table.sql`
-7. `007_create_routines_table.sql`
-8. `008_create_goals_table.sql`
+2. `002_create_exercise_table.sql`
+3. `003_create_pr_table.sql`
+4. `004_create_workouts_table.sql`
+5. `005_create_sets_table.sql`
+6. `006_create_routines_table.sql`
+7. `007_create_goals_table.sql`
+8. `008_create_planned_workouts_table.sql`
+9. `008_create_user_settings.sql`
+10. `009_alter_exercise_columns_to_varchar.sql`
+11. `010_add_workout_visibility_settings.sql`
 
 You can apply them with `psql` or through a SQL client like pgAdmin.
 

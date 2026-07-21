@@ -51,7 +51,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With, ngrok-skip-browser-warning');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
     res.header('Access-Control-Allow-Credentials', 'true');
     if (req.method === 'OPTIONS') {
         return res.sendStatus(204);
