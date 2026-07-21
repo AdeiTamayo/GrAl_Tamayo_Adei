@@ -8,9 +8,9 @@
 
 | Dashboard | Active Workout | Video Analysis |
 | :---: | :---: | :---: |
-| ![Dashboard](screenshots/dashboard.png) | ![Active Workout](screenshots/active-workout.png) | ![Video Analysis](screenshots/features.png) |
+| ![Dashboard](Screenshots/dashboard.png) | ![Active Workout](Screenshots/active-workout.png) | ![Video Analysis](Screenshots/features.png) |
 | **Workout History** | **Weight Tracking** | **Exercise Library** |
-| ![Workout History](screenshots/workout-history.png) | ![Weight Tracking](screenshots/weight-history.png) | ![Exercises](screenshots/exercises.png) |
+| ![Workout History](Screenshots/workout-history.png) | ![Weight Tracking](Screenshots/weight-history.png) | ![Exercises](Screenshots/exercises.png) |
 
 ---
 
