@@ -7,7 +7,7 @@
 ## Screenshots / Pantaila-argazkiak
 
 | Dashboard | Active Workout | Video Analysis |
-|:---:|:---:|:---:|
+| :---: | :---: | :---: |
 | ![Dashboard](Screenshots/dashboard.png) | ![Active Workout](Screenshots/active-workout.png) | ![Video Analysis](Screenshots/features.png) |
 | **Workout History** | **Weight Tracking** | **Exercise Library** |
 | ![Workout History](Screenshots/workout-history.png) | ![Weight Tracking](Screenshots/weight-history.png) | ![Exercises](Screenshots/exercises.png) |
