@@ -4,13 +4,13 @@
 
 ---
 
-## 📸 Features / Ezaugarriak
+## Screenshots / Pantaila-argazkiak
 
 | Dashboard | Active Workout | Video Analysis |
-| :---: | :---: | :---: |
-| ![Dashboard](screenshots/dashboard.png) | ![Active Workout](screenshots/active-workout.png) | ![Video Analysis](screenshots/features.png) |
+|:---:|:---:|:---:|
+| ![Dashboard](Screenshots/dashboard.png) | ![Active Workout](Screenshots/active-workout.png) | ![Video Analysis](Screenshots/features.png) |
 | **Workout History** | **Weight Tracking** | **Exercise Library** |
-| ![Workout History](screenshots/workout-history.png) | ![Weight Tracking](screenshots/weight-history.png) | ![Exercises](screenshots/exercises.png) |
+| ![Workout History](Screenshots/workout-history.png) | ![Weight Tracking](Screenshots/weight-history.png) | ![Exercises](Screenshots/exercises.png) |
 
 ---
 
@@ -44,6 +44,44 @@
 **EN** — Gym Tracker analyzes exercise videos using computer vision to evaluate barbell path, velocity, and lifting technique. Users can log their workouts, upload videos, track personal records, set goals, and view visual analytics of their performance. The system uses an Express.js (Node.js) + React + PostgreSQL architecture, with a barbell tracking module implemented in Python using OpenCV and MediaPipe.
 
 **EU** — Aplikazioak ariketen bideoak aztertzen ditu ikusmen konputazionalaren bidez, barraren ibilbidea, abiadura eta teknika ebaluatzeko. Erabiltzaileek beren entrenamenduak gorde, bideoak igo, marka pertsonalak jarraitu, helburuak ezarri eta errendimenduaren analisi bisualak ikus ditzakete. Sistema honek Express.js (Node.js) + React + PostgreSQL arkitektura erabiltzen du, eta barbell tracking modulua Python-ez inplementatzen da OpenCV eta MediaPipe erabiliz.
+
+## Architecture / Arkitektura
+
+```mermaid
+flowchart TD
+    subgraph Frontend ["Frontend (React + TypeScript)"]
+        UI[React UI\nTailwind CSS]
+        Router[React Router\n18 routes]
+        Charts[Recharts\nGraphs & Analytics]
+    end
+
+    subgraph Backend ["Backend (Express.js)"]
+        API[REST API\n/api/*]
+        Auth[JWT + bcrypt\nAuthentication]
+        Upload[Multer\nFile Upload]
+        VP[VideoProcessor\nPython Bridge]
+    end
+
+    subgraph Database ["PostgreSQL"]
+        DB[(Users, Workouts,\nExercises, PRs,\nRoutines, Goals,\nVideos, Settings)]
+    end
+
+    subgraph Vision ["Computer Vision (Python)"]
+        PT[Pose Estimation\nMediaPipe]
+        BT[Barbell Tracking\nYOLO + OpenCV CSRT]
+    end
+
+    UI -->|Fetch API| API
+    Router --> UI
+    Charts --> API
+    API --> Auth
+    API --> Upload
+    API --> VP
+    VP -->|spawn| PT
+    VP -->|spawn| BT
+    API --> DB
+    Upload -->|videos| VP
+```
 
 ---
 
