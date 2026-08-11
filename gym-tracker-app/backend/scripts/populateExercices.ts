@@ -11,9 +11,9 @@ const require = createRequire(import.meta.url);
 // Helper function to prevent "Too Many Requests" (429) errors
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-dotenv.config({ path: path.resolve('PATH_TO_EnvFile') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const pool = require('../config/database');
+const supabase = require('../config/database');
 
 async function seedExercises(): Promise<void> {
     const apiKey = process.env.RAPIDAPI_KEY || process.env.RapidAPI_Key;
@@ -54,30 +54,24 @@ async function seedExercises(): Promise<void> {
 
             for (const ex of exercises) {
                 try {
-                    await pool.query(
-                        `INSERT INTO exercises 
-                            (api_id, name, body_part, target_muscle, secondary_muscles, 
-                             equipment, difficulty, category, description, instructions)
-                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                         ON CONFLICT (api_id) DO UPDATE 
-                            SET name = EXCLUDED.name,
-                                difficulty = EXCLUDED.difficulty,
-                                category = EXCLUDED.category,
-                                description = EXCLUDED.description,
-                                instructions = EXCLUDED.instructions`,
-                        [
-                            ex.id,
-                            ex.name,
-                            ex.bodyPart || null,
-                            ex.target || null,
-                            ex.secondaryMuscles || [],
-                            ex.equipment || null,
-                            ex.difficulty || null,
-                            ex.category || null,
-                            ex.description || null,
-                            ex.instructions || []
-                        ]
-                    );
+                    const { error } = await supabase
+                        .from('exercises')
+                        .upsert(
+                            {
+                                api_id: ex.id,
+                                name: ex.name,
+                                body_part: ex.bodyPart || null,
+                                target_muscle: ex.target || null,
+                                secondary_muscles: ex.secondaryMuscles || [],
+                                equipment: ex.equipment || null,
+                                difficulty: ex.difficulty || null,
+                                category: ex.category || null,
+                                description: ex.description || null,
+                                instructions: ex.instructions || []
+                            },
+                            { onConflict: 'api_id' }
+                        );
+                    if (error) throw error;
                     totalInserted++;
                 } catch (err) {
                     console.warn(`Skipped ${ex.id}: ${err.message}`);
@@ -106,7 +100,7 @@ async function seedExercises(): Promise<void> {
     }
 
     console.log(`\n✨ Finished! Total Sync: ${totalInserted}, Total Skipped: ${totalSkipped}`);
-    await pool.end();
+    supabase.realtime.disconnect();
 }
 
 seedExercises();
