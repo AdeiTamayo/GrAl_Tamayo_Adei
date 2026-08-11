@@ -1,21 +1,20 @@
-const { Pool, types } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
 
-types.setTypeParser(1082, (val) => val);
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+if (!supabaseUrl || !supabaseKey) {
+    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_ANON_KEY) must be set in .env');
+}
+
+// Service role key bypasses RLS — backend scripts only. NEVER expose to the frontend.
+const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+    },
 });
 
-pool.on('connect', () => {
-    console.log('[Database] Connected to PostgreSQL');
-});
+console.log(`[Database] Supabase client ready (${supabaseUrl})`);
 
-pool.on('error', (err) => {
-    console.error('[Database] Unexpected error on idle client:', err);
-});
-
-module.exports = pool;
+module.exports = supabase;

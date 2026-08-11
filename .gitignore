@@ -1,0 +1,15 @@
+# Environment / secrets
+.env
+
+# Node
+node_modules/
+
+# Builds
+build/
+dist/
+
+# Media uploads / processed videos
+gym-tracker-app/backend/media/
+
+# Logs
+*.log
