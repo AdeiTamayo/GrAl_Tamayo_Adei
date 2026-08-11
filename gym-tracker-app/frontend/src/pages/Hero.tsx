@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { apiBaseUrl } from '../utils/api';
 import Calendar from '../components/Calendar';
 import ErrorBanner from '../components/ErrorBanner';
@@ -11,11 +11,6 @@ import { getWeightHistory } from '../data/user';
 import { getPlannedWorkouts } from '../data/plannedWorkouts';
 import { getUserGoals } from '../data/goals';
 import { Workout, VideoRecord, WeightEntry, DashboardStats, PlannedWorkout, Goal } from '../data/types';
-
-type LocationState = {
-    user?: { email?: string };
-    email?: string;
-};
 
 const primaryNav = [
     { to: '/active-workout', label: 'Active Workout', desc: 'Start or continue a training session', icon: 'M8 5v14l11-7z' },
@@ -35,10 +30,6 @@ const secondaryNav = [
 ];
 
 export default function Hero() {
-    const location = useLocation();
-    const { user, email: stateEmail } = (location.state as LocationState) || {};
-    const displayEmail = localStorage.getItem('email') || user?.email || stateEmail || 'N/A';
-    const isLoggedIn = displayEmail !== 'N/A';
     const { isAuthenticated } = useAuth();
 
     const [workoutCount, setWorkoutCount] = useState<number | null>(null);
@@ -55,7 +46,7 @@ export default function Hero() {
     const [showActions, setShowActions] = useState(false);
 
     useEffect(() => {
-        if (!isLoggedIn || !isAuthenticated) {
+        if (!isAuthenticated) {
             setLoading(false);
             return;
         }
@@ -111,7 +102,7 @@ export default function Hero() {
         }
 
         fetchDashboard().catch(err => { setDashboardError("Failed to load dashboard data."); console.error(err); });
-    }, [isLoggedIn, isAuthenticated]);
+    }, [isAuthenticated]);
 
     const workoutEvents = useMemo(() => {
         const events: Record<string, { date: string; status: 'completed' }> = {};
@@ -124,7 +115,7 @@ export default function Hero() {
         return events;
     }, [allWorkouts]);
 
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-body text-body p-4">
                 <div className="w-full max-w-md text-center space-y-8">
