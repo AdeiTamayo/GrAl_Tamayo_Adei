@@ -1,33 +1,21 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { apiFetch, apiBaseUrl } from '../utils/api';
+import { apiBaseUrl } from '../utils/api';
 import Calendar from '../components/Calendar';
 import ErrorBanner from '../components/ErrorBanner';
+import { useAuth } from '../contexts/AuthContext';
+import { getDashboardStats } from '../data/dashboard';
+import { getWorkouts } from '../data/workouts';
+import { getVideos } from '../data/videos';
+import { getWeightHistory } from '../data/user';
+import { getPlannedWorkouts } from '../data/plannedWorkouts';
+import { getUserGoals } from '../data/goals';
+import { Workout, VideoRecord, WeightEntry, DashboardStats, PlannedWorkout, Goal } from '../data/types';
 
 type LocationState = {
     user?: { email?: string };
     email?: string;
 };
-
-interface Workout {
-    id: number;
-    name: string;
-    date: string;
-    exercises?: { id: number }[];
-}
-
-interface VideoItem {
-    id: string;
-    process_type: string;
-    processed_url: string;
-    created_at: string;
-}
-
-interface WeightEntry {
-    id: number;
-    weight: number | string;
-    date: string;
-}
 
 const primaryNav = [
     { to: '/active-workout', label: 'Active Workout', desc: 'Start or continue a training session', icon: 'M8 5v14l11-7z' },
@@ -51,13 +39,14 @@ export default function Hero() {
     const { user, email: stateEmail } = (location.state as LocationState) || {};
     const displayEmail = localStorage.getItem('email') || user?.email || stateEmail || 'N/A';
     const isLoggedIn = displayEmail !== 'N/A';
+    const { isAuthenticated } = useAuth();
 
     const [workoutCount, setWorkoutCount] = useState<number | null>(null);
     const [weeklyVolume, setWeeklyVolume] = useState<number | null>(null);
     const [currentStreak, setCurrentStreak] = useState<number | null>(null);
     const [allWorkouts, setAllWorkouts] = useState<Workout[]>([]);
     const [recentWorkouts, setRecentWorkouts] = useState<Workout[]>([]);
-    const [videos, setVideos] = useState<VideoItem[]>([]);
+    const [videos, setVideos] = useState<VideoRecord[]>([]);
     const [latestWeight, setLatestWeight] = useState<WeightEntry | null>(null);
     const [plannedDates, setPlannedDates] = useState<Set<string>>(new Set());
     const [goalDates, setGoalDates] = useState<Set<string>>(new Set());
@@ -65,58 +54,54 @@ export default function Hero() {
     const [dashboardError, setDashboardError] = useState<string | null>(null);
     const [showActions, setShowActions] = useState(false);
 
-    const token = localStorage.getItem('user_login_token');
-
     useEffect(() => {
-        if (!isLoggedIn || !token) {
+        if (!isLoggedIn || !isAuthenticated) {
             setLoading(false);
             return;
         }
 
-        const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
-
         async function fetchDashboard() {
             const results = await Promise.allSettled([
-                apiFetch('/api/dashboard/stats', { headers }).then(r => r.json()),
-                apiFetch('/api/workouts', { headers }).then(r => r.json()),
-                apiFetch('/api/videos?sort=desc', { headers }).then(r => r.json()),
-                apiFetch('/api/user/weights', { headers }).then(r => r.json()),
-                apiFetch('/api/planned-workouts', { headers }).then(r => r.json()),
-                apiFetch('/api/goals', { headers }).then(r => r.json()),
+                getDashboardStats(),
+                getWorkouts(),
+                getVideos(),
+                getWeightHistory(),
+                getPlannedWorkouts(),
+                getUserGoals(),
             ]);
 
             const [statsData, workoutData, videoData, weightData, plannedData, goalsData] = results.map(r =>
                 r.status === 'fulfilled' ? r.value : null
-            );
+            ) as [DashboardStats | null, Workout[] | null, VideoRecord[] | null, { rows: WeightEntry[]; total: number } | null, PlannedWorkout[] | null, Goal[] | null];
 
-            if (statsData?.success) {
-                setWorkoutCount(statsData.data.workoutCount);
-                setWeeklyVolume(statsData.data.weeklyVolume);
-                setCurrentStreak(statsData.data.currentStreak);
+            if (statsData) {
+                setWorkoutCount(statsData.workoutCount);
+                setWeeklyVolume(statsData.weeklyVolume);
+                setCurrentStreak(statsData.currentStreak);
             }
-            if (workoutData?.success) {
-                const w = workoutData.data || [];
+            if (workoutData) {
+                const w = workoutData;
                 setAllWorkouts(w);
                 setRecentWorkouts(w.slice(0, 5));
             }
-            if (videoData?.success) {
-                setVideos((videoData.videos || []).slice(0, 3));
+            if (videoData) {
+                setVideos(videoData.slice(0, 3));
             }
-            if (weightData?.success) {
-                const entries: WeightEntry[] = weightData.data || [];
+            if (weightData) {
+                const entries: WeightEntry[] = weightData.rows;
                 entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 if (entries.length > 0) setLatestWeight(entries[0]);
             }
-            if (plannedData?.success) {
+            if (plannedData) {
                 const dates = new Set<string>();
-                (plannedData.data || []).forEach((p: any) => {
+                plannedData.forEach((p) => {
                     if (p.date) dates.add(p.date.substring(0, 10));
                 });
                 setPlannedDates(dates);
             }
-            if (goalsData?.success) {
+            if (goalsData) {
                 const dates = new Set<string>();
-                (goalsData.goals || []).forEach((g: any) => {
+                goalsData.forEach((g) => {
                     if (g.expected_date) dates.add(g.expected_date.substring(0, 10));
                 });
                 setGoalDates(dates);
@@ -126,7 +111,7 @@ export default function Hero() {
         }
 
         fetchDashboard().catch(err => { setDashboardError("Failed to load dashboard data."); console.error(err); });
-    }, [isLoggedIn, token]);
+    }, [isLoggedIn, isAuthenticated]);
 
     const workoutEvents = useMemo(() => {
         const events: Record<string, { date: string; status: 'completed' }> = {};
@@ -268,7 +253,7 @@ export default function Hero() {
                             {videos.map(video => (
                                 <Link key={video.id} to="/videos" className="group bg-card border border-subtle/80 rounded-xl overflow-hidden hover:border-accent/40 transition-all hover:shadow-lg">
                                     <div className="bg-black aspect-video flex items-center justify-center">
-                                        <video className="w-full h-full object-contain" src={`${apiBaseUrl}${video.processed_url}`} preload="metadata" />
+                                        {video.processed_url && <video className="w-full h-full object-contain" src={`${apiBaseUrl}${video.processed_url}`} preload="metadata" />}
                                     </div>
                                     <div className="p-3">
                                         <p className="text-xs font-bold text-accent uppercase tracking-wider truncate">{video.process_type}</p>

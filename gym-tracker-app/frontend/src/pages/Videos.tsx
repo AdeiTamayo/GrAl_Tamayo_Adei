@@ -1,12 +1,12 @@
-﻿import { useEffect, useState } from "react";
-import { Video } from "../../types";
-import { apiFetch, apiBaseUrl } from "../utils/api";
+﻿import { useEffect, useMemo, useState } from "react";
+import { getVideos } from "../data/videos";
+import { VideoRecord } from "../data/types";
 import Pagination from "../components/Pagination";
 import Select from "../components/Select";
 import DatePicker from "../components/DatePicker";
 
 export default function UserVideos() {
-    const [videos, setVideos] = useState<Video[]>([]);
+    const [videos, setVideos] = useState<VideoRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -20,46 +20,58 @@ export default function UserVideos() {
     // Pagination
     const [videosPage, setVideosPage] = useState(1);
     const pageSize = 9;
-    const totalPages = Math.max(1, Math.ceil(videos.length / pageSize));
-    const paginatedVideos = videos.slice((videosPage - 1) * pageSize, videosPage * pageSize);
-
-    const token = localStorage.getItem("user_login_token");
 
     useEffect(() => {
-        if (!token) {
-            setError("Please login first");
-            setLoading(false);
-            return;
+        let cancelled = false;
+
+        (async () => {
+            try {
+                setLoading(true);
+                const allVideos = await getVideos();
+                if (!cancelled) {
+                    setVideos(allVideos);
+                    setError(null);
+                }
+            } catch (err: any) {
+                if (!cancelled) setError(err.message || "Failed to fetch videos");
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, []);
+
+    const filteredVideos = useMemo(() => {
+        let result = videos;
+
+        if (filterType !== "all") {
+            result = result.filter(v => v.process_type === filterType);
         }
 
-        setLoading(true);
+        if (filterDateFrom) {
+            const from = new Date(filterDateFrom).getTime();
+            result = result.filter(v => new Date(v.created_at).getTime() >= from);
+        }
+
+        if (filterDateTo) {
+            const to = new Date(filterDateTo).getTime();
+            result = result.filter(v => new Date(v.created_at).getTime() <= to);
+        }
+
+        return [...result].sort((a, b) =>
+            sortOrder === "asc"
+                ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                : new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+    }, [videos, filterType, filterDateFrom, filterDateTo, sortOrder]);
+
+    useEffect(() => {
         setVideosPage(1);
+    }, [filterType, filterDateFrom, filterDateTo, sortOrder]);
 
-        const params = new URLSearchParams();
-        if (filterType !== "all") params.append("type", filterType);
-        if (filterDateFrom) params.append("date_from", filterDateFrom);
-        if (filterDateTo) params.append("date_to", filterDateTo);
-        if (sortOrder) params.append("sort", sortOrder);
-
-        apiFetch(`/api/videos?${params.toString()}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    setVideos(data.videos);
-                } else {
-                    setError(data.message || "Failed to load filtered videos");
-                }
-                setLoading(false);
-            })
-            .catch(err => {
-                setError(err.message || "Failed to fetch videos");
-                setLoading(false);
-            });
-    }, [token, filterType, filterDateFrom, filterDateTo, sortOrder]);
+    const totalPages = Math.max(1, Math.ceil(filteredVideos.length / pageSize));
+    const paginatedVideos = filteredVideos.slice((videosPage - 1) * pageSize, videosPage * pageSize);
 
     if (error) {
         return (
@@ -128,7 +140,7 @@ export default function UserVideos() {
                         <div key={n} className="bg-surface/40 border border-subtle rounded-xl h-80" />
                     ))}
                 </div>
-            ) : videos.length === 0 ? (
+            ) : paginatedVideos.length === 0 ? (
                 <div className="text-center py-16 bg-card rounded-xl border border-subtle">
                     <p className="text-dim font-medium italic text-sm">
                         No videos match your selected filter criteria.
@@ -143,16 +155,20 @@ export default function UserVideos() {
                                 className="bg-card border border-subtle/80 rounded-xl p-4 flex flex-col justify-between shadow-lg hover:border-hover/80 transition-all duration-200"
                             >
                                 <div className="bg-black border border-subtle rounded-lg overflow-hidden relative aspect-[3/4] shadow-inner mb-3 flex items-center justify-center">
-                                    <video
-                                        className="w-full h-full object-contain"
-                                        controls
-                                        preload="metadata"
-                                    >
-                                        <source
-                                            src={`${apiBaseUrl}${video.processed_url}`}
-                                            type="video/mp4"
-                                        />
-                                    </video>
+                                    {video.processed_url ? (
+                                        <video
+                                            className="w-full h-full object-contain"
+                                            controls
+                                            preload="metadata"
+                                        >
+                                            <source
+                                                src={video.processed_url}
+                                                type="video/mp4"
+                                            />
+                                        </video>
+                                    ) : (
+                                        <span className="text-dim text-xs font-medium italic">No processed video available</span>
+                                    )}
                                 </div>
 
                                 {/* CARD DETAILS FOOTER */}
@@ -184,5 +200,3 @@ export default function UserVideos() {
         </div>
     );
 }
-
-

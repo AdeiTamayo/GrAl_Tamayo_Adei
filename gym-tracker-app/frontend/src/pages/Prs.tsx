@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { apiFetch } from "../utils/api";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
@@ -17,30 +16,14 @@ import Input from "../components/Input";
 import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import Badge from "../components/Badge";
-
-interface PRSummary {
-    id: number;
-    exercise_id: number;
-    exercise_name: string;
-    weight: string;
-    repetitions: number;
-    date: string;
-    note: string | null;
-}
-
-interface PRHistory {
-    id: number;
-    weight: string;
-    repetitions: number;
-    date: string;
-    note: string | null;
-}
+import { getPrSummary, getPrHistory, createPR, deletePR, updatePR } from "../data/prs";
+import { PR } from "../data/types";
 
 export default function PersonalRecords() {
-    const [prSummary, setPrSummary] = useState<PRSummary[]>([]);
+    const [prSummary, setPrSummary] = useState<PR[]>([]);
     const [selectedExerciseName, setSelectedExerciseName] = useState<string | null>(null);
     const [selectedExerciseId, setSelectedExerciseId] = useState<number | null>(null);
-    const [prHistory, setPrHistory] = useState<PRHistory[]>([]);
+    const [prHistory, setPrHistory] = useState<PR[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -63,24 +46,14 @@ export default function PersonalRecords() {
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
     const [editRecord, setEditRecord] = useState<{ id: number; weight: number | ""; repetitions: number | ""; date: string; note: string } | null>(null);
 
-    const getHeaders = () => ({
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem("user_login_token")}`
-    });
-
     useEffect(() => {
         fetchPrSummary().finally(() => setLoading(false));
     }, []);
 
     async function fetchPrSummary() {
         try {
-            const res = await apiFetch("/api/prs", { headers: getHeaders() });
-            const data = await res.json();
-            if (data.success) {
-                setPrSummary(data.data);
-            } else {
-                setError(data.error);
-            }
+            const data = await getPrSummary();
+            setPrSummary(data);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to load PR summary");
         }
@@ -88,55 +61,41 @@ export default function PersonalRecords() {
 
     async function fetchPrHistory(exerciseId: number, exerciseName: string) {
         try {
-            const res = await apiFetch(`/api/prs/${exerciseId}/history`, { headers: getHeaders() });
-            const data = await res.json();
-            if (data.success) {
-                const sortedHistory = (data.data as PRHistory[]).sort(
-                    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-                );
-                setPrHistory(sortedHistory);
-                setSelectedExerciseName(exerciseName);
-                setSelectedExerciseId(exerciseId);
-            } else {
-                setError(data.error);
-            }
+            const history = await getPrHistory(exerciseId);
+            const sortedHistory = history.sort(
+                (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
+            setPrHistory(sortedHistory);
+            setSelectedExerciseName(exerciseName);
+            setSelectedExerciseId(exerciseId);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to load history data");
         }
     }
 
-    async function createPR(e: React.FormEvent) {
+    async function createNewPR(e: React.FormEvent) {
         e.preventDefault();
         setIsCreating(true);
         setError(null);
         try {
-            const res = await apiFetch("/api/prs", {
-                method: "POST",
-                headers: getHeaders(),
-                body: JSON.stringify({
-                    exercise_id: formExerciseId,
-                    weight: newWeight,
-                    repetitions: newReps,
-                    date: newDate || undefined,
-                    note: newNote || undefined
-                })
+            await createPR({
+                exerciseId: Number(formExerciseId),
+                weight: newWeight === "" ? 0 : Number(newWeight),
+                repetitions: newReps === "" ? 0 : Number(newReps),
+                date: newDate || null,
+                note: newNote || null
             });
-            const data = await res.json();
-            if (data.success) {
-                fetchPrSummary();
-                setFormExerciseId("");
-                setFormExerciseName("");
-                setNewWeight("");
-                setNewReps("");
-                setNewDate("");
-                setNewNote("");
-                setShowAddForm(false);
+            fetchPrSummary();
+            setFormExerciseId("");
+            setFormExerciseName("");
+            setNewWeight("");
+            setNewReps("");
+            setNewDate("");
+            setNewNote("");
+            setShowAddForm(false);
 
-                if (formExerciseId === selectedExerciseId && selectedExerciseName) {
-                    fetchPrHistory(selectedExerciseId, selectedExerciseName);
-                }
-            } else {
-                setError(data.error);
+            if (formExerciseId === selectedExerciseId && selectedExerciseName) {
+                fetchPrHistory(selectedExerciseId, selectedExerciseName);
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred while creating entry");
@@ -145,48 +104,31 @@ export default function PersonalRecords() {
         }
     }
 
-    async function deletePR(prId: number) {
+    async function deletePRRecord(prId: number) {
         try {
-            const res = await apiFetch(`/api/prs/${prId}`, {
-                method: "DELETE",
-                headers: getHeaders()
-            });
-            const data = await res.json();
-            if (data.success) {
-                fetchPrSummary();
-                if (selectedExerciseId && selectedExerciseName) {
-                    fetchPrHistory(selectedExerciseId, selectedExerciseName);
-                }
-            } else {
-                setError(data.error);
+            await deletePR(prId);
+            fetchPrSummary();
+            if (selectedExerciseId && selectedExerciseName) {
+                fetchPrHistory(selectedExerciseId, selectedExerciseName);
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred while deleting entry");
         }
     }
 
-    async function updatePR() {
+    async function updatePRRecord() {
         if (!editRecord) return;
         try {
-            const res = await apiFetch(`/api/prs/${editRecord.id}`, {
-                method: "PUT",
-                headers: getHeaders(),
-                body: JSON.stringify({
-                    weight: editRecord.weight,
-                    repetitions: editRecord.repetitions,
-                    date: editRecord.date,
-                    note: editRecord.note || undefined
-                })
+            await updatePR(editRecord.id, {
+                weight: editRecord.weight === "" ? 0 : editRecord.weight,
+                repetitions: editRecord.repetitions === "" ? 0 : editRecord.repetitions,
+                date: editRecord.date,
+                note: editRecord.note || null
             });
-            const data = await res.json();
-            if (data.success) {
-                setEditRecord(null);
-                fetchPrSummary();
-                if (selectedExerciseId && selectedExerciseName) {
-                    fetchPrHistory(selectedExerciseId, selectedExerciseName);
-                }
-            } else {
-                setError(data.error);
+            setEditRecord(null);
+            fetchPrSummary();
+            if (selectedExerciseId && selectedExerciseName) {
+                fetchPrHistory(selectedExerciseId, selectedExerciseName);
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "An error occurred while updating entry");
@@ -197,7 +139,7 @@ export default function PersonalRecords() {
         return [...prHistory]
             .map(h => ({
                 date: h.date?.substring(0, 10),
-                weight: parseFloat(h.weight),
+                weight: h.weight,
                 reps: h.repetitions
             }))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -205,7 +147,7 @@ export default function PersonalRecords() {
 
     const currentMaxRecordId = useMemo(() => {
         if (prHistory.length === 0) return null;
-        return [...prHistory].sort((a, b) => parseFloat(b.weight) - parseFloat(a.weight))[0]?.id;
+        return [...prHistory].sort((a, b) => b.weight - a.weight)[0]?.id;
     }, [prHistory]);
 
     if (loading) return <div className="p-8"><LoadingSkeleton type="page" /></div>;
@@ -239,7 +181,7 @@ export default function PersonalRecords() {
                     <Modal open={showAddForm} onClose={() => setShowAddForm(false)} maxWidth="sm">
                         <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                             <h3 className="font-display text-lg font-bold text-accent mb-4">Log a PR</h3>
-                            <form onSubmit={createPR} className="flex flex-col gap-4">
+                            <form onSubmit={createNewPR} className="flex flex-col gap-4">
                                 <button
                                     type="button"
                                     onClick={() => setShowPicker(true)}
@@ -321,7 +263,7 @@ export default function PersonalRecords() {
                                             >
                                                 <div
                                                     className="flex justify-between items-center cursor-pointer"
-                                                    onClick={() => { setPrPage(1); fetchPrHistory(pr.exercise_id, pr.exercise_name); }}
+                                                    onClick={() => { setPrPage(1); fetchPrHistory(pr.exercise_id, pr.exercise_name || ''); }}
                                                 >
                                                     <div>
                                                         <strong className="text-lg font-bold text-accent capitalize">{pr.exercise_name}</strong>
@@ -337,7 +279,7 @@ export default function PersonalRecords() {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setFormExerciseId(pr.exercise_id);
-                                                        setFormExerciseName(pr.exercise_name);
+                                                        setFormExerciseName(pr.exercise_name || '');
                                                         setShowAddForm(true);
                                                     }}
                                                     className="mt-2 text-xs font-semibold text-accent bg-accent/10 border border-accent/20 rounded-lg px-3 py-1 hover:bg-accent/20 transition-colors"
@@ -430,7 +372,7 @@ export default function PersonalRecords() {
                                         <div className="flex gap-2 shrink-0">
                                             <EditButton onClick={() => setEditRecord({
                                                 id: history.id,
-                                                weight: parseFloat(history.weight) || "",
+                                                weight: history.weight || "",
                                                 repetitions: history.repetitions || "",
                                                 date: history.date?.substring(0, 10) || "",
                                                 note: history.note || ""
@@ -448,7 +390,7 @@ export default function PersonalRecords() {
             {deleteConfirmId !== null && (
                 <ConfirmModal
                     message="Are you sure you want to delete this PR?"
-                    onConfirm={() => deletePR(deleteConfirmId)}
+                    onConfirm={() => deletePRRecord(deleteConfirmId)}
                     onCancel={() => setDeleteConfirmId(null)}
                     confirmLabel="Delete"
                 />
@@ -483,7 +425,7 @@ export default function PersonalRecords() {
                         inputSize="lg"
                     />
                     <div className="space-y-3 pt-2">
-                        <Button onClick={updatePR} variant="primary" fullWidth>
+                        <Button onClick={updatePRRecord} variant="primary" fullWidth>
                             Save Changes
                         </Button>
                         <Button onClick={() => setEditRecord(null)} variant="secondary" fullWidth>

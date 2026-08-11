@@ -1,21 +1,21 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { apiFetch } from '../utils/api';
 import Button from './Button';
 import Pagination from './Pagination';
 import Select from './Select';
+import { getExercises, getFilterOptions, createExercise } from '../data/exercises';
 
 export interface Exercise {
     id: number;
     name: string;
-    bodyPart?: string;
-    target?: string;
-    equipment: string;
-    difficulty: string;
-    category: string;
-    secondary_muscles?: string[];
+    bodyPart?: string | null;
+    target?: string | null;
+    equipment?: string | null;
+    difficulty?: string | null;
+    category?: string | null;
+    secondary_muscles?: string[] | null;
     is_custom?: boolean;
-    description?: string;
-    instructions?: string[];
+    description?: string | null;
+    instructions?: string[] | null;
 }
 
 interface FilterOptions {
@@ -74,19 +74,12 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
     async function loadData() {
         try {
             setLoading(true);
-            const token = localStorage.getItem('user_login_token');
-            const headers = { 'Authorization': `Bearer ${token}` };
-
-            const [fRes, eRes] = await Promise.all([
-                apiFetch('/api/exercises/filters', { headers }),
-                apiFetch('/api/exercises', { headers })
+            const [fData, eData] = await Promise.all([
+                getFilterOptions(),
+                getExercises()
             ]);
-
-            const fData = await fRes.json();
-            const eData = await eRes.json();
-
-            if (fData.success) setFilterOptions(fData.data);
-            if (eData.success) setAllExercises(eData.data);
+            setFilterOptions(fData);
+            setAllExercises(eData.exercises);
         } catch (err) {
             setError('Failed to load exercises');
         } finally {
@@ -112,29 +105,14 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
         e.preventDefault();
         setSaving(true);
         try {
-            const token = localStorage.getItem('user_login_token');
-            const response = await apiFetch('/api/exercises', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    exercice_name: newName,
-                    target: newTarget,
-                    equipment: newEquipment,
-                    difficulty: newDifficulty,
-                    category: newCategory,
-                    secondary_muscles: [],
-                    instructions: []
-                })
+            const created = await createExercise({
+                name: newName,
+                target: newTarget || null,
+                equipment: newEquipment || null,
+                difficulty: newDifficulty,
+                category: newCategory || null
             });
-            const result = await response.json();
-            if (result.success) {
-                onSelect(result.data);
-            } else {
-                setError(result.error || 'Failed to create exercise');
-            }
+            onSelect(created);
         } catch (err) {
             setError('Error creating exercise');
         } finally {

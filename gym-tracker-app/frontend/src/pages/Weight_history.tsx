@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, FormEvent } from "react";
-import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
@@ -14,13 +13,8 @@ import ErrorBanner from "../components/ErrorBanner";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
-
-interface WeightEntry {
-    id: number;
-    user_id: number;
-    weight: number | string;
-    date: string; // yyyy-mm-dd
-}
+import { getWeightHistory, addWeight, updateWeight, deleteWeight } from "../data/user";
+import { WeightEntry } from "../data/types";
 
 const PAGE_SIZE = 10;
 
@@ -42,33 +36,16 @@ export default function WeightHistory() {
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [hidden, setHidden] = useState(false);
 
-    const token = localStorage.getItem("user_login_token");
-    const headers = useMemo(
-        () => ({
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-        }),
-        [token]
-    );
-
     useEffect(() => {
         fetchWeightHistory().finally(() => setIsLoading(false));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [headers]);
+    }, []);
 
     async function fetchWeightHistory() {
         try {
             setError(null);
-            const res = await apiFetch("/api/user/weights", { headers });
-            const data = await res.json();
-
-            if (!data.success) {
-                setError(data.error || "Failed to fetch weight history");
-                return;
-            }
-
-            const rows: WeightEntry[] = data.data || [];
-            setEntries(rows);
+            const result = await getWeightHistory();
+            setEntries(result.rows);
         } catch (err: any) {
             setError(err.message || "Failed to fetch weight history");
         }
@@ -146,34 +123,9 @@ export default function WeightHistory() {
             setError(null);
 
             if (editingId) {
-                const res = await apiFetch("/api/user/weights", {
-                    method: "PUT",
-                    headers,
-                    body: JSON.stringify({
-                        id: editingId,
-                        weight: Number(weight),
-                        date,
-                    }),
-                });
-                const data = await res.json();
-                if (!data.success) {
-                    setError(data.error || "Failed to update weight");
-                    return;
-                }
+                await updateWeight(editingId, Number(weight), date);
             } else {
-                const res = await apiFetch("/api/user/weights", {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify({
-                        weight: Number(weight),
-                        date,
-                    }),
-                });
-                const data = await res.json();
-                if (!data.success) {
-                    setError(data.error || "Failed to add weight");
-                    return;
-                }
+                await addWeight(Number(weight), date);
             }
 
             await fetchWeightHistory();
@@ -187,17 +139,7 @@ export default function WeightHistory() {
     async function handleDelete(id: number) {
         try {
             setError(null);
-            const res = await apiFetch(`/api/user/weights/${id}`, {
-                method: "DELETE",
-                headers,
-            });
-            const data = await res.json();
-
-            if (!data.success) {
-                setError(data.error || "Failed to delete weight");
-                return;
-            }
-
+            await deleteWeight(id);
             setEntries(prev => prev.filter(e => e.id !== id));
             if (editingId === id) resetForm();
         } catch (err: any) {

@@ -5,36 +5,25 @@ import Pagination from '../components/Pagination';
 import ErrorBanner from '../components/ErrorBanner';
 import EditableExerciseCard from '../components/EditableExerciseCard';
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
-import { apiFetch } from "../utils/api";
 import ConfirmModal from '../components/ConfirmModal';
 import DeleteButton from '../components/DeleteButton';
 import CloseButton from '../components/CloseButton';
 import Input from '../components/Input';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
-
-interface SetTemplate {
-    id: number;
-    set_number: number;
-    planned_weight: number | null;
-    planned_reps: number | null;
-    planned_time: number | null;
-}
-
-interface ExerciseTemplate {
-    item_id: number;
-    exercise_name?: string;
-    name?: string;
-    exercise_order: number;
-    sets: SetTemplate[];
-}
-
-interface Routine {
-    id: number;
-    name: string;
-    note?: string;
-    exercises: ExerciseTemplate[];
-}
+import {
+    getUserRoutines,
+    getRoutineById,
+    createRoutine,
+    updateRoutine,
+    deleteRoutine as deleteRoutineData,
+    addExerciseToRoutine,
+    removeExerciseFromRoutine,
+    addSetToRoutineExercise,
+    updateRoutineSet,
+    deleteRoutineSet
+} from '../data/routines';
+import { Routine } from '../data/types';
 
 export default function RoutinesManagement() {
     const [routines, setRoutines] = useState<Routine[]>([]);
@@ -67,31 +56,17 @@ export default function RoutinesManagement() {
         setRoutinesPage(1);
     }, [routines.length]);
 
-    // Layout Reference Focus Wrappers
-
-
-    const token = localStorage.getItem("user_login_token");
-    const headers = useMemo(() => ({
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-    }), [token]);
-
     useEffect(() => {
         fetchUserRoutines();
-    }, [headers]);
+    }, []);
 
     // --- API Interactions Handlers ---
 
     async function fetchUserRoutines() {
         try {
             setError(null);
-            const res = await apiFetch("/api/routines", { headers });
-            const data = await res.json();
-            if (data.success) {
-                setRoutines(data.routines || []);
-            } else {
-                setError(data.error || "Failed loading routines.");
-            }
+            const data = await getUserRoutines();
+            setRoutines(data || []);
         } catch (err: any) {
             setError(err.message || "Network layout exception fetching templates.");
         }
@@ -100,14 +75,13 @@ export default function RoutinesManagement() {
     async function fetchRoutineById(id: number) {
         try {
             setError(null);
-            const res = await apiFetch(`/api/routines/${id}`, { headers });
-            const data = await res.json();
-            if (data.success) {
-                setSelectedRoutine(data.data);
-                setEditName(data.data.name);
-                setEditNote(data.data.note || '');
+            const data = await getRoutineById(id);
+            if (data) {
+                setSelectedRoutine(data);
+                setEditName(data.name);
+                setEditNote(data.note || '');
             } else {
-                setError(data.error);
+                setError("Routine not found.");
             }
         } catch (err: any) {
             setError(err.message);
@@ -120,33 +94,17 @@ export default function RoutinesManagement() {
 
         try {
             setError(null);
-            const res = await apiFetch("/api/routines", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ name: newRoutineName })
-            });
-            const data = await res.json();
-
-            if (!data.success || !data.data) {
-                setError(data.error || "Failed to create routine.");
-                return;
-            }
-
-            const routineId = data.data.id;
+            const data = await createRoutine(newRoutineName);
 
             if (newRoutineNote.trim()) {
-                await apiFetch(`/api/routines/${routineId}`, {
-                    method: "PUT",
-                    headers,
-                    body: JSON.stringify({ name: newRoutineName, note: newRoutineNote })
-                });
+                await updateRoutine(data.id, { name: newRoutineName, note: newRoutineNote });
             }
 
             setNewRoutineName('');
             setNewRoutineNote('');
             setShowCreateModal(false);
             await fetchUserRoutines();
-            setSelectedRoutine({ ...data.data, exercises: [] });
+            setSelectedRoutine({ ...data, exercises: [] });
         } catch (err: any) {
             setError(err.message || "Failed to create routine.");
         }
@@ -157,13 +115,7 @@ export default function RoutinesManagement() {
         if (!editName.trim()) { setError("Routine name cannot be empty."); return; }
         try {
             setError(null);
-            const res = await apiFetch(`/api/routines/${selectedRoutine.id}`, {
-                method: "PUT",
-                headers,
-                body: JSON.stringify({ name: editName.trim(), note: editNote.trim() || undefined })
-            });
-            const data = await res.json();
-            if (!data.success) throw new Error(data.error || "Failed to update routine details");
+            await updateRoutine(selectedRoutine.id, { name: editName.trim(), note: editNote.trim() || null });
 
             setShowDetailsDropdown(false);
             await fetchRoutineById(selectedRoutine.id);
@@ -173,14 +125,11 @@ export default function RoutinesManagement() {
         }
     }
 
-    async function deleteRoutine(id: number) {
+    async function handleDeleteRoutine(id: number) {
         try {
-            const res = await apiFetch(`/api/routines/${id}`, { method: "DELETE", headers });
-            const data = await res.json();
-            if (data.success) {
-                setRoutines(prev => prev.filter(r => r.id !== id));
-                if (selectedRoutine?.id === id) setSelectedRoutine(null);
-            }
+            await deleteRoutineData(id);
+            setRoutines(prev => prev.filter(r => r.id !== id));
+            if (selectedRoutine?.id === id) setSelectedRoutine(null);
         } catch (err: any) {
             setError(err.message);
         }
@@ -191,19 +140,12 @@ export default function RoutinesManagement() {
 
         try {
             const order = (selectedRoutine.exercises?.length || 0) + 1;
-            const res = await apiFetch(`/api/routines/${selectedRoutine.id}/exercises`, {
-                method: "POST",
-                headers,
-                body: JSON.stringify({
-                    exercise_id: exercise.id,
-                    exercise_order: order
-                })
+            await addExerciseToRoutine(selectedRoutine.id, {
+                exercise_id: exercise.id,
+                exercise_order: order
             });
-            const data = await res.json();
-            if (data.success) {
-                await fetchRoutineById(selectedRoutine.id);
-                setShowPicker(false);
-            }
+            await fetchRoutineById(selectedRoutine.id);
+            setShowPicker(false);
         } catch (err: any) {
             setError(err.message);
         }
@@ -211,10 +153,8 @@ export default function RoutinesManagement() {
 
     async function removeExercise(itemId: number) {
         try {
-            const res = await apiFetch(`/api/routines/exercises/${itemId}`, { method: "DELETE", headers });
-            if (res.ok) {
-                if (selectedRoutine) await fetchRoutineById(selectedRoutine.id);
-            }
+            await removeExerciseFromRoutine(itemId);
+            if (selectedRoutine) await fetchRoutineById(selectedRoutine.id);
         } catch (err: any) {
             setError(err.message);
         }
@@ -390,7 +330,7 @@ export default function RoutinesManagement() {
                                 {selectedRoutine.exercises.map((ex) => (
                                     <EditableExerciseCard
                                         key={ex.item_id}
-                                        exerciseName={ex.exercise_name || ex.name || 'Unknown Target'}
+                                        exerciseName={ex.exercise_name || 'Unknown Target'}
                                         exerciseOrder={ex.exercise_order}
                                         showNotesField={false}
                                         sets={(ex.sets || []).map(s => ({
@@ -404,9 +344,7 @@ export default function RoutinesManagement() {
                                         onAddSet={async (w, r, t) => {
                                             try {
                                                 const num = (ex.sets?.length || 0) + 1;
-                                                await apiFetch(`/api/routines/exercises/${ex.item_id}/sets`, {
-                                                    method: "POST", headers, body: JSON.stringify({ set_number: num, planned_weight: w, planned_reps: r, planned_time: t })
-                                                });
+                                                await addSetToRoutineExercise(ex.item_id, { set_number: num, planned_weight: w, planned_reps: r, planned_time: t });
                                                 fetchRoutineById(selectedRoutine.id);
                                             } catch (err: any) {
                                                 setError(err.message || "Failed to add set");
@@ -414,7 +352,7 @@ export default function RoutinesManagement() {
                                         }}
                                         onRemoveSet={async (id) => {
                                             try {
-                                                await apiFetch(`/api/routines/sets/${id}`, { method: "DELETE", headers });
+                                                await deleteRoutineSet(id);
                                                 fetchRoutineById(selectedRoutine.id);
                                             } catch (err: any) {
                                                 setError(err.message || "Failed to remove set");
@@ -425,14 +363,12 @@ export default function RoutinesManagement() {
                                             if (val !== null && Math.abs(val) >= 1000) { setError("Value must be less than 1000"); return; }
                                             setSelectedRoutine(prev => {
                                                 if (!prev) return prev;
-                                                return { ...prev, exercises: prev.exercises.map(ex => ({ ...ex, sets: ex.sets.map(s => s.id === id ? { ...s, [f === 'weight' ? 'planned_weight' : f === 'reps' ? 'planned_reps' : 'planned_time']: val } : s) })) };
+                                                return { ...prev, exercises: (prev.exercises || []).map(ex => ({ ...ex, sets: ex.sets.map(s => s.id === id ? { ...s, [f === 'weight' ? 'planned_weight' : f === 'reps' ? 'planned_reps' : 'planned_time']: val } : s) })) };
                                             });
                                             try {
                                                 const bodyPayload: any = {};
                                                 bodyPayload[`planned_${f}`] = val;
-                                                const res = await apiFetch(`/api/routines/sets/${id}`, { method: "PUT", headers, body: JSON.stringify(bodyPayload) });
-                                                const data = await res.json();
-                                                if (!data.success) setError(data.error || "Failed to update set");
+                                                await updateRoutineSet(id, bodyPayload);
                                             } catch (err: any) { setError(err.message || "Failed to update set"); }
                                         }}
                                         onBlurSet={() => fetchRoutineById(selectedRoutine.id)}
@@ -472,7 +408,7 @@ export default function RoutinesManagement() {
             {deleteConfirmId !== null && (
                 <ConfirmModal
                     message="Are you sure you want to completely remove this routine template?"
-                    onConfirm={() => deleteRoutine(deleteConfirmId)}
+                    onConfirm={() => handleDeleteRoutine(deleteConfirmId)}
                     onCancel={() => setDeleteConfirmId(null)}
                     confirmLabel="Delete"
                 />

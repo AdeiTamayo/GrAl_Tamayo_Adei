@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { apiFetch } from '../utils/api';
+import { getSettings, updateSettings as updateSettingsData } from '../data/user';
 
 interface Settings {
     show_rpe: boolean;
@@ -37,58 +37,31 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
     const [settings, setSettings] = useState<Settings>(defaultSettings);
     const [loading, setLoading] = useState(true);
 
-    const token = localStorage.getItem('user_login_token');
-
     useEffect(() => {
-        if (!token) {
-            setLoading(false);
-            return;
-        }
-
-        apiFetch('/api/user/settings', {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(r => r.json())
+        getSettings()
             .then(data => {
-                if (data.success && data.data) {
-                    setSettings({
-                        show_rpe: data.data.show_rpe !== undefined ? data.data.show_rpe : defaultSettings.show_rpe,
-                        show_1rm: data.data.show_1rm !== undefined ? data.data.show_1rm : defaultSettings.show_1rm,
-                        show_goals: data.data.show_goals !== undefined ? data.data.show_goals : defaultSettings.show_goals,
-                        show_rest_time: data.data.show_rest_time !== undefined ? data.data.show_rest_time : defaultSettings.show_rest_time,
-                        default_rest_time: data.data.default_rest_time || defaultSettings.default_rest_time,
-                    });
-                }
+                setSettings({
+                    show_rpe: data.show_rpe !== undefined ? data.show_rpe : defaultSettings.show_rpe,
+                    show_1rm: data.show_1rm !== undefined ? data.show_1rm : defaultSettings.show_1rm,
+                    show_goals: data.show_goals !== undefined ? data.show_goals : defaultSettings.show_goals,
+                    show_rest_time: data.show_rest_time !== undefined ? data.show_rest_time : defaultSettings.show_rest_time,
+                    default_rest_time: data.default_rest_time ?? defaultSettings.default_rest_time,
+                });
             })
             .catch(() => { })
             .finally(() => setLoading(false));
-    }, [token]);
+    }, []);
 
     const updateSettings = useCallback(async (data: Partial<Settings>) => {
-        const token = localStorage.getItem('user_login_token');
-        if (!token) return;
-
-        const res = await apiFetch('/api/user/settings', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(data),
-        });
-        const result = await res.json();
-        if (result.success && result.data) {
-            setSettings({
-                show_rpe: result.data.show_rpe !== undefined ? result.data.show_rpe : settings.show_rpe,
-                show_1rm: result.data.show_1rm !== undefined ? result.data.show_1rm : settings.show_1rm,
-                show_goals: result.data.show_goals !== undefined ? result.data.show_goals : settings.show_goals,
-                show_rest_time: result.data.show_rest_time !== undefined ? result.data.show_rest_time : settings.show_rest_time,
-                default_rest_time: result.data.default_rest_time || settings.default_rest_time,
-            });
-        } else {
-            throw new Error(result.error || 'Failed to update settings');
-        }
-    }, [settings]);
+        const result = await updateSettingsData(data);
+        setSettings(prev => ({
+            show_rpe: result.show_rpe !== undefined ? result.show_rpe : prev.show_rpe,
+            show_1rm: result.show_1rm !== undefined ? result.show_1rm : prev.show_1rm,
+            show_goals: result.show_goals !== undefined ? result.show_goals : prev.show_goals,
+            show_rest_time: result.show_rest_time !== undefined ? result.show_rest_time : prev.show_rest_time,
+            default_rest_time: result.default_rest_time ?? prev.default_rest_time,
+        }));
+    }, []);
 
     return (
         <SettingsContext.Provider value={{ settings, loading, updateSettings }}>

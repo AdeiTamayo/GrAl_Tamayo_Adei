@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiFetch } from '../utils/api';
 import Button from '../components/Button';
 import ErrorBanner from '../components/ErrorBanner';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -14,20 +13,15 @@ import Textarea from '../components/Textarea';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
 import Badge from '../components/Badge';
-
-type Exercise = {
-    id: number;
-    name: string;
-    bodyPart?: string;
-    target?: string;
-    equipment: string;
-    difficulty: string;
-    category: string;
-    secondary_muscles?: string[];
-    is_custom?: boolean;
-    description?: string;
-    instructions?: string[];
-};
+import {
+    getExercises as getExercisesData,
+    getExerciseById,
+    getFilterOptions as getFilterOptionsData,
+    createExercise as createExerciseData,
+    updateExercise as updateExerciseData,
+    deleteExercise as deleteExerciseData
+} from '../data/exercises';
+import { Exercise } from '../data/types';
 
 type ExercisePayload = {
     exercice_name?: string;
@@ -94,11 +88,6 @@ export default function Exercises() {
     const [page, setPage] = useState(1);
     const [exercisesOpen, setExercisesOpen] = useState(true);
     const pageSize = 20;
-
-    const headers = useMemo(() => ({
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('user_login_token')}`
-    }), []);
 
     const filteredExercises = useMemo(() => {
         const filtered = allExercises.filter(ex => {
@@ -172,48 +161,23 @@ export default function Exercises() {
         }
     }, [showCreateModal]);
 
-    async function apiRequest<T>(url: string, options: RequestInit): Promise<T> {
-        const response = await apiFetch(url, options);
-        const result = await response.json();
-
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || 'Request failed');
-        }
-
-        return result.data;
-    }
-
     async function loadInitialData() {
         try {
             setLoading(true);
             setError('');
 
             const [filtersData, exercisesData] = await Promise.all([
-                getFilterOptions(),
-                getExercises()
+                getFilterOptionsData(),
+                getExercisesData()
             ]);
 
             setFilterOptions(filtersData);
-            setAllExercises(exercisesData);
+            setAllExercises(exercisesData.exercises);
         } catch (err: any) {
             setError(err.message || 'Could not load data.');
         } finally {
             setLoading(false);
         }
-    }
-
-    async function getFilterOptions(): Promise<FilterOptions> {
-        return await apiRequest<FilterOptions>('/api/exercises/filters', {
-            method: 'GET',
-            headers
-        });
-    }
-
-    async function getExercises(): Promise<Exercise[]> {
-        return await apiRequest<Exercise[]>('/api/exercises', {
-            method: 'GET',
-            headers
-        });
     }
 
     async function fetchExerciseById(id: number) {
@@ -222,22 +186,12 @@ export default function Exercises() {
             setError('');
             setSuccess(null);
 
-            const response = await apiFetch("/api/exercises/" + id, {
-                method: "GET",
-                headers
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to fetch exercise");
-            }
-
-            const result = await response.json();
-
-            if (result.success && result.data) {
-                setSelectedExercise(result.data);
+            const result = await getExerciseById(id);
+            if (result) {
+                setSelectedExercise(result);
                 setViewMode('details');
             } else {
-                throw new Error(result.message || "Exercise not found");
+                throw new Error("Exercise not found");
             }
 
         } catch (err: any) {
@@ -256,19 +210,10 @@ export default function Exercises() {
             setLoading(true);
             setError('');
 
-            const response = await apiFetch(`/api/exercises/${id}`, {
-                method: 'DELETE',
-                headers
-            });
+            await deleteExerciseData(id);
 
-            const result = await response.json();
-
-            if (!result.success) {
-                throw new Error(result.error || 'Unknown error');
-            }
-
-            const refreshedExercises = await getExercises();
-            setAllExercises(refreshedExercises);
+            const refreshedExercises = await getExercisesData();
+            setAllExercises(refreshedExercises.exercises);
 
             backToList();
             setSuccess('Exercise deleted.');
@@ -285,10 +230,16 @@ export default function Exercises() {
             setError('');
             setSuccess(null);
 
-            const createdExercise = await apiRequest<Exercise>('/api/exercises', {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(payload)
+            const createdExercise = await createExerciseData({
+                name: payload.exercice_name ?? '',
+                bodyPart: payload.body_part || null,
+                target: payload.target_muscle || null,
+                equipment: payload.equipment || null,
+                difficulty: payload.difficulty || null,
+                category: payload.category || null,
+                secondaryMuscles: payload.secondary_muscles,
+                description: payload.description || null,
+                instructions: payload.instructions
             });
 
             setAllExercises(prev => [...prev, createdExercise]);
@@ -307,11 +258,19 @@ export default function Exercises() {
             setError('');
             setSuccess(null);
 
-            const updatedExercise = await apiRequest<Exercise>(`/api/exercises/${id}`, {
-                method: 'PUT',
-                headers,
-                body: JSON.stringify(payload)
+            const updatedExercise = await updateExerciseData(id, {
+                name: payload.exercice_name,
+                bodyPart: payload.body_part || null,
+                target: payload.target_muscle || null,
+                equipment: payload.equipment || null,
+                difficulty: payload.difficulty || null,
+                category: payload.category || null,
+                secondaryMuscles: payload.secondary_muscles,
+                description: payload.description || null,
+                instructions: payload.instructions
             });
+
+            if (!updatedExercise) throw new Error('Exercise not found');
 
             setAllExercises(prev =>
                 prev.map(ex => ex.id === id ? updatedExercise : ex)

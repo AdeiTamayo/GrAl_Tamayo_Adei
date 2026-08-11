@@ -1,33 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import WorkoutPicker from "../components/WorkoutPicker";
-
-interface SetEntry {
-    weight: number;
-    repetitions: number;
-}
-
-interface WorkoutExercise {
-    exercise_id: number;
-    name: string;
-    sets: SetEntry[];
-}
-
-interface Workout {
-    id: number;
-    name: string;
-    date: string;
-    exercises: WorkoutExercise[];
-}
-
-interface PickedWorkout {
-    id: number;
-    name: string;
-    date: string;
-}
+import { getWorkoutById } from "../data/workouts";
+import { Workout } from "../data/types";
 
 interface SetComparison {
     setNumber: number;
@@ -35,6 +12,12 @@ interface SetComparison {
     repsA: number | null;
     weightB: number | null;
     repsB: number | null;
+}
+
+interface PickedWorkout {
+    id: number;
+    name: string;
+    date: string;
 }
 
 export default function CompareWorkouts() {
@@ -50,27 +33,20 @@ export default function CompareWorkouts() {
     useEffect(() => { window.scrollTo(0, 0); }, []);
 
     const navigate = useNavigate();
-    const token = localStorage.getItem("user_login_token");
-    const headers = useMemo(() => ({
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-    }), [token]);
 
     const fetchComparison = async () => {
         if (!pickedA || !pickedB) return;
         setError(null);
         setLoading(true);
         try {
-            const [resA, resB] = await Promise.all([
-                apiFetch(`/api/workouts/${pickedA.id}`, { headers }),
-                apiFetch(`/api/workouts/${pickedB.id}`, { headers })
+            const [dataA, dataB] = await Promise.all([
+                getWorkoutById(pickedA.id),
+                getWorkoutById(pickedB.id)
             ]);
-            const dataA = await resA.json();
-            const dataB = await resB.json();
 
-            if (dataA.success && dataB.success) {
-                setWorkoutA(dataA.data);
-                setWorkoutB(dataB.data);
+            if (dataA && dataB) {
+                setWorkoutA(dataA);
+                setWorkoutB(dataB);
             } else {
                 setError("Failed to load workout data.");
             }
@@ -120,11 +96,11 @@ export default function CompareWorkouts() {
         const totalVolumeA = commonExercises.reduce((sum, ex) => sum + ex.volumeA, 0);
         const totalVolumeB = commonExercises.reduce((sum, ex) => sum + ex.volumeB, 0);
         const totalSetsA = commonExercises.reduce((sum, ex) => {
-            const exA = workoutA.exercises.find(e => e.exercise_id === ex.exId)!;
+            const exA = (workoutA.exercises || []).find(e => e.exercise_id === ex.exId)!;
             return sum + exA.sets.length;
         }, 0);
         const totalSetsB = commonExercises.reduce((sum, ex) => {
-            const exB = workoutB.exercises.find(e => e.exercise_id === ex.exId)!;
+            const exB = (workoutB.exercises || []).find(e => e.exercise_id === ex.exId)!;
             return sum + exB.sets.length;
         }, 0);
 

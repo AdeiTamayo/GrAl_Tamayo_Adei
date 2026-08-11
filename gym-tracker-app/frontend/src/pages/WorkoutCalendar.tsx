@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../utils/api";
 import Calendar from "../components/Calendar";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import Button from "../components/Button";
@@ -8,40 +7,15 @@ import DeleteButton from "../components/DeleteButton";
 import Modal from "../components/Modal";
 import Select from "../components/Select";
 import DatePicker from "../components/DatePicker";
-
-interface Workout {
-    id: number;
-    name: string;
-    date: string;
-    note?: string | null;
-}
-
-interface PlannedWorkout {
-    id: number;
-    date: string;
-    routine_id: number | null;
-    routine_name: string | null;
-    name: string;
-    note: string | null;
-}
-
-interface Goal {
-    id: number;
-    exercise_name: string;
-    target_weight: string;
-    target_reps: number;
-    expected_date: string | null;
-}
-
-interface Routine {
-    id: number;
-    name: string;
-
-}
+import { getWorkouts } from "../data/workouts";
+import { getPlannedWorkouts, createPlannedWorkout, deletePlannedWorkout } from "../data/plannedWorkouts";
+import { getUserRoutines } from "../data/routines";
+import { getUserGoals } from "../data/goals";
+import { PlannedWorkout, Goal, Routine } from "../data/types";
 
 export default function WorkoutCalendar() {
     const navigate = useNavigate();
-    const [workouts, setWorkouts] = useState<Workout[]>([]);
+    const [workouts, setWorkouts] = useState<{ id: number; name: string; date: string; note?: string | null }[]>([]);
     const [planned, setPlanned] = useState<PlannedWorkout[]>([]);
     const [routines, setRoutines] = useState<Routine[]>([]);
     const [goals, setGoals] = useState<Goal[]>([]);
@@ -53,22 +27,15 @@ export default function WorkoutCalendar() {
     const [planRoutineId, setPlanRoutineId] = useState<number | "">("");
     const [planName, setPlanName] = useState("");
 
-    const token = localStorage.getItem("user_login_token");
-    const headers = useMemo(() => ({
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-    }), [token]);
-
     useEffect(() => {
         Promise.all([fetchWorkouts(), fetchPlanned(), fetchRoutines(), fetchGoals()])
             .finally(() => setIsLoading(false));
-    }, [headers]);
+    }, []);
 
     async function fetchWorkouts() {
         try {
-            const res = await apiFetch("/api/workouts", { headers });
-            const data = await res.json();
-            if (data.success) setWorkouts(data.data || []);
+            const data = await getWorkouts();
+            setWorkouts(data || []);
         } catch (err) {
             console.error("Failed to fetch workouts", err);
         }
@@ -76,9 +43,8 @@ export default function WorkoutCalendar() {
 
     async function fetchPlanned() {
         try {
-            const res = await apiFetch("/api/planned-workouts", { headers });
-            const data = await res.json();
-            if (data.success) setPlanned(data.data || []);
+            const data = await getPlannedWorkouts();
+            setPlanned(data || []);
         } catch (err) {
             console.error("Failed to fetch planned workouts", err);
         }
@@ -86,9 +52,8 @@ export default function WorkoutCalendar() {
 
     async function fetchRoutines() {
         try {
-            const res = await apiFetch("/api/routines", { headers });
-            const data = await res.json();
-            if (data.success) setRoutines(data.routines || []);
+            const data = await getUserRoutines();
+            setRoutines(data || []);
         } catch (err) {
             console.error("Failed to fetch routines", err);
         }
@@ -97,22 +62,15 @@ export default function WorkoutCalendar() {
     async function handleAddPlanned() {
         if (!planDate || !planName.trim()) return;
         try {
-            const res = await apiFetch("/api/planned-workouts", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({
-                    date: planDate,
-                    name: planName.trim(),
-                    routine_id: planRoutineId || null,
-                }),
+            await createPlannedWorkout({
+                date: planDate,
+                name: planName.trim(),
+                routineId: planRoutineId === "" ? null : planRoutineId,
             });
-            const data = await res.json();
-            if (data.success) {
-                await fetchPlanned();
-                setShowPlanModal(false);
-                setPlanRoutineId("");
-                setPlanName("");
-            }
+            await fetchPlanned();
+            setShowPlanModal(false);
+            setPlanRoutineId("");
+            setPlanName("");
         } catch (err) {
             console.error("Failed to add planned workout", err);
         }
@@ -120,7 +78,7 @@ export default function WorkoutCalendar() {
 
     async function handleDeletePlanned(id: number) {
         try {
-            await apiFetch(`/api/planned-workouts/${id}`, { method: "DELETE", headers });
+            await deletePlannedWorkout(id);
             setPlanned(prev => prev.filter(p => p.id !== id));
         } catch (err) {
             console.error("Failed to delete planned workout", err);
@@ -129,9 +87,8 @@ export default function WorkoutCalendar() {
 
     async function fetchGoals() {
         try {
-            const res = await apiFetch("/api/goals", { headers });
-            const data = await res.json();
-            setGoals(data.goals || []);
+            const data = await getUserGoals();
+            setGoals(data || []);
         } catch (err) {
             console.error("Failed to fetch goals", err);
         }
@@ -257,8 +214,8 @@ export default function WorkoutCalendar() {
                                     <ul className="space-y-3 mb-6">
                                         {selectedGoals.map(g => (
                                             <li key={g.id} className="bg-surface/40 border border-subtle/80 rounded-lg p-4">
-                                                <strong className="text-lg font-bold text-body capitalize">{g.exercise_name}</strong>
-                                                <div className="text-sm text-body font-medium mt-1">{g.target_weight} kg × {g.target_reps} reps</div>
+                                                <strong className="text-lg font-bold text-body capitalize">{g.exercise_name ?? ''}</strong>
+                                                <div className="text-sm text-body font-medium mt-1">{g.target_weight ?? 0} kg × {g.target_reps ?? 0} reps</div>
                                             </li>
                                         ))}
                                     </ul>

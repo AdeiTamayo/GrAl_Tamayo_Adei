@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo, FormEvent, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
 import TransparentNumericInput from "../components/TransparentNumericInput";
-import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
+import ExercisePicker from "../components/ExercisePicker";
 import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
 import Calendar from "../components/Calendar";
@@ -15,16 +14,10 @@ import LoadingSkeleton from "../components/LoadingSkeleton";
 import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import Badge from "../components/Badge";
-
-interface Goal {
-    id: number;
-    exercise_id: number;
-    exercise_name: string;
-    target_weight: string;
-    target_reps: number;
-    expected_date: string | null;
-    created_at: string;
-}
+import { getUserGoals, createGoal, updateGoal, deleteGoal as deleteGoalRecord } from "../data/goals";
+import { getPlannedWorkouts } from "../data/plannedWorkouts";
+import { getPrSummary } from "../data/prs";
+import { Goal, PlannedWorkout } from "../data/types";
 
 export default function Goals() {
     const [searchParams] = useSearchParams();
@@ -48,35 +41,25 @@ export default function Goals() {
     const [goalsPage, setGoalsPage] = useState(1);
     const [goalsOpen, setGoalsOpen] = useState(true);
     const GOALS_PER_PAGE = 5;
-    const [planned, setPlanned] = useState<any[]>([]);
-
-    const token = localStorage.getItem("user_login_token");
-    const headers = useMemo(() => ({
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-    }), [token]);
+    const [planned, setPlanned] = useState<PlannedWorkout[]>([]);
 
     const fetchPRs = useCallback(async () => {
         try {
-            const res = await apiFetch("/api/prs", { headers });
-            const data = await res.json();
-            if (data.success) {
-                const map: Record<number, { weight: number; reps: number }> = {};
-                for (const pr of data.data || []) {
-                    map[pr.exercise_id] = { weight: Number(pr.weight), reps: pr.repetitions };
-                }
-                setPrData(map);
+            const data = await getPrSummary();
+            const map: Record<number, { weight: number; reps: number }> = {};
+            for (const pr of data || []) {
+                map[pr.exercise_id] = { weight: pr.weight, reps: pr.repetitions };
             }
+            setPrData(map);
         } catch (err) {
             console.error("Failed to fetch PRs", err);
         }
-    }, [headers]);
+    }, []);
 
     async function fetchPlanned() {
         try {
-            const res = await apiFetch("/api/planned", { headers });
-            const data = await res.json();
-            setPlanned(data.data || []);
+            const data = await getPlannedWorkouts();
+            setPlanned(data || []);
         } catch (err) {
             console.error("Failed to fetch planned workouts", err);
         }
@@ -84,19 +67,18 @@ export default function Goals() {
 
     useEffect(() => {
         Promise.all([fetchGoals(), fetchPRs(), fetchPlanned()]).finally(() => setIsLoading(false));
-    }, [headers, fetchPRs]);
+    }, [fetchPRs]);
 
     function isGoalFulfilled(g: Goal): boolean {
         const pr = prData[g.exercise_id];
         if (!pr) return false;
-        return pr.weight >= Number(g.target_weight) && pr.reps >= g.target_reps;
+        return pr.weight >= (g.target_weight ?? 0) && pr.reps >= (g.target_reps ?? 0);
     }
 
     async function fetchGoals() {
         try {
-            const res = await apiFetch("/api/goals", { headers });
-            const data = await res.json();
-            setGoals(data.goals || []);
+            const data = await getUserGoals();
+            setGoals(data || []);
         } catch (err: any) {
             console.error("Failed to fetch goals", err);
             setError("Failed to fetch goals");
@@ -109,28 +91,22 @@ export default function Goals() {
 
         setError(null);
         try {
-            const url = editingGoalId ? `/api/goals/${editingGoalId}` : "/api/goals";
-            const method = editingGoalId ? "PUT" : "POST";
-
-            const res = await apiFetch(url, {
-                method,
-                headers,
-                body: JSON.stringify({
-                    exercise_id: selectedExerciseId,
-                    target_weight: targetWeight,
-                    target_reps: targetReps,
-                    expected_date: expectedDate || null
-                })
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                await fetchGoals();
-                resetForm();
+            if (editingGoalId) {
+                await updateGoal(editingGoalId, {
+                    targetWeight,
+                    targetReps,
+                    expectedDate: expectedDate || null
+                });
             } else {
-                console.log(data.error);
-                setError(data.error);
+                await createGoal({
+                    exerciseId: selectedExerciseId,
+                    targetWeight,
+                    targetReps,
+                    expectedDate: expectedDate || null
+                });
             }
+            await fetchGoals();
+            resetForm();
         } catch (err: any) {
             setError(err.message || "Failed to save goal");
         }
@@ -139,9 +115,9 @@ export default function Goals() {
     function handleEditGoal(goal: Goal) {
         setEditingGoalId(goal.id);
         setSelectedExerciseId(goal.exercise_id);
-        setSelectedExerciseName(goal.exercise_name);
-        setTargetWeight(Number(goal.target_weight));
-        setTargetReps(goal.target_reps);
+        setSelectedExerciseName(goal.exercise_name || '');
+        setTargetWeight(goal.target_weight ?? "");
+        setTargetReps(goal.target_reps ?? "");
         setExpectedDate(goal.expected_date || "");
         setError(null);
         setShowGoalModal(true);
@@ -157,13 +133,10 @@ export default function Goals() {
         setShowGoalModal(false);
     }
 
-    async function deleteGoal(id: number) {
+    async function handleDeleteGoal(id: number) {
         try {
-            const res = await apiFetch(`/api/goals/${id}`, { method: "DELETE", headers });
-            const data = await res.json();
-            if (data.success) {
-                setGoals(prev => prev.filter(g => g.id !== id));
-            }
+            await deleteGoalRecord(id);
+            setGoals(prev => prev.filter(g => g.id !== id));
         } catch (err: any) {
             setError(err.message || "Failed to delete goal");
         }
@@ -182,8 +155,8 @@ export default function Goals() {
     const plannedDates = useMemo(() => {
         const set = new Set<string>();
         for (const p of planned) {
-            if (p.scheduled_date) {
-                set.add(p.scheduled_date.substring(0, 10));
+            if (p.date) {
+                set.add(p.date.substring(0, 10));
             }
         }
         return set;
@@ -333,14 +306,14 @@ export default function Goals() {
                                         <div>
                                             <strong className="text-xl font-bold text-accent capitalize">{g.exercise_name}</strong>
                                             <div className="text-body font-medium text-lg mt-1 flex items-center gap-2">
-                                                {g.target_weight} kg × {g.target_reps} reps
+                                                {g.target_weight ?? 0} kg × {g.target_reps ?? 0} reps
                                                 {(() => {
                                                     const fulfilled = isGoalFulfilled(g);
                                                     const pr = prData[g.exercise_id];
                                                     return fulfilled ? (
                                                         <Badge variant="accent">✓</Badge>
                                                     ) : pr ? (
-                                                        <Badge variant="warning">{Math.max(0, Number(g.target_weight) - pr.weight).toFixed(1)} kg to go</Badge>
+                                                        <Badge variant="warning">{Math.max(0, (g.target_weight ?? 0) - pr.weight).toFixed(1)} kg to go</Badge>
                                                     ) : (
                                                         <Badge variant="default">No PR registered yet</Badge>
                                                     );
@@ -352,7 +325,7 @@ export default function Goals() {
                                         </div>
                                         <div className="flex gap-2">
                                             <EditButton onClick={() => handleEditGoal(g)} />
-                                            <DeleteButton onClick={() => deleteGoal(g.id)} />
+                                            <DeleteButton onClick={() => handleDeleteGoal(g.id)} />
                                         </div>
                                     </li>
                                 ))}

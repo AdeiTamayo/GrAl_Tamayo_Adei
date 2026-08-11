@@ -1,13 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { apiFetch } from '../utils/api';
 import Pagination from './Pagination';
 import Select from './Select';
-
-interface Workout {
-    id: number;
-    name: string;
-    date: string;
-}
+import { getWorkouts } from '../data/workouts';
+import { Workout } from '../data/types';
 
 interface WorkoutPickerProps {
     onSelect: (workout: Workout) => void;
@@ -38,16 +33,8 @@ export default function WorkoutPicker({ onSelect, onClose, title = "Select Worko
     async function loadWorkouts() {
         try {
             setLoading(true);
-            const token = localStorage.getItem('user_login_token');
-            const res = await apiFetch('/api/workouts', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json();
-            if (data.success) {
-                setAllWorkouts(data.data || []);
-            } else {
-                setError('Failed to load workouts');
-            }
+            const data = await getWorkouts();
+            setAllWorkouts(data || []);
         } catch (err) {
             setError('Error loading workouts');
         } finally {

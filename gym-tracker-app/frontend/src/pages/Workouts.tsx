@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, FormEvent } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
@@ -16,39 +15,26 @@ import { useNotification } from "../components/NotificationProvider";
 import Input from '../components/Input';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
-
-// ---- TYPES & INTERFACES ----
-interface SetEntry {
-    id: number;
-    set_number: number;
-    weight: number | null;
-    repetitions: number | null;
-    time: number | null;
-    note?: string | null;
-}
-
-interface WorkoutExercise {
-    id: number;
-    exercise_id: number;
-    exercise_order: number;
-    name: string;
-    note?: string | null;
-    sets: SetEntry[];
-}
-
-interface Workout {
-    id: number;
-    name: string;
-    date: string;
-    note?: string | null;
-    exercises?: WorkoutExercise[];
-}
-
-interface Exercise {
-    id: number;
-    name: string;
-    category?: string;
-}
+import {
+    getWorkouts,
+    getWorkoutById,
+    createWorkout as createWorkoutData,
+    updateWorkout as updateWorkoutData,
+    deleteWorkout as deleteWorkoutData,
+    addWorkoutExercise,
+    deleteWorkoutExercise as deleteWorkoutExerciseData,
+    addSet as addSetData,
+    updateSet as updateSetData,
+    deleteSet as deleteSetData
+} from '../data/workouts';
+import {
+    createRoutine as createRoutineData,
+    addExerciseToRoutine as addExerciseToRoutineData,
+    addSetToRoutineExercise as addSetToRoutineExerciseData
+} from '../data/routines';
+import { getUserGoals } from '../data/goals';
+import { getExercises } from '../data/exercises';
+import { Workout, WorkoutExercise, WorkoutSet, Exercise, Goal } from '../data/types';
 
 type EditableSetField = "weight" | "repetitions" | "time" | "note";
 
@@ -108,16 +94,6 @@ export default function WorkoutsManagement() {
 
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    // ---- API HEADERS MEMO ----
-    const token = localStorage.getItem("user_login_token");
-    const headers = useMemo(
-        () => ({
-            Authorization: "Bearer " + token,
-            "Content-Type": "application/json",
-        }),
-        [token]
-    );
-
     // ---- COMPUTED VALUES ----
     const filteredWorkouts = useMemo(() => {
         return workouts.filter(w => {
@@ -139,11 +115,8 @@ export default function WorkoutsManagement() {
     // ---- DATA FETCHING HANDLERS ----
     const fetchWorkouts = useCallback(async () => {
         try {
-            const res = await apiFetch("/api/workouts", { headers });
-            const data = await res.json();
-            if (data.success) {
-                setWorkouts(data.data || []);
-            }
+            const data = await getWorkouts();
+            setWorkouts(data || []);
         } catch (err: any) {
             console.error("Failed to fetch workouts", err);
             setError("Failed to fetch workouts");
@@ -152,28 +125,22 @@ export default function WorkoutsManagement() {
 
     const fetchGoalsMap = useCallback(async () => {
         try {
-            const res = await apiFetch("/api/goals", { headers });
-            const data = await res.json();
-            if (data.success) {
-                const gMap: Record<number, number> = {};
-                for (const g of data.goals || []) {
-                    const w = Number(g.target_weight);
-                    if (w) gMap[g.exercise_id] = w;
-                }
-                setGoals(gMap);
+            const goals = await getUserGoals();
+            const gMap: Record<number, number> = {};
+            for (const g of goals || []) {
+                const w = Number(g.target_weight);
+                if (w) gMap[g.exercise_id] = w;
             }
+            setGoals(gMap);
         } catch (err: any) {
             console.error("Failed to fetch goals", err);
         }
-    }, [headers]);
+    }, []);
 
     const fetchExercises = useCallback(async () => {
         try {
-            const res = await apiFetch("/api/exercises", { headers });
-            const data = await res.json();
-            if (data.success) {
-                setExercises(data.data || data.exercises || []);
-            }
+            const data = await getExercises();
+            setExercises(data.exercises || []);
         } catch (err: any) {
             console.error("Failed to fetch exercises", err);
             setError("Failed to fetch exercises");
@@ -183,25 +150,17 @@ export default function WorkoutsManagement() {
     const fetchWorkoutById = useCallback(async (id: number) => {
         try {
             setError(null);
-            const res = await apiFetch("/api/workouts/" + id, { headers });
-            const data = await res.json();
-            if (data.success) {
-                const workoutData = data.data;
-                if (workoutData && Array.isArray(workoutData.exercises)) {
-                    workoutData.exercises = workoutData.exercises.map((ex: WorkoutExercise) => ({
-                        ...ex,
-                        sets: Array.isArray(ex.sets) ? ex.sets : [],
-                    }));
-                }
+            const workoutData = await getWorkoutById(id);
+            if (workoutData) {
                 setSelectedWorkout(workoutData);
                 setShowDetailsDropdown(false);
             } else {
-                setError(data.error || "Failed to load workout details");
+                setError("Failed to load workout details");
             }
         } catch (err: any) {
             setError("Failed to load workout details");
         }
-    }, [headers]);
+    }, []);
 
     // Initial load
     useEffect(() => {
@@ -234,25 +193,15 @@ export default function WorkoutsManagement() {
         setShowCreateModal(false);
 
         try {
-            const res = await apiFetch("/api/workouts", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({
-                    name: tempWorkout.name,
-                    date: tempWorkout.date,
-                    note: tempWorkout.note,
-                }),
+            const created = await createWorkoutData({
+                name: tempWorkout.name,
+                date: tempWorkout.date,
+                note: tempWorkout.note,
             });
-            const data = await res.json();
-
-            if (res.ok && data.success && data.data) {
-                setWorkouts((prev) =>
-                    prev.map((w) => (w.id === tempId ? { ...w, id: data.data.id } : w))
-                );
-                setSelectedWorkout({ ...data.data, exercises: [] });
-            } else {
-                await fetchWorkouts();
-            }
+            setWorkouts((prev) =>
+                prev.map((w) => (w.id === tempId ? { ...w, id: created.id } : w))
+            );
+            setSelectedWorkout({ ...created, exercises: [] });
         } catch (err: any) {
             setError("Failed to create workout");
             setWorkouts((prev) => prev.filter((w) => w.id !== tempId));
@@ -272,26 +221,20 @@ export default function WorkoutsManagement() {
         if (!editName.trim()) { setError("Workout name cannot be empty."); return; }
 
         try {
-            const res = await apiFetch("/api/workouts/" + selectedWorkout.id, {
-                method: "PUT",
-                headers,
-                body: JSON.stringify({
-                    name: editName,
-                    date: editDate,
-                    note: editNote,
-                }),
+            const updated = await updateWorkoutData(selectedWorkout.id, {
+                name: editName,
+                date: editDate,
+                note: editNote,
             });
 
-            const data = await res.json();
-
-            if (res.ok && data.success) {
-                setSelectedWorkout({ ...data.data, exercises: selectedWorkout.exercises || [] });
+            if (updated) {
+                setSelectedWorkout({ ...updated, exercises: selectedWorkout.exercises || [] });
                 setWorkouts((prev) =>
-                    prev.map((w) => (w.id === selectedWorkout.id ? data.data : w))
+                    prev.map((w) => (w.id === selectedWorkout.id ? updated : w))
                 );
                 setShowDetailsDropdown(false);
             } else {
-                setError(data.error || "Update failed");
+                setError("Update failed");
             }
         } catch (err: any) {
             console.error(err);
@@ -306,7 +249,7 @@ export default function WorkoutsManagement() {
         }
 
         try {
-            await apiFetch("/api/workouts/" + id, { method: "DELETE", headers });
+            await deleteWorkoutData(id);
         } catch (err: any) {
             console.error("Delete workout failed", err);
             setError("Failed to delete workout");
@@ -343,28 +286,19 @@ export default function WorkoutsManagement() {
         setShowPicker(false);
 
         try {
-            const res = await apiFetch("/api/workouts/" + selectedWorkout.id + "/exercises", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ exercise_id: selectedExId }),
-            });
-            const data = await res.json();
+            const created = await addWorkoutExercise(selectedWorkout.id, selectedExId);
 
-            if (res.ok && data.success && data.data) {
-                setSelectedWorkout((prev) => {
-                    if (!prev) return prev;
-                    return {
-                        ...prev,
-                        exercises: prev.exercises?.map((ex) =>
-                            ex.id === tempId
-                                ? { ...ex, id: data.data.id, exercise_order: data.data.exercise_order }
-                                : ex
-                        ),
-                    };
-                });
-            } else {
-                await fetchWorkoutById(selectedWorkout.id);
-            }
+            setSelectedWorkout((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    exercises: prev.exercises?.map((ex) =>
+                        ex.id === tempId
+                            ? { ...ex, id: created.id, exercise_order: created.exercise_order }
+                            : ex
+                    ),
+                };
+            });
         } catch (err: any) {
             setError("Failed to add exercise");
             setSelectedWorkout((prev) => {
@@ -381,17 +315,8 @@ export default function WorkoutsManagement() {
         if (!selectedWorkout) return;
 
         try {
-            const res = await apiFetch("/api/workouts/exercises/" + workoutExerciseId, {
-                method: "DELETE",
-                headers,
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                await fetchWorkoutById(selectedWorkout.id);
-            } else {
-                setError(data.error || "Failed to remove exercise");
-            }
+            await deleteWorkoutExerciseData(workoutExerciseId);
+            await fetchWorkoutById(selectedWorkout.id);
         } catch (err: any) {
             setError("Failed to remove exercise");
         }
@@ -401,29 +326,15 @@ export default function WorkoutsManagement() {
     async function submitNewSet(exercise: WorkoutExercise, weight: any, reps: any, time: any, note?: any) {
         if (!selectedWorkout) return;
 
-        const sets = exercise.sets || [];
-        const nextSetNum = sets.length + 1;
-
         try {
-            const res = await apiFetch("/api/workouts/exercises/" + exercise.id + "/sets", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({
-                    set_number: nextSetNum,
-                    weight: weight === "" || weight === null ? null : Number(weight),
-                    reps: reps === "" || reps === null ? null : Number(reps),
-                    time: time === "" || time === null ? null : Number(time),
-                    note: !note || note.trim() === "" ? null : note.trim(),
-                }),
+            await addSetData(exercise.id, {
+                weight: weight === "" || weight === null ? null : Number(weight),
+                repetitions: reps === "" || reps === null ? null : Number(reps),
+                time: time === "" || time === null ? null : Number(time),
+                note: !note || note.trim() === "" ? null : note.trim(),
             });
 
-            const data = await res.json();
-
-            if (data.success) {
-                await fetchWorkoutById(selectedWorkout.id);
-            } else {
-                setError(data.error || "Failed to add set");
-            }
+            await fetchWorkoutById(selectedWorkout.id);
         } catch (err: any) {
             setError("Failed to add set");
         }
@@ -433,17 +344,8 @@ export default function WorkoutsManagement() {
         if (!selectedWorkout) return;
 
         try {
-            const res = await apiFetch("/api/workouts/sets/" + setId, {
-                method: "DELETE",
-                headers,
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                await fetchWorkoutById(selectedWorkout.id);
-            } else {
-                setError(data.error || "Failed to remove set");
-            }
+            await deleteSetData(setId);
+            await fetchWorkoutById(selectedWorkout.id);
         } catch (err: any) {
             setError("Failed to remove set");
         }
@@ -487,15 +389,11 @@ export default function WorkoutsManagement() {
         if (!set) return;
 
         try {
-            await apiFetch("/api/workouts/sets/" + setId, {
-                method: "PUT",
-                headers,
-                body: JSON.stringify({
-                    weight: set.weight,
-                    reps: set.repetitions,
-                    time: set.time,
-                    note: set.note ?? null,
-                }),
+            await updateSetData(setId, {
+                weight: set.weight,
+                repetitions: set.repetitions,
+                time: set.time,
+                note: set.note ?? null,
             });
         } catch (err: any) {
             console.error("Failed to save set update");
@@ -514,15 +412,8 @@ export default function WorkoutsManagement() {
             return;
         }
         try {
-            const res = await apiFetch("/api/routines", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ name: routineName.trim() })
-            });
-            const data = await res.json();
-            if (!data.success) throw new Error("Failed to create routine");
-
-            const routineId = data.data.id;
+            const routine = await createRoutineData(routineName.trim());
+            const routineId = routine.id;
             let exCount = 0;
 
             for (const ex of selectedWorkout.exercises) {
@@ -531,35 +422,24 @@ export default function WorkoutsManagement() {
                 const weights = ex.sets.map(s => Number(s.weight) || 0).filter(w => w > 0);
                 const avgWeight = weights.length > 0 ? (weights.reduce((a, b) => a + b, 0) / weights.length) : 0;
 
-                const exRes = await apiFetch(`/api/routines/${routineId}/exercises`, {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify({
-                        exercise_id: ex.exercise_id,
-                        exercise_order: ex.exercise_order,
-                        planned_sets: ex.sets.length,
-                        planned_reps: avgReps,
-                        planned_weight: avgWeight,
-                        planned_time: 0
-                    })
+                const routineExercise = await addExerciseToRoutineData(routineId, {
+                    exercise_id: ex.exercise_id,
+                    exercise_order: ex.exercise_order,
+                    planned_sets: ex.sets.length,
+                    planned_reps: avgReps,
+                    planned_weight: avgWeight,
+                    planned_time: 0
                 });
-                const exData = await exRes.json();
-                if (exData.success && exData.data) {
-                    const itemId = exData.data.id || exData.data.item_id;
-                    if (itemId) {
-                        for (let i = 0; i < ex.sets.length; i++) {
-                            const s = ex.sets[i];
-                            await apiFetch(`/api/routines/exercises/${itemId}/sets`, {
-                                method: "POST",
-                                headers,
-                                body: JSON.stringify({
-                                    set_number: i + 1,
-                                    planned_weight: Number(s.weight) || 0,
-                                    planned_reps: Number(s.repetitions) || 0,
-                                    planned_time: 0
-                                })
-                            });
-                        }
+                const itemId = routineExercise.item_id;
+                if (itemId) {
+                    for (let i = 0; i < ex.sets.length; i++) {
+                        const s = ex.sets[i];
+                        await addSetToRoutineExerciseData(itemId, {
+                            set_number: i + 1,
+                            planned_weight: Number(s.weight) || 0,
+                            planned_reps: Number(s.repetitions) || 0,
+                            planned_time: 0
+                        });
                     }
                 }
                 exCount++;
@@ -785,7 +665,7 @@ export default function WorkoutsManagement() {
                                         exerciseOrder={ex.exercise_order}
                                         showNotesField={true}
                                         goalWeight={goals[ex.exercise_id]}
-                                        sets={ex.sets.map((s: SetEntry) => ({
+                                        sets={ex.sets.map((s: WorkoutSet) => ({
                                             id: s.id,
                                             set_number: s.set_number,
                                             weight: s.weight,

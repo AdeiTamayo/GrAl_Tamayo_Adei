@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { apiFetch } from "../utils/api";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Modal from "../components/Modal";
 import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
+import { getExerciseHistory } from "../data/exercises";
 
 interface HistoryPoint {
     date: string;
     workout_name: string;
-    max_weight: number;
+    max_weight: number | null;
     total_volume: number;
-    max_reps: number;
+    max_reps: number | null;
 }
 
 export default function ExerciseHistory() {
@@ -35,32 +35,20 @@ export default function ExerciseHistory() {
         }
     }, [exerciseIdParam, exerciseNameParam]);
 
-    const token = localStorage.getItem("user_login_token");
-    const headers = useMemo(() => ({
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-    }), [token]);
-
     const fetchHistory = useCallback(async (id: number) => {
         setIsLoading(true);
         setFetchError(null);
         try {
-            const res = await apiFetch(`/api/exercises/${id}/history`, { headers });
-            const data = await res.json();
-            if (!res.ok || !data.success) {
-                setFetchError(data.error || `Server error: ${res.status} ${res.statusText}`);
-                setHistory([]);
-                return;
-            }
-            setHistory(data.data || []);
+            const data = await getExerciseHistory(id);
+            setHistory(data || []);
         } catch (err) {
             console.error("[ExerciseHistory] Fetch error:", err);
-            setFetchError("Cannot connect to server. Make sure the backend is running.");
+            setFetchError("Failed to load exercise history.");
             setHistory([]);
         } finally {
             setIsLoading(false);
         }
-    }, [headers]);
+    }, []);
 
     useEffect(() => {
         if (selectedExercise) {
@@ -137,12 +125,6 @@ export default function ExerciseHistory() {
                 {fetchError && (
                     <div className="text-center py-8 bg-rose-500/10 rounded-xl border border-rose-500/20 mb-6">
                         <p className="text-rose-400 text-lg font-medium">{fetchError}</p>
-                        {fetchError.includes("Cannot connect") && (
-                            <p className="text-dim text-sm mt-2">Start the backend with <code className="text-accent">cd backend && node server.js</code></p>
-                        )}
-                        {fetchError.includes("Invalid token") && (
-                            <p className="text-dim text-sm mt-2">Please log in again.</p>
-                        )}
                     </div>
                 )}
 

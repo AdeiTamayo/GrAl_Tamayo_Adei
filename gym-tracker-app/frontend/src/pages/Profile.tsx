@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import CloseButton from "../components/CloseButton";
 import ErrorBanner from "../components/ErrorBanner";
@@ -11,16 +10,9 @@ import Select from "../components/Select";
 import Input from "../components/Input";
 import Card from "../components/Card";
 import { useAuth } from "../contexts/AuthContext";
-
-interface UserProfile {
-    name: string;
-    surname: string;
-    email: string;
-    gender: string;
-    weight: number | null;
-    height: number | null;
-    birth_date: string | null;
-}
+import { getProfile as getProfileData, updateProfile } from "../data/user";
+import { supabase } from "../utils/supabaseClient";
+import { UserProfile } from "../data/types";
 
 export default function Profile() {
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -39,20 +31,14 @@ export default function Profile() {
     const navigate = useNavigate();
     const { logout: authLogout } = useAuth();
 
-    useEffect(() => { getProfile(); }, []);
+    useEffect(() => { fetchProfile(); }, []);
 
-    async function getProfile() {
+    async function fetchProfile() {
         try {
-            const response = await apiFetch("/api/user/", {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("user_login_token")}`,
-                },
-            });
-            if (!response.ok) throw new Error("Failed to fetch profile");
-            const data = await response.json();
-            setProfile(data.user as UserProfile);
-            setForm(data.user as UserProfile);
+            const data = await getProfileData();
+            if (!data) throw new Error("Failed to fetch profile");
+            setProfile(data);
+            setForm(data);
         } catch {
             setError("Could not load profile.");
         } finally {
@@ -90,15 +76,7 @@ export default function Profile() {
         }
 
         try {
-            const response = await apiFetch("/api/user", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("user_login_token")}`,
-                },
-                body: JSON.stringify(form),
-            });
-            if (!response.ok) throw new Error("Failed to save");
+            await updateProfile(form);
             setProfile(form);
             setEditing(false);
             setSuccess("Profile updated successfully.");
@@ -111,27 +89,19 @@ export default function Profile() {
 
     async function handleDeleteAccountSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!passwordConfirm) return;
+        if (!passwordConfirm || !profile) return;
 
         setDeleting(true);
         setError(null);
 
         try {
-            const response = await apiFetch("/api/user/", {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("user_login_token")}`
-                },
-                body: JSON.stringify({ password: passwordConfirm })
+            const { error: authError } = await supabase.auth.signInWithPassword({
+                email: profile.email,
+                password: passwordConfirm,
             });
+            if (authError) throw new Error("Incorrect password.");
 
-            const result = await response.json();
-            if (!result.success) throw new Error(result.error || "Incorrect password or server error.");
-
-            authLogout();
-            navigate("/");
-
+            throw new Error("Account deletion requires a server-side admin action and is not available in this version yet. Your data can be wiped from the Supabase dashboard.");
         } catch (err: any) {
             setError(err.message || "Could not delete account.");
             setShowDeleteModal(false);
@@ -196,7 +166,7 @@ export default function Profile() {
                 <div className="flex justify-between items-start gap-4 pb-6 border-b border-subtle/80 mb-6">
                     <div>
                         <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">
-                            {profile.name} {profile.surname}
+                            {profile.name ?? ''} {profile.surname ?? ''}
                         </h1>
                         <p className="text-muted font-medium mt-1">Manage your account details and preferences.</p>
                     </div>

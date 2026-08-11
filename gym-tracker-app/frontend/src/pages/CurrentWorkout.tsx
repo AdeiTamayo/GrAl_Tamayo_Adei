@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { apiFetch } from "../utils/api";
 import { formatTime } from "../utils/helpers";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
@@ -12,12 +11,11 @@ import { useWorkout } from "../components/WorkoutContext";
 import { useSettings } from "../components/SettingsContext";
 import Input from "../components/Input";
 import Card from "../components/Card";
-
-interface Routine {
-    id: number;
-    name: string;
-    exercises: any[];
-}
+import { getUserRoutines, getRoutineById, createRoutine as createRoutineData, addExerciseToRoutine as addExerciseToRoutineData, addSetToRoutineExercise as addSetToRoutineExerciseData } from '../data/routines';
+import { getUserGoals } from '../data/goals';
+import { getPrSummary } from '../data/prs';
+import { createWorkout, addWorkoutExercise, addSet as addSetData } from '../data/workouts';
+import { Routine } from '../data/types';
 
 export default function CurrentWorkout() {
     const navigate = useNavigate();
@@ -71,13 +69,7 @@ export default function CurrentWorkout() {
     };
 
     // Goals state
-    const [goals, setGoals] = useState<Record<number, { target_weight: string; target_reps: number }>>({});
-
-    const token = localStorage.getItem("user_login_token");
-    const headers = useMemo(() => ({
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-    }), [token]);
+    const [goals, setGoals] = useState<Record<number, { target_weight: number | null; target_reps: number | null }>>({});
 
     useEffect(() => {
         if (searchParams.get('finish') === '1') {
@@ -101,46 +93,38 @@ export default function CurrentWorkout() {
 
     const fetchRoutines = useCallback(async () => {
         try {
-            const res = await apiFetch("/api/routines", { headers });
-            const data = await res.json();
-            if (data.success) {
-                setRoutines(data.routines || []);
-            }
+            const data = await getUserRoutines();
+            setRoutines(data || []);
         } catch (err) {
             console.error("Failed to fetch routines", err);
             showNotification("Failed to fetch routines", "error");
         }
-    }, [headers, showNotification]);
+    }, [showNotification]);
 
     const fetchGoals = useCallback(async () => {
         try {
-            const res = await apiFetch("/api/goals", { headers });
-            const data = await res.json();
-            if (data.success) {
-                const goalsMap: Record<number, { target_weight: string; target_reps: number }> = {};
-                for (const g of data.goals || []) {
-                    goalsMap[g.exercise_id] = { target_weight: g.target_weight, target_reps: g.target_reps };
-                }
-                setGoals(goalsMap);
+            const data = await getUserGoals();
+            const goalsMap: Record<number, { target_weight: number | null; target_reps: number | null }> = {};
+            for (const g of data || []) {
+                goalsMap[g.exercise_id] = { target_weight: g.target_weight, target_reps: g.target_reps };
             }
+            setGoals(goalsMap);
         } catch (err) {
             console.error("Failed to fetch goals", err);
         }
-    }, [headers]);
+    }, []);
 
     useEffect(() => {
         fetchRoutines();
         fetchGoals();
-    }, [headers, fetchRoutines, fetchGoals]);
+    }, [fetchRoutines, fetchGoals]);
 
     const loadRoutine = async (routineId: number) => {
         try {
-            const res = await apiFetch(`/api/routines/${routineId}`, { headers });
-            const data = await res.json();
-            if (data.success) {
-                const routine = data.data;
+            const routine = await getRoutineById(routineId);
+            if (routine) {
                 setWorkoutName(routine.name);
-                const loadedExercises = routine.exercises.map((ex: any) => {
+                const loadedExercises = (routine.exercises || []).map((ex: any) => {
                     const hasSets = ex.sets && ex.sets.length > 0;
                     const exerciseRest = getLoadedRestTime(ex);
                     return {
@@ -167,6 +151,8 @@ export default function CurrentWorkout() {
                 setExercises(loadedExercises);
                 setShowRoutinePicker(false);
                 startWorkout();
+            } else {
+                showNotification("Failed to load routine", "error");
             }
         } catch (err) {
             console.error("Failed to load routine", err);
@@ -200,63 +186,50 @@ export default function CurrentWorkout() {
         }
 
         try {
-            const workoutRes = await apiFetch("/api/workouts", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({
+            const [createdWorkout, prSummary] = await Promise.all([
+                createWorkout({
                     name: workoutName,
                     date: new Date().toISOString().split('T')[0],
                     note: `Duration: ${formatTime(elapsedTime)}`
-                })
-            });
-            const workoutData = await workoutRes.json();
-            if (!workoutData.success) throw new Error("Failed to create workout");
+                }),
+                getPrSummary()
+            ]);
 
-            const workoutId = workoutData.data.id;
+            const workoutId = createdWorkout.id;
+            const prMap = new Map<number, number>(prSummary.map(p => [p.exercise_id, p.weight]));
 
             let savedCount = 0;
             let failedCount = 0;
             const prExercises: string[] = [];
 
             for (const ex of exercises) {
-                const exRes = await apiFetch(`/api/workouts/${workoutId}/exercises`, {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify({ exercise_id: ex.exercise_id })
-                });
-                const exData = await exRes.json();
-                if (!exData.success) {
-                    failedCount += ex.sets.length;
-                    continue;
-                }
+                try {
+                    const workoutExercise = await addWorkoutExercise(workoutId, ex.exercise_id);
+                    const workoutExerciseId = workoutExercise.id;
 
-                const workoutExerciseId = exData.data.id;
-
-                for (const set of ex.sets) {
-                    try {
-                        const setRes = await apiFetch(`/api/workouts/exercises/${workoutExerciseId}/sets`, {
-                            method: "POST",
-                            headers,
-                            body: JSON.stringify({
-                                weight: set.weight || 0,
-                                reps: set.repetitions || 0,
-                                time: set.rest_time ?? ex.rest_time,
+                    for (const set of ex.sets) {
+                        try {
+                            const savedSet = await addSetData(workoutExerciseId, {
+                                weight: Number(set.weight) || 0,
+                                repetitions: Number(set.repetitions) || 0,
+                                time: Number(set.rest_time ?? ex.rest_time) || 0,
                                 note: set.note || null,
-                                rpe: set.rpe || null
-                            })
-                        });
-                        const setData = await setRes.json();
-                        if (setData.success) {
+                                rpe: set.rpe ? Number(set.rpe) : null
+                            });
                             savedCount++;
-                            if (setData.isPr) {
+
+                            const prevBest = prMap.get(ex.exercise_id) ?? 0;
+                            const setWeight = Number(savedSet.weight) || 0;
+                            if (setWeight > 0 && setWeight > prevBest) {
+                                prMap.set(ex.exercise_id, setWeight);
                                 prExercises.push(ex.name);
                             }
-                        } else {
+                        } catch {
                             failedCount++;
                         }
-                    } catch {
-                        failedCount++;
                     }
+                } catch {
+                    failedCount += ex.sets.length;
                 }
             }
 
@@ -289,15 +262,8 @@ export default function CurrentWorkout() {
             return;
         }
         try {
-            const res = await apiFetch("/api/routines", {
-                method: "POST",
-                headers,
-                body: JSON.stringify({ name: routineName.trim() })
-            });
-            const data = await res.json();
-            if (!data.success) throw new Error("Failed to create routine");
-
-            const routineId = data.data.id;
+            const routine = await createRoutineData(routineName.trim());
+            const routineId = routine.id;
             let exCount = 0;
 
             let exIdx = 0;
@@ -308,35 +274,24 @@ export default function CurrentWorkout() {
                 const weights = ex.sets.map(s => Number(s.weight) || 0).filter(w => w > 0);
                 const avgWeight = weights.length > 0 ? (weights.reduce((a, b) => a + b, 0) / weights.length) : 0;
 
-                const exRes = await apiFetch(`/api/routines/${routineId}/exercises`, {
-                    method: "POST",
-                    headers,
-                    body: JSON.stringify({
-                        exercise_id: ex.exercise_id,
-                        exercise_order: exIdx,
-                        planned_sets: ex.sets.length,
-                        planned_reps: avgReps,
-                        planned_weight: avgWeight,
-                        planned_time: ex.sets[0]?.rest_time ?? ex.rest_time
-                    })
+                const routineExercise = await addExerciseToRoutineData(routineId, {
+                    exercise_id: ex.exercise_id,
+                    exercise_order: exIdx,
+                    planned_sets: ex.sets.length,
+                    planned_reps: avgReps,
+                    planned_weight: avgWeight,
+                    planned_time: ex.sets[0]?.rest_time ?? ex.rest_time
                 });
-                const exData = await exRes.json();
-                if (exData.success && exData.data) {
-                    const itemId = exData.data.id || exData.data.item_id;
-                    if (itemId) {
-                        for (let i = 0; i < ex.sets.length; i++) {
-                            const s = ex.sets[i];
-                            await apiFetch(`/api/routines/exercises/${itemId}/sets`, {
-                                method: "POST",
-                                headers,
-                                body: JSON.stringify({
-                                    set_number: i + 1,
-                                    planned_weight: Number(s.weight) || 0,
-                                    planned_reps: Number(s.repetitions) || 0,
-                                    planned_time: s.rest_time ?? ex.rest_time
-                                })
-                            });
-                        }
+                const itemId = routineExercise.item_id;
+                if (itemId) {
+                    for (let i = 0; i < ex.sets.length; i++) {
+                        const s = ex.sets[i];
+                        await addSetToRoutineExerciseData(itemId, {
+                            set_number: i + 1,
+                            planned_weight: Number(s.weight) || 0,
+                            planned_reps: Number(s.repetitions) || 0,
+                            planned_time: s.rest_time ?? ex.rest_time
+                        });
                     }
                 }
                 exCount++;
