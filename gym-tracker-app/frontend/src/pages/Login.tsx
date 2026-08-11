@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import { useAuth } from "../contexts/AuthContext";
@@ -32,30 +31,15 @@ export default function Login() {
         }
 
         try {
-            const response = await apiFetch('/api/user/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email: email.trim(), password })
-            });
+            const { error } = await login(email.trim(), password);
 
-            const data = await response.json();
-
-            if (data.success) {
-                if (data.token) {
-                    login(data.token, data.user.email);
-                }
+            if (error) {
+                setMessage(error);
+            } else {
                 navigate("/", {
                     replace: true,
-                    state: {
-                        user: data.user,
-                        email: data.email,
-                        message: "Login successful"
-                    }
+                    state: { message: "Login successful" }
                 });
-            } else {
-                setMessage(data.error || 'Login failed.');
             }
         } catch (error) {
             console.error('Login failed:', error);

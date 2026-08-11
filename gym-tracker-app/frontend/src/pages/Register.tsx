@@ -1,6 +1,5 @@
 import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import Input from "../components/Input";
 import { useAuth } from "../contexts/AuthContext";
@@ -9,7 +8,7 @@ import TransparentNumericInput from "../components/TransparentNumericInput";
 import Select from "../components/Select";
 
 export default function Register() {
-    const { login } = useAuth();
+    const { register } = useAuth();
     const [name, setName] = useState("");
     const [surname, setSurname] = useState("");
     const [email, setEmail] = useState("");
@@ -82,55 +81,24 @@ export default function Register() {
         setIsLoading(true);
 
         try {
-            const payload = {
+            const { error, needsEmailConfirmation } = await register(email.trim(), password, {
                 name: toNullableString(name),
                 surname: toNullableString(surname),
-                email: email.trim(),
-                password,
-                gender_id: toNullableString(genderId),
+                gender: toNullableString(genderId),
                 weight: toNullableNumber(weight),
                 height: toNullableNumber(height),
                 birth_date: toNullableString(birthDate)
-            };
-
-            const response = await apiFetch("/api/user/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
             });
 
-            const data = await response.json();
-
-            if (data.success) {
-                const loginResponse = await apiFetch("/api/user/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ email: email.trim(), password })
-                });
-
-                const loginData = await loginResponse.json();
-
-                if (loginData.success && loginData.token) {
-                    login(loginData.token, loginData.user.email);
-
-                    navigate("/", {
-                        replace: true,
-                        state: {
-                            user: loginData.user,
-                            email: loginData.user.email,
-                            message: "Registration and login successful"
-                        }
-                    });
-                } else {
-                    navigate("/login");
-                }
-
+            if (error) {
+                setMessage(error);
+            } else if (needsEmailConfirmation) {
+                setMessage("Account created! Check your email to confirm your account, then log in.");
             } else {
-                setMessage(data.error || "Registration failed.");
+                navigate("/", {
+                    replace: true,
+                    state: { message: "Registration successful" }
+                });
             }
         } catch (error) {
             console.error("Registration failed:", error);
