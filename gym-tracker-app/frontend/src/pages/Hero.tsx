@@ -243,7 +243,11 @@ export default function Hero() {
                             {videos.map(video => (
                                 <Link key={video.id} to="/videos" className="group bg-card border border-subtle/80 rounded-xl overflow-hidden hover:border-accent/40 transition-all hover:shadow-lg">
                                     <div className="bg-black aspect-video flex items-center justify-center">
-                                        {video.processed_url && <video className="w-full h-full object-contain" src={video.processed_url} preload="metadata" />}
+                                        {video.processed_url ? (
+                                            <video className="w-full h-full object-contain" src={video.processed_url} preload="metadata" />
+                                        ) : (
+                                            <span className="text-dim text-xs font-medium italic px-3 text-center">Processing…</span>
+                                        )}
                                     </div>
                                     <div className="p-3">
                                         <p className="text-xs font-bold text-accent uppercase tracking-wider truncate">{video.process_type}</p>

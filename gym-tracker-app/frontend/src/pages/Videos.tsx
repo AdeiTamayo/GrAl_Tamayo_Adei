@@ -1,9 +1,11 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { getVideos } from "../data/videos";
+import { getVideos, deleteVideo } from "../data/videos";
 import { VideoRecord } from "../data/types";
 import Pagination from "../components/Pagination";
 import Select from "../components/Select";
 import DatePicker from "../components/DatePicker";
+import DeleteButton from "../components/DeleteButton";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function UserVideos() {
     const [videos, setVideos] = useState<VideoRecord[]>([]);
@@ -16,6 +18,25 @@ export default function UserVideos() {
     const [filterDateTo, setFilterDateTo] = useState<string>("");
     const [sortOrder, setSortOrder] = useState<string>("desc");
     const [activeDatePicker, setActiveDatePicker] = useState<'from' | 'to' | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+    async function handleDeleteVideo(id: number) {
+        try {
+            const video = videos.find((v) => v.id === id);
+            await deleteVideo(id, video?.processed_url);
+            setVideos((prev) => {
+                const remaining = prev.filter((v) => v.id !== id);
+                return remaining;
+            });
+            if (filteredVideos.length - 1 < (videosPage - 1) * pageSize + 1 && videosPage > 1) {
+                setVideosPage(videosPage - 1);
+            }
+        } catch (err: any) {
+            setError(err.message || "Failed to delete video");
+        } finally {
+            setDeleteConfirmId(null);
+        }
+    }
 
     // Pagination
     const [videosPage, setVideosPage] = useState(1);
@@ -185,6 +206,7 @@ export default function UserVideos() {
                                             })}
                                         </span>
                                     </div>
+                                    <DeleteButton onClick={() => setDeleteConfirmId(video.id)} />
                                 </div>
                             </div>
                         ))}
@@ -196,6 +218,15 @@ export default function UserVideos() {
                         onPageChange={setVideosPage}
                     />
                 </>
+            )}
+
+            {deleteConfirmId !== null && (
+                <ConfirmModal
+                    message="Delete this video? The processed video will also be removed from storage."
+                    onConfirm={() => handleDeleteVideo(deleteConfirmId)}
+                    onCancel={() => setDeleteConfirmId(null)}
+                    confirmLabel="Delete"
+                />
             )}
         </div>
     );

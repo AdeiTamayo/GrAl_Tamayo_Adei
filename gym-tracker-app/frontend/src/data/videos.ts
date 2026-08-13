@@ -24,6 +24,16 @@ export async function uploadProcessedVideo(blob: Blob, fileName: string): Promis
     if (error) throw new Error(error.message);
 
     const { data } = supabase.storage.from(PROCESSED_BUCKET).getPublicUrl(path);
+
+    const probe = await fetch(data.publicUrl, {
+        method: 'GET',
+        headers: { Range: 'bytes=0-0' },
+    });
+    if (!probe.ok && probe.status !== 206) {
+        await supabase.storage.from(PROCESSED_BUCKET).remove([path]);
+        throw new Error('Processed video could not be read from storage');
+    }
+
     return data.publicUrl;
 }
 
@@ -81,4 +91,19 @@ export async function updateVideoRecord(
 export async function deleteVideoRecord(id: number): Promise<void> {
     const { error } = await supabase.from('videos').delete().eq('id', id);
     if (error) throw new Error(error.message);
+}
+
+export async function deleteVideo(id: number, processedUrl?: string | null): Promise<void> {
+    if (processedUrl) {
+        const marker = `/object/public/${PROCESSED_BUCKET}/`;
+        const idx = processedUrl.indexOf(marker);
+        if (idx !== -1) {
+            const path = decodeURIComponent(processedUrl.slice(idx + marker.length));
+            await supabase.storage
+                .from(PROCESSED_BUCKET)
+                .remove([path])
+                .catch(() => undefined);
+        }
+    }
+    await deleteVideoRecord(id);
 }

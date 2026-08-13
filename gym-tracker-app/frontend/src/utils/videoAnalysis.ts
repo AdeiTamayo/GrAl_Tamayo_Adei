@@ -178,6 +178,7 @@ export async function analyzeVideo(
         if (!mimeType) throw new Error('Video recording is not supported in this browser');
 
         const stream = canvas.captureStream(30);
+        const captureTrack = stream.getVideoTracks()[0] as (MediaStreamTrack & { requestFrame?: () => void }) | undefined;
         const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 5_000_000 });
         const chunks: Blob[] = [];
         recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
@@ -185,6 +186,23 @@ export async function analyzeVideo(
         const state = { minKnee: 180, minHip: 180, down: false, reps: 0, barPath: [] as { x: number; y: number }[] };
 
         await video.play().catch(() => undefined);
+
+        // Ensure at least one real frame is painted before capture starts,
+        // otherwise the first captured frames (and often the whole file) come out black.
+        await new Promise<void>((resolve) => {
+            const rvf = (video as HTMLVideoElement & {
+                requestVideoFrameCallback?: (cb: (now: number, metadata: unknown) => void) => number;
+            }).requestVideoFrameCallback;
+            if (rvf) {
+                rvf.call(video, () => resolve());
+            } else {
+                video.addEventListener('timeupdate', () => resolve(), { once: true });
+                setTimeout(resolve, 300);
+            }
+        });
+        ctx.drawImage(video, 0, 0, w, h);
+        captureTrack?.requestFrame?.();
+
         onProgress('Analyzing frames... 0%');
         recorder.start(250);
 
@@ -201,6 +219,8 @@ export async function analyzeVideo(
                     reject(new DOMException('Analysis cancelled', 'AbortError'));
                     return;
                 }
+
+                if (video.paused) void video.play().catch(() => undefined);
 
                 const t = video.currentTime;
                 const pct = Math.round((t / duration) * 100);
@@ -243,7 +263,12 @@ export async function analyzeVideo(
         });
         stream.getTracks().forEach((track) => track.stop());
 
-        const blob = new Blob(chunks, { type: mimeType });
+        const blobType = mimeType.split(';')[0].trim();
+        const blob = new Blob(chunks, { type: blobType });
+
+        if (chunks.length === 0 || blob.size < 2 * 1024) {
+            throw new Error('Recording produced an empty video — try a shorter clip');
+        }
 
         const feedback: string[] = [];
         if (mode === 'squat') {
