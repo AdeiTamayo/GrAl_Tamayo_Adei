@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Pagination from './Pagination';
 import Select from './Select';
 import { getWorkouts } from '../data/workouts';

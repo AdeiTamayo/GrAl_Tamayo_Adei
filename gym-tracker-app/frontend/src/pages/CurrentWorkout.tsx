@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { formatTime } from "../utils/helpers";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
@@ -198,16 +198,12 @@ export default function CurrentWorkout() {
             const workoutId = createdWorkout.id;
             const prMap = new Map<number, number>(prSummary.map(p => [p.exercise_id, p.weight]));
 
-            let savedCount = 0;
-            let failedCount = 0;
-            const prExercises: string[] = [];
-
-            for (const ex of exercises) {
+            const results = await Promise.all(exercises.map(async (ex) => {
                 try {
                     const workoutExercise = await addWorkoutExercise(workoutId, ex.exercise_id);
                     const workoutExerciseId = workoutExercise.id;
 
-                    for (const set of ex.sets) {
+                    return await Promise.all(ex.sets.map(async (set) => {
                         try {
                             const savedSet = await addSetData(workoutExerciseId, {
                                 weight: Number(set.weight) || 0,
@@ -216,20 +212,32 @@ export default function CurrentWorkout() {
                                 note: set.note || null,
                                 rpe: set.rpe ? Number(set.rpe) : null
                             });
-                            savedCount++;
-
-                            const prevBest = prMap.get(ex.exercise_id) ?? 0;
-                            const setWeight = Number(savedSet.weight) || 0;
-                            if (setWeight > 0 && setWeight > prevBest) {
-                                prMap.set(ex.exercise_id, setWeight);
-                                prExercises.push(ex.name);
-                            }
+                            return { ok: true, exerciseId: ex.exercise_id, name: ex.name, weight: Number(savedSet.weight) || 0 };
                         } catch {
-                            failedCount++;
+                            return { ok: false, exerciseId: ex.exercise_id, name: ex.name, weight: 0 };
                         }
-                    }
+                    }));
                 } catch {
-                    failedCount += ex.sets.length;
+                    return ex.sets.map(() => ({ ok: false, exerciseId: ex.exercise_id, name: ex.name, weight: 0 }));
+                }
+            }));
+
+            const flattened = results.flat();
+
+            let savedCount = 0;
+            let failedCount = 0;
+            const prExercises: string[] = [];
+
+            for (const r of flattened) {
+                if (r.ok) {
+                    savedCount++;
+                    const prevBest = prMap.get(r.exerciseId) ?? 0;
+                    if (r.weight > 0 && r.weight > prevBest) {
+                        prMap.set(r.exerciseId, r.weight);
+                        prExercises.push(r.name);
+                    }
+                } else {
+                    failedCount++;
                 }
             }
 
@@ -264,11 +272,8 @@ export default function CurrentWorkout() {
         try {
             const routine = await createRoutineData(routineName.trim());
             const routineId = routine.id;
-            let exCount = 0;
 
-            let exIdx = 0;
-            for (const ex of exercises) {
-                exIdx++;
+            await Promise.all(exercises.map(async (ex, exIdx) => {
                 const reps = ex.sets.map(s => Number(s.repetitions) || 0).filter(r => r > 0);
                 const avgReps = reps.length > 0 ? Math.round(reps.reduce((a, b) => a + b, 0) / reps.length) : 10;
                 const weights = ex.sets.map(s => Number(s.weight) || 0).filter(w => w > 0);
@@ -276,30 +281,27 @@ export default function CurrentWorkout() {
 
                 const routineExercise = await addExerciseToRoutineData(routineId, {
                     exercise_id: ex.exercise_id,
-                    exercise_order: exIdx,
+                    exercise_order: exIdx + 1,
                     planned_sets: ex.sets.length,
                     planned_reps: avgReps,
                     planned_weight: avgWeight,
                     planned_time: ex.sets[0]?.rest_time ?? ex.rest_time
                 });
-                const itemId = routineExercise.item_id;
-                if (itemId) {
-                    for (let i = 0; i < ex.sets.length; i++) {
-                        const s = ex.sets[i];
-                        await addSetToRoutineExerciseData(itemId, {
+                if (routineExercise.item_id) {
+                    await Promise.all(ex.sets.map((s, i) =>
+                        addSetToRoutineExerciseData(routineExercise.item_id, {
                             set_number: i + 1,
                             planned_weight: Number(s.weight) || 0,
                             planned_reps: Number(s.repetitions) || 0,
                             planned_time: s.rest_time ?? ex.rest_time
-                        });
-                    }
+                        })
+                    ));
                 }
-                exCount++;
-            }
+            }));
 
             setShowSaveRoutineModal(false);
             setRoutineName("");
-            showNotification(`Routine created with ${exCount} exercise(s)!`, "success");
+            showNotification(`Routine created with ${exercises.length} exercise(s)!`, "success");
         } catch (err) {
             console.error("Failed to save routine", err);
             showNotification("Error saving routine.", "error");

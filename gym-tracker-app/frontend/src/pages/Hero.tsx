@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { apiBaseUrl } from '../utils/api';
 import Calendar from '../components/Calendar';
 import ErrorBanner from '../components/ErrorBanner';
 import { useAuth } from '../contexts/AuthContext';
@@ -56,7 +55,7 @@ export default function Hero() {
                 getDashboardStats(),
                 getWorkouts(),
                 getVideos(),
-                getWeightHistory(),
+                getWeightHistory({ page: 1, limit: 1 }),
                 getPlannedWorkouts(),
                 getUserGoals(),
             ]);
@@ -244,7 +243,7 @@ export default function Hero() {
                             {videos.map(video => (
                                 <Link key={video.id} to="/videos" className="group bg-card border border-subtle/80 rounded-xl overflow-hidden hover:border-accent/40 transition-all hover:shadow-lg">
                                     <div className="bg-black aspect-video flex items-center justify-center">
-                                        {video.processed_url && <video className="w-full h-full object-contain" src={`${apiBaseUrl}${video.processed_url}`} preload="metadata" />}
+                                        {video.processed_url && <video className="w-full h-full object-contain" src={video.processed_url} preload="metadata" />}
                                     </div>
                                     <div className="p-3">
                                         <p className="text-xs font-bold text-accent uppercase tracking-wider truncate">{video.process_type}</p>

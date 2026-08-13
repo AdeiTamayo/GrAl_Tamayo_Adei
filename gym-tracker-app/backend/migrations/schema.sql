@@ -413,3 +413,53 @@ DROP POLICY IF EXISTS exercises_delete_own_custom ON exercises;
 CREATE POLICY exercises_delete_own_custom ON exercises
     FOR DELETE TO authenticated
     USING (is_custom = true AND created_by = public.current_user_id());
+
+-- -----------------------------------------------------------------------------
+-- Storage buckets for video analysis
+--   uploads   = private raw videos (owners only)
+--   processed = public analysed videos (readable by everyone)
+-- -----------------------------------------------------------------------------
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('uploads', 'uploads', false),
+       ('processed', 'processed', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS uploads_select_own ON storage.objects;
+CREATE POLICY uploads_select_own ON storage.objects
+    FOR SELECT TO authenticated
+    USING (bucket_id = 'uploads' AND owner_id = auth.uid());
+
+DROP POLICY IF EXISTS uploads_insert_own ON storage.objects;
+CREATE POLICY uploads_insert_own ON storage.objects
+    FOR INSERT TO authenticated
+    WITH CHECK (bucket_id = 'uploads' AND owner_id = auth.uid());
+
+DROP POLICY IF EXISTS uploads_update_own ON storage.objects;
+CREATE POLICY uploads_update_own ON storage.objects
+    FOR UPDATE TO authenticated
+    USING (bucket_id = 'uploads' AND owner_id = auth.uid());
+
+DROP POLICY IF EXISTS uploads_delete_own ON storage.objects;
+CREATE POLICY uploads_delete_own ON storage.objects
+    FOR DELETE TO authenticated
+    USING (bucket_id = 'uploads' AND owner_id = auth.uid());
+
+DROP POLICY IF EXISTS processed_select_public ON storage.objects;
+CREATE POLICY processed_select_public ON storage.objects
+    FOR SELECT TO authenticated, anon
+    USING (bucket_id = 'processed');
+
+DROP POLICY IF EXISTS processed_insert_own ON storage.objects;
+CREATE POLICY processed_insert_own ON storage.objects
+    FOR INSERT TO authenticated
+    WITH CHECK (bucket_id = 'processed' AND owner_id = auth.uid());
+
+DROP POLICY IF EXISTS processed_update_own ON storage.objects;
+CREATE POLICY processed_update_own ON storage.objects
+    FOR UPDATE TO authenticated
+    USING (bucket_id = 'processed' AND owner_id = auth.uid());
+
+DROP POLICY IF EXISTS processed_delete_own ON storage.objects;
+CREATE POLICY processed_delete_own ON storage.objects
+    FOR DELETE TO authenticated
+    USING (bucket_id = 'processed' AND owner_id = auth.uid());

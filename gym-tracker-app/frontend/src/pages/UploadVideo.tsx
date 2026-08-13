@@ -1,9 +1,10 @@
 import { useState, useRef, DragEvent, useEffect } from 'react';
-import { apiUrl } from '../utils/api';
 import Card from '../components/Card';
 import { useNotification } from '../components/NotificationProvider';
+import { uploadRawVideo, createVideoRecord, uploadProcessedVideo, updateVideoRecord } from '../data/videos';
+import { analyzeVideo, AnalysisMode } from '../utils/videoAnalysis';
 
-const ANALYSIS_MODES = [
+const ANALYSIS_MODES: { id: AnalysisMode; label: string; description: string; icon: string }[] = [
     {
         id: 'pose',
         label: 'General Pose Estimation',
@@ -22,7 +23,13 @@ const ANALYSIS_MODES = [
         description: 'Map the trajectory of your barbell',
         icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
     },
-] as const;
+];
+
+const PROCESS_TYPES: Record<AnalysisMode, string> = {
+    pose: 'pose_estimation',
+    squat: 'squat_analysis',
+    barbell: 'barbell_tracking',
+};
 
 export default function UploadVideo() {
     const [file, setFile] = useState<File | null>(null);
@@ -30,12 +37,11 @@ export default function UploadVideo() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [progress, setProgress] = useState<string>('');
-    const [activeMode, setActiveMode] = useState<string | null>(null);
+    const [activeMode, setActiveMode] = useState<AnalysisMode | null>(null);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const token = localStorage.getItem("user_login_token");
     const { showNotification } = useNotification();
-    const abortRef = useRef<AbortController | null>(null);
+    const cancelRef = useRef(false);
 
     useEffect(() => {
         return () => {
@@ -43,91 +49,11 @@ export default function UploadVideo() {
         };
     }, [previewUrl]);
 
-    async function streamFetch(url: string, formData: FormData) {
-        if (!token) throw new Error('Please login first');
-
-        const controller = new AbortController();
-        abortRef.current = controller;
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData,
-            signal: controller.signal,
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            let msg = 'Request failed';
-            try { const d = JSON.parse(text); msg = d.error || msg; } catch { }
-            throw new Error(msg);
-        }
-
-        const reader = response.body!.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-
-            for (const line of lines) {
-                if (!line.trim()) continue;
-                const data = JSON.parse(line);
-
-                if (data.type === 'progress') {
-                    setProgress(data.message);
-                } else if (data.type === 'done') {
-                    return { processedVideoUrl: data.processedVideoUrl };
-                } else if (data.type === 'error') {
-                    throw new Error(data.message);
-                }
-            }
-        }
-
-        throw new Error('Connection closed before processing completed');
-    }
-
     const resetFile = () => {
         setFile(null);
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
-    };
-
-    const handleBarbellTracking = async () => {
-        if (!file) return;
-
-        setIsProcessing(true);
-        setActiveMode('barbell');
-        setError(null);
-        setProgress('Starting barbell tracking...');
-
-        const formData = new FormData();
-        formData.append('video', file);
-
-        try {
-            await streamFetch(apiUrl('/api/videos/barbell-tracking'), formData);
-
-            setProgress('Barbell tracking complete!');
-            showNotification('Barbell tracking complete!', 'success');
-            resetFile();
-
-        } catch (error) {
-            if (error instanceof DOMException && error.name === 'AbortError') return;
-            const msg = error instanceof Error ? error.message : 'Barbell tracking failed';
-            setError(msg);
-            setProgress('');
-            showNotification('Barbell tracking failed', 'error');
-        } finally {
-            setIsProcessing(false);
-            setActiveMode(null);
-            abortRef.current = null;
-        }
     };
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,41 +84,58 @@ export default function UploadVideo() {
         }
     };
 
-    const handleUpload = async (mode: 'normal' | 'squat') => {
+    const handleAnalysis = async (mode: AnalysisMode) => {
         if (!file) return;
 
         setIsProcessing(true);
-        setActiveMode(mode === 'squat' ? 'squat' : 'pose');
+        setActiveMode(mode);
         setError(null);
-        setProgress(mode === 'squat' ? 'Starting squat analysis...' : 'Starting pose estimation...');
+        setProgress('');
+        cancelRef.current = false;
 
-        const formData = new FormData();
-        formData.append('video', file);
-        formData.append('mode', mode);
+        let recordId: number | null = null;
 
         try {
-            await streamFetch(apiUrl('/api/videos/pose-estimation'), formData);
+            setProgress('Uploading video...');
+            await uploadRawVideo(file);
 
-            const successMsg = mode === 'squat' ? 'Squat analysis complete!' : 'Pose estimation complete!';
+            const record = await createVideoRecord({
+                filename: file.name,
+                process_type: PROCESS_TYPES[mode],
+                status: 'processing',
+            });
+            recordId = record.id;
+
+            const result = await analyzeVideo(file, mode, setProgress, () => cancelRef.current);
+            if (cancelRef.current) return;
+
+            setProgress('Uploading processed video...');
+            const publicUrl = await uploadProcessedVideo(result.blob, file.name);
+            await updateVideoRecord(recordId, { processed_url: publicUrl, status: 'completed' });
+
+            const summary = result.feedback.length > 0 ? ` — ${result.feedback.join('. ')}` : '';
+            const successMsg = `${mode === 'squat' ? 'Squat analysis' : mode === 'barbell' ? 'Barbell tracking' : 'Pose estimation'} complete!${summary}`;
             setProgress(successMsg);
             showNotification(successMsg, 'success');
             resetFile();
-
         } catch (error) {
             if (error instanceof DOMException && error.name === 'AbortError') return;
-            const msg = error instanceof Error ? error.message : 'Upload failed';
+            if (recordId !== null) {
+                try { await updateVideoRecord(recordId, { status: 'failed' }); } catch { /* ignore */ }
+            }
+            const msg = error instanceof Error ? error.message : 'Video processing failed';
             setError(msg);
             setProgress('');
             showNotification('Video processing failed', 'error');
         } finally {
             setIsProcessing(false);
             setActiveMode(null);
-            abortRef.current = null;
+            cancelRef.current = false;
         }
     };
 
     const handleCancel = () => {
-        abortRef.current?.abort();
+        cancelRef.current = true;
         setIsProcessing(false);
         setActiveMode(null);
         setProgress('');
@@ -262,10 +205,7 @@ export default function UploadVideo() {
                             return (
                                 <button
                                     key={mode.id}
-                                    onClick={() => {
-                                        if (mode.id === 'barbell') handleBarbellTracking();
-                                        else handleUpload(mode.id === 'squat' ? 'squat' : 'normal');
-                                    }}
+                                    onClick={() => handleAnalysis(mode.id)}
                                     disabled={isDisabled}
                                     className={`
                                         w-full flex items-start gap-3 p-4 rounded-xl border text-left transition-all duration-200

@@ -1,5 +1,31 @@
 import { supabase } from "../utils/supabaseClient";
+import { getMyId } from "./client";
 import { VideoRecord } from "./types";
+
+const UPLOADS_BUCKET = 'uploads';
+const PROCESSED_BUCKET = 'processed';
+
+export async function uploadRawVideo(file: File): Promise<string> {
+    const userId = await getMyId();
+    const path = `${userId}/${crypto.randomUUID()}.${file.name.split('.').pop() ?? 'mp4'}`;
+    const { error } = await supabase.storage
+        .from(UPLOADS_BUCKET)
+        .upload(path, file, { upsert: false });
+    if (error) throw new Error(error.message);
+    return path;
+}
+
+export async function uploadProcessedVideo(blob: Blob, fileName: string): Promise<string> {
+    const userId = await getMyId();
+    const path = `${userId}/${crypto.randomUUID()}-${fileName}`;
+    const { error } = await supabase.storage
+        .from(PROCESSED_BUCKET)
+        .upload(path, blob, { contentType: blob.type || 'video/webm', upsert: false });
+    if (error) throw new Error(error.message);
+
+    const { data } = supabase.storage.from(PROCESSED_BUCKET).getPublicUrl(path);
+    return data.publicUrl;
+}
 
 export async function getVideos(): Promise<VideoRecord[]> {
     const { data, error } = await supabase
@@ -16,13 +42,15 @@ export async function createVideoRecord(data: {
     processed_url?: string | null;
     status?: string | null;
 }): Promise<VideoRecord> {
+    const userId = await getMyId();
     const { data: row, error } = await supabase
         .from('videos')
         .insert({
+            user_id: userId,
             filename: data.filename ?? null,
             process_type: data.process_type ?? null,
             processed_url: data.processed_url ?? null,
-            status: data.status ?? null,
+            status: data.status ?? 'completed',
         })
         .select('*')
         .single();

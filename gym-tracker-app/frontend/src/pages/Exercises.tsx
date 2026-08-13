@@ -11,7 +11,6 @@ import DeleteButton from '../components/DeleteButton';
 import Input from '../components/Input';
 import Textarea from '../components/Textarea';
 import Card from '../components/Card';
-import EmptyState from '../components/EmptyState';
 import Badge from '../components/Badge';
 import {
     getExercises as getExercisesData,
@@ -86,7 +85,7 @@ export default function Exercises() {
     const [success, setSuccess] = useState<string | null>(null);
 
     const [page, setPage] = useState(1);
-    const [exercisesOpen, setExercisesOpen] = useState(true);
+    const [exercisesOpen] = useState(true);
     const pageSize = 20;
 
     const filteredExercises = useMemo(() => {

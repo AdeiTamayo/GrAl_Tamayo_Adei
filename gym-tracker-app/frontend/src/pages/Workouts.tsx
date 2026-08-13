@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, FormEvent } from "react";
+import { useState, useEffect, useCallback, useMemo, FormEvent } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
@@ -33,8 +33,7 @@ import {
     addSetToRoutineExercise as addSetToRoutineExerciseData
 } from '../data/routines';
 import { getUserGoals } from '../data/goals';
-import { getExercises } from '../data/exercises';
-import { Workout, WorkoutExercise, WorkoutSet, Exercise, Goal } from '../data/types';
+import { Workout, WorkoutExercise, WorkoutSet } from '../data/types';
 
 type EditableSetField = "weight" | "repetitions" | "time" | "note";
 
@@ -46,7 +45,6 @@ export default function WorkoutsManagement() {
 
     // ---- STATE MANAGEMENT ----
     const [workouts, setWorkouts] = useState<Workout[]>([]);
-    const [exercises, setExercises] = useState<Exercise[]>([]);
     const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
     const [isLoadingInit, setIsLoadingInit] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -137,16 +135,6 @@ export default function WorkoutsManagement() {
         }
     }, []);
 
-    const fetchExercises = useCallback(async () => {
-        try {
-            const data = await getExercises();
-            setExercises(data.exercises || []);
-        } catch (err: any) {
-            console.error("Failed to fetch exercises", err);
-            setError("Failed to fetch exercises");
-        }
-    }, []);
-
     const fetchWorkoutById = useCallback(async (id: number) => {
         try {
             setError(null);
@@ -164,12 +152,12 @@ export default function WorkoutsManagement() {
 
     // Initial load
     useEffect(() => {
-        Promise.all([fetchWorkouts(), fetchExercises(), fetchGoalsMap()])
+        Promise.all([fetchWorkouts(), fetchGoalsMap()])
             .then(() => {
                 if (preselectedId) fetchWorkoutById(preselectedId);
             })
             .finally(() => setIsLoadingInit(false));
-    }, [fetchWorkouts, fetchExercises, fetchWorkoutById, fetchGoalsMap, preselectedId]);
+    }, [fetchWorkouts, fetchWorkoutById, fetchGoalsMap, preselectedId]);
 
 
 
@@ -258,7 +246,7 @@ export default function WorkoutsManagement() {
     }
 
     // ---- EXERCISE MANAGEMENT ----
-    async function handleAddExercise(exerciseToHub: ExerciseMeta | Exercise) {
+    async function handleAddExercise(exerciseToHub: ExerciseMeta) {
         if (!selectedWorkout) return;
         setError(null);
 
@@ -316,7 +304,9 @@ export default function WorkoutsManagement() {
 
         try {
             await deleteWorkoutExerciseData(workoutExerciseId);
-            await fetchWorkoutById(selectedWorkout.id);
+            setSelectedWorkout((prev) =>
+                prev ? { ...prev, exercises: prev.exercises?.filter((ex) => ex.id !== workoutExerciseId) } : prev
+            );
         } catch (err: any) {
             setError("Failed to remove exercise");
         }
@@ -327,14 +317,22 @@ export default function WorkoutsManagement() {
         if (!selectedWorkout) return;
 
         try {
-            await addSetData(exercise.id, {
+            const newSet = await addSetData(exercise.id, {
                 weight: weight === "" || weight === null ? null : Number(weight),
                 repetitions: reps === "" || reps === null ? null : Number(reps),
                 time: time === "" || time === null ? null : Number(time),
                 note: !note || note.trim() === "" ? null : note.trim(),
             });
 
-            await fetchWorkoutById(selectedWorkout.id);
+            setSelectedWorkout((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    exercises: prev.exercises?.map((ex) =>
+                        ex.id === exercise.id ? { ...ex, sets: [...ex.sets, newSet] } : ex
+                    ),
+                };
+            });
         } catch (err: any) {
             setError("Failed to add set");
         }
@@ -345,7 +343,16 @@ export default function WorkoutsManagement() {
 
         try {
             await deleteSetData(setId);
-            await fetchWorkoutById(selectedWorkout.id);
+            setSelectedWorkout((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    exercises: prev.exercises?.map((ex) => ({
+                        ...ex,
+                        sets: ex.sets.filter((s) => s.id !== setId),
+                    })),
+                };
+            });
         } catch (err: any) {
             setError("Failed to remove set");
         }
@@ -414,9 +421,8 @@ export default function WorkoutsManagement() {
         try {
             const routine = await createRoutineData(routineName.trim());
             const routineId = routine.id;
-            let exCount = 0;
 
-            for (const ex of selectedWorkout.exercises) {
+            await Promise.all(selectedWorkout.exercises.map(async (ex) => {
                 const reps = ex.sets.map(s => Number(s.repetitions) || 0).filter(r => r > 0);
                 const avgReps = reps.length > 0 ? Math.round(reps.reduce((a, b) => a + b, 0) / reps.length) : 10;
                 const weights = ex.sets.map(s => Number(s.weight) || 0).filter(w => w > 0);
@@ -430,24 +436,21 @@ export default function WorkoutsManagement() {
                     planned_weight: avgWeight,
                     planned_time: 0
                 });
-                const itemId = routineExercise.item_id;
-                if (itemId) {
-                    for (let i = 0; i < ex.sets.length; i++) {
-                        const s = ex.sets[i];
-                        await addSetToRoutineExerciseData(itemId, {
+                if (routineExercise.item_id) {
+                    await Promise.all(ex.sets.map((s, i) =>
+                        addSetToRoutineExerciseData(routineExercise.item_id, {
                             set_number: i + 1,
                             planned_weight: Number(s.weight) || 0,
                             planned_reps: Number(s.repetitions) || 0,
                             planned_time: 0
-                        });
-                    }
+                        })
+                    ));
                 }
-                exCount++;
-            }
+            }));
 
             setShowSaveRoutineModal(false);
             setRoutineName("");
-            showNotification(`Routine created with ${exCount} exercise(s)!`, "success");
+            showNotification(`Routine created with ${selectedWorkout.exercises.length} exercise(s)!`, "success");
         } catch (err) {
             console.error("Failed to save routine", err);
             showNotification("Error saving routine.", "error");

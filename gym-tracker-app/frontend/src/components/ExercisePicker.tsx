@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Button from './Button';
 import Pagination from './Pagination';
 import Select from './Select';
@@ -63,7 +63,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
     const [newDifficulty, setNewDifficulty] = useState('intermediate');
     const [newCategory, setNewCategory] = useState('');
     const [saving, setSaving] = useState(false);
-    const [exercisesOpen, setExercisesOpen] = useState(true);
+    const [exercisesOpen] = useState(true);
     const [exPage, setExPage] = useState(1);
     const EXERCISES_PER_PAGE = 5;
 
