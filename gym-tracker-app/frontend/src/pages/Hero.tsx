@@ -140,18 +140,77 @@ export default function Hero() {
     return (
         <div className="min-h-screen bg-body text-body p-4 md:p-8 pb-24 md:pb-8">
             <div className="max-w-6xl mx-auto space-y-8">
-                <header className="flex items-center justify-between pb-6 border-b border-subtle gap-3">
-                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent shrink-0">Dashboard</h1>
-                    <div className="flex items-center gap-2">
-                        <Link to="/active-workout" className="inline-flex items-center gap-2 bg-accent text-black font-bold rounded-lg hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98] px-4 py-2 text-sm transition-all">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>Start Workout</span>
-                        </Link>
+                <header className="flex flex-col gap-4 pb-6 border-b border-subtle md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-dim">Performance overview</p>
+                        <h1 className="mt-2 font-display text-3xl font-bold tracking-tight uppercase italic text-accent md:text-4xl">Dashboard</h1>
                     </div>
+
+                    <Link to="/active-workout" className="inline-flex items-center gap-2 self-start rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-black transition-all hover:bg-accent-hover hover:scale-[1.01] active:scale-[0.99] md:self-center">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Start Workout</span>
+                    </Link>
                 </header>
+
+                {dashboardError && (
+                    <ErrorBanner message={dashboardError} />
+                )}
+
+                <section className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
+                    <div className="rounded-2xl border border-subtle bg-card p-5 md:p-6">
+                        <div className="flex items-center justify-between gap-3 border-b border-subtle pb-4">
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Today’s plan</p>
+                                <h2 className="mt-2 text-2xl font-bold text-heading">Training overview</h2>
+                            </div>
+                            <span className="inline-flex w-fit items-center rounded-full border border-subtle bg-surface px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted">
+                                {currentStreak ? `${currentStreak} wk streak` : 'New routine'}
+                            </span>
+                        </div>
+
+                        <div className="mt-5 grid gap-3 md:grid-cols-3">
+                            <Link to="/workouts" className="rounded-xl border border-subtle bg-surface/40 p-4 transition-all hover:border-accent/40 hover:bg-surface/60">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Recent</p>
+                                <p className="mt-3 text-lg font-bold text-heading">Workouts</p>
+                                <p className="mt-1 text-sm text-muted">Review your latest sessions.</p>
+                            </Link>
+                            <Link to="/routines" className="rounded-xl border border-subtle bg-surface/40 p-4 transition-all hover:border-accent/40 hover:bg-surface/60">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Program</p>
+                                <p className="mt-3 text-lg font-bold text-heading">Routines</p>
+                                <p className="mt-1 text-sm text-muted">Manage your training blocks.</p>
+                            </Link>
+                            <Link to="/goals" className="rounded-xl border border-subtle bg-surface/40 p-4 transition-all hover:border-accent/40 hover:bg-surface/60">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Target</p>
+                                <p className="mt-3 text-lg font-bold text-heading">Goals</p>
+                                <p className="mt-1 text-sm text-muted">Keep your focus on progress.</p>
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-subtle bg-card p-5 md:p-6">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Momentum</p>
+                        <div className="mt-4 space-y-4">
+                            <div>
+                                <p className="text-xs uppercase tracking-[0.2em] text-dim">This week</p>
+                                <p className="mt-2 text-3xl font-bold font-mono text-heading">{weeklyVolume != null ? `${(weeklyVolume / 1000).toFixed(1)}k` : '—'}</p>
+                                <p className="mt-1 text-xs text-muted">Total volume</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="rounded-xl border border-subtle bg-surface/40 p-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Sessions</p>
+                                    <p className="mt-2 text-2xl font-bold font-mono text-heading">{workoutCount ?? '—'}</p>
+                                </div>
+                                <div className="rounded-xl border border-subtle bg-surface/40 p-3">
+                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Streak</p>
+                                    <p className="mt-2 text-2xl font-bold font-mono text-heading">{currentStreak ?? '—'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
                 {loading ? (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
@@ -164,58 +223,69 @@ export default function Hero() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="bg-card border border-subtle rounded-xl p-5">
-                            <p className="text-xs font-bold tracking-widest uppercase text-dim">Total Workouts</p>
-                            <p className="text-3xl font-bold text-body mt-2 font-mono">{workoutCount ?? '—'}</p>
+                        <div className="bg-card border border-subtle rounded-2xl p-5">
+                            <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Total sessions</p>
+                            <p className="mt-3 text-3xl font-bold text-heading font-mono">{workoutCount ?? '—'}</p>
                         </div>
-                        <div className="bg-card border border-subtle rounded-xl p-5">
-                            <p className="text-xs font-bold tracking-widest uppercase text-dim">Weekly Volume</p>
-                            <p className="text-3xl font-bold mt-2 font-mono">{weeklyVolume != null ? `${(weeklyVolume / 1000).toFixed(1)}k` : '—'}</p>
-                            <p className="text-[10px] text-dim mt-0.5">total kg this week</p>
+                        <div className="bg-card border border-subtle rounded-2xl p-5">
+                            <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Weekly volume</p>
+                            <p className="mt-3 text-3xl font-bold text-heading font-mono">{weeklyVolume != null ? `${(weeklyVolume / 1000).toFixed(1)}k` : '—'}</p>
+                            <p className="mt-1 text-[10px] text-dim">total kg this week</p>
                         </div>
-                        <div className="bg-card border border-subtle rounded-xl p-5">
-                            <p className="text-xs font-bold tracking-widest uppercase text-dim">Current Streak</p>
-                            <p className="text-3xl font-bold text-body mt-2 font-mono">{currentStreak ?? '—'}</p>
+                        <div className="bg-card border border-subtle rounded-2xl p-5">
+                            <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Workout streak</p>
+                            <p className="mt-3 text-3xl font-bold text-heading font-mono">{currentStreak ?? '—'}</p>
                             {currentStreak != null && currentStreak > 0 && (
-                                <p className="text-[10px] text-dim mt-0.5">{currentStreak === 1 ? 'week' : 'weeks'} straight</p>
+                                <p className="mt-1 text-[10px] text-dim">{currentStreak === 1 ? 'week' : 'weeks'} straight</p>
                             )}
                         </div>
                     </div>
                 )}
 
-                {dashboardError && (
-                    <ErrorBanner message={dashboardError} />
-                )}
-
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
                     <div className="flex flex-col gap-4">
-                        <Calendar events={workoutEvents} plannedDates={plannedDates} goalDates={goalDates} compact />
-                        <Link to="/workout-calendar" className="w-full bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-xl px-4 py-2.5 transition-all text-center">
-                            View Full Calendar
+                        <div className="rounded-2xl border border-subtle bg-card p-4 md:p-5">
+                            <Calendar events={workoutEvents} plannedDates={plannedDates} goalDates={goalDates} compact />
+                        </div>
+                        <Link to="/workout-calendar" className="w-full rounded-xl border border-subtle bg-elevated px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-body transition-all hover:border-accent/40 hover:bg-hover">
+                            View full calendar
                         </Link>
                     </div>
+
                     <div className="flex flex-col gap-4">
-                        {latestWeight && (
-                            <div className="bg-card border border-subtle rounded-xl p-5">
-                                <p className="text-xs font-bold tracking-widest uppercase text-dim">Current Weight</p>
-                                <p className="text-3xl font-bold text-body mt-2 font-mono">{Number(latestWeight.weight)} <span className="text-lg text-dim font-normal">kg</span></p>
-                                <p className="text-[10px] text-dim mt-0.5">as of {latestWeight.date?.substring(0, 10)}</p>
-                                <Link to="/Weight_history" className="mt-4 w-full block text-center bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-xl px-4 py-2.5 transition-all">Track Weight</Link>
+                        {latestWeight ? (
+                            <div className="rounded-2xl border border-subtle bg-card p-5">
+                                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Latest body weight</p>
+                                <p className="mt-3 text-3xl font-bold text-heading font-mono">{Number(latestWeight.weight)} <span className="text-lg text-dim font-normal">kg</span></p>
+                                <p className="mt-1 text-[10px] text-dim">as of {latestWeight.date?.substring(0, 10)}</p>
+                                <Link to="/Weight_history" className="mt-4 block w-full rounded-xl border border-subtle bg-surface/40 px-4 py-2.5 text-center text-sm font-bold uppercase tracking-[0.12em] text-body transition-all hover:border-accent/40 hover:bg-elevated">View weight history</Link>
+                            </div>
+                        ) : (
+                            <div className="rounded-2xl border border-dashed border-subtle bg-card/30 p-5">
+                                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Weight tracking</p>
+                                <p className="mt-3 text-base text-muted">Log your next weigh-in to track long-term progress.</p>
+                                <Link to="/Weight_history" className="mt-4 inline-flex rounded-lg bg-accent px-3 py-2 text-sm font-bold text-black hover:bg-accent-hover">Add weight</Link>
                             </div>
                         )}
-                        <div className="bg-surface/30 border border-subtle rounded-xl p-5 flex-1">
-                            <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim mb-4">Recent Workouts</h2>
+
+                        <div className="bg-surface/30 border border-subtle rounded-2xl p-5 flex-1">
+                            <div className="flex items-center justify-between gap-3">
+                                <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Recent workouts</h2>
+                                <Link to="/workouts" className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent hover:text-accent-hover">View all</Link>
+                            </div>
+
                             {recentWorkouts.length === 0 ? (
-                                <div className="text-center py-10 bg-card/40 rounded-xl border border-dashed border-subtle/60">
-                                    <p className="text-xs text-dim italic">No workouts logged yet.</p>
+                                <div className="mt-4 rounded-xl border border-dashed border-subtle/60 bg-card/40 px-4 py-10 text-center">
+                                    <p className="text-sm text-muted">No workouts logged yet.</p>
+                                    <p className="mt-2 text-xs text-dim">Start your first session to build momentum.</p>
                                 </div>
                             ) : (
-                                <ul className="space-y-3">
+                                <ul className="mt-4 space-y-3">
                                     {recentWorkouts.slice(0, 3).map(w => (
                                         <li key={w.id}>
-                                            <Link to="/workouts" state={{ preselectedWorkoutId: w.id }} className="block bg-surface/20 border border-subtle rounded-lg p-3 hover:border-accent/40 hover:bg-surface/40 transition-all">
+                                            <Link to="/workouts" state={{ preselectedWorkoutId: w.id }} className="block rounded-xl border border-subtle bg-card/40 p-3 transition-all hover:border-accent/40 hover:bg-surface/40">
                                                 <p className="text-sm font-semibold text-heading truncate">{w.name}</p>
-                                                <div className="flex items-center gap-3 mt-1">
+                                                <div className="mt-1 flex items-center gap-3">
                                                     <span className="text-xs font-mono text-dim">{w.date?.substring(0, 10)}</span>
                                                     {w.exercises && <span className="text-xs text-dim">{w.exercises.length} exercises</span>}
                                                 </div>
@@ -224,34 +294,31 @@ export default function Hero() {
                                     ))}
                                 </ul>
                             )}
-                            <Link to="/workouts" className="mt-4 w-full block text-center bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-xl px-4 py-2.5 transition-all">View All Workouts</Link>
                         </div>
                     </div>
                 </div>
 
-
-
                 {!loading && videos.length > 0 && (
                     <div>
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-display text-xs font-bold tracking-[0.15em] uppercase text-dim">Recent Videos</h2>
-                            <Link to="/upload" className="text-xs font-bold text-accent hover:text-accent-hover uppercase tracking-wider transition-colors">
-                                + Upload Video
+                        <div className="mb-4 flex items-center justify-between gap-3">
+                            <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Recent videos</h2>
+                            <Link to="/upload" className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent hover:text-accent-hover">
+                                Upload video
                             </Link>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             {videos.map(video => (
-                                <Link key={video.id} to="/videos" className="group bg-card border border-subtle/80 rounded-xl overflow-hidden hover:border-accent/40 transition-all hover:shadow-lg">
+                                <Link key={video.id} to="/videos" className="group overflow-hidden rounded-2xl border border-subtle bg-card transition-all hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5">
                                     <div className="bg-black aspect-video flex items-center justify-center">
                                         {video.processed_url ? (
                                             <video className="w-full h-full object-contain" src={video.processed_url} preload="metadata" />
                                         ) : (
-                                            <span className="text-dim text-xs font-medium italic px-3 text-center">Processing…</span>
+                                            <span className="px-3 text-center text-xs font-medium italic text-dim">Processing…</span>
                                         )}
                                     </div>
                                     <div className="p-3">
-                                        <p className="text-xs font-bold text-accent uppercase tracking-wider truncate">{video.process_type}</p>
-                                        <p className="text-[10px] text-dim mt-0.5 font-mono">{new Date(video.created_at).toLocaleDateString()}</p>
+                                        <p className="truncate text-xs font-bold uppercase tracking-[0.15em] text-accent">{video.process_type}</p>
+                                        <p className="mt-1 text-[10px] font-mono text-dim">{new Date(video.created_at).toLocaleDateString()}</p>
                                     </div>
                                 </Link>
                             ))}
