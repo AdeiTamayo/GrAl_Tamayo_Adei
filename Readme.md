@@ -117,7 +117,13 @@ cd GrAl_Tamayo_Adei/gym-tracker-app
 
 ### 2. Configure environment / Konfiguratu ingurunea
 
-Create a `.env` file in the repository root (parent of `gym-tracker-app/`):
+The backend loads its configuration from a `.env` file in the `gym-tracker-app/` folder
+(the parent of `backend/`). Copy the provided template and fill in your own values:
+
+```bash
+cd gym-tracker-app
+cp .env.example .env
+```
 
 ```env
 PORT=8000
@@ -129,14 +135,24 @@ DB_PASSWORD=your_password
 JWT_SECRET=your_long_random_secret
 ```
 
+`JWT_SECRET` is required — the server refuses to start without it, and any missing
+variable is reported by name instead of failing later with a cryptic error.
+
+The frontend reads its API base URL from `frontend/.env` when it is not served from
+the same origin as the API:
+
+```env
+REACT_APP_API_URL=http://localhost:8000
+```
+
 ### 3. Install & run backend / Instalatu eta exekutatu backend-a
 
 ```bash
 cd backend
 npm install
 python -m pip install -r requirements.txt
-node migrate.js
-npm start
+npm run migrate   # creates the schema; safe to re-run
+npm run dev       # or: npm start
 ```
 
 ### 4. Install & run frontend / Instalatu eta exekutatu frontend-a
@@ -149,47 +165,66 @@ npm start
 
 The API runs on `http://localhost:8000` and the frontend on `http://localhost:3000`.
 
+### 5. Run the tests / Exekutatu probak
+
+```bash
+cd backend  && npm test    # Jest + Supertest
+cd frontend && npm test    # React Testing Library
+```
+
 ---
 
 ## Project Structure / Proiektuaren egitura
 
 ```
 gym-tracker-app/
+├── .env.example        # Copy to .env and fill in
 ├── backend/
-│   ├── __tests__/          # Backend test suite
-│   ├── config/             # Database connection
-│   ├── controllers/        # Route handlers
-│   ├── middleware/         # Auth & file upload
-│   ├── migrations/         # SQL schema migrations
-│   ├── models/            # Database queries
-│   ├── python/            # Computer vision scripts
+│   ├── __tests__/          # Jest + Supertest suite
+│   ├── config/             # env.js (validation) + database.js (pg Pool)
+│   ├── controllers/        # HTTP layer: read req, call a model, shape the response
+│   ├── middleware/         # auth (JWT), upload (multer), cache invalidation
+│   ├── migrations/         # SQL schema, applied in filename order
+│   ├── models/             # All SQL lives here, scoped to the owning user
+│   ├── python/             # Computer vision scripts (OpenCV / MediaPipe)
 │   │   ├── barbell_tracking.py   # YOLO + CSRT barbell tracking
 │   │   ├── landmarks_video.py    # MediaPipe pose estimation
 │   │   └── pose_landmarker_heavy.task  # ML model
-│   ├── routes/            # Express route definitions
-│   ├── scripts/           # Data population scripts
-│   ├── utils/             # Video processor & helpers
-│   ├── server.js          # Express app entry
-│   └── migrate.js         # Migration runner
+│   ├── routes/             # Express route tables (URL -> middleware -> controller)
+│   ├── services/           # videoAnalysisService: the Python bridge
+│   ├── utils/              # HTTP helpers, exercise cache, python process runner
+│   ├── media/              # uploads/ and output/ (git-ignored)
+│   ├── server.js           # Express app entry
+│   └── migrate.js          # Migration runner
 ├── frontend/
 │   ├── public/            # Static assets
 │   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Page-level components
+│   │   ├── components/    # Reusable UI + the app's context providers
+│   │   ├── contexts/      # Auth context
+│   │   ├── pages/         # Page-level components (one per route)
 │   │   ├── utils/         # API client & helpers
 │   │   ├── App.tsx        # Router & layout
 │   │   └── index.tsx      # React entry point
 │   ├── types.ts           # TypeScript type definitions
 │   └── package.json
 └── docs/
+    ├── ARCHITECTURE.md    # How a request flows through the system
     ├── INSTALLATION.md    # Detailed setup guide
     └── database-schema.md # ER diagram & table reference
 ```
+
+**Layering rule:** `routes` → `controllers` → `models` → PostgreSQL. Controllers never
+write SQL; models never touch `req`/`res`. Video analysis is the one place that leaves
+the Node process, and it is isolated behind `services/videoAnalysisService.js`.
+
+**Ownership rule:** every model method that reads or writes user data takes a `userId`
+and filters on it, so one account can never reach another's rows by guessing an id.
 
 ---
 
 ## Documentation / Dokumentazioa
 
+- **Architecture / Arkitektura:** [docs/ARCHITECTURE.md](gym-tracker-app/docs/ARCHITECTURE.md) — how a request flows through the system
 - **Installation Guide / Instalazio gida:** [docs/INSTALLATION.md](gym-tracker-app/docs/INSTALLATION.md)
 - **Database Schema / Datu-basearen eskema:** [docs/database-schema.md](gym-tracker-app/docs/database-schema.md)
 

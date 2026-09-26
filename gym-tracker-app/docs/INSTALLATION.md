@@ -85,11 +85,16 @@ ffmpeg -version
 
 ## 6. Configure the environment
 
-The backend loads environment variables from the root `.env` file:
+The backend loads environment variables from a single `.env` file:
 
-- `backend/server.js` reads `../.env`
+- `backend/server.js` reads `../.env`, i.e. `gym-tracker-app/.env`
 
-Create a `.env` file at the repository root if it does not already exist.
+Copy the provided template and edit it:
+
+```bash
+cd gym-tracker-app
+cp .env.example .env
+```
 
 Example configuration:
 
@@ -108,7 +113,11 @@ Notes:
 - `PORT` defaults to `8000` if it is not set.
 - The frontend development server runs on `3000`.
 - The backend expects PostgreSQL credentials in `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD`.
-- `JWT_SECRET` is required for authentication features.
+- `JWT_SECRET` is required for authentication features. The server validates every
+  required variable on start-up and exits with an error naming the ones that are
+  missing, so a misconfiguration is reported immediately rather than at the first login.
+- Optional variables are documented in `.env.example` (`PYTHON_PATH`,
+  `PUBLIC_API_URL`, `CORS_ORIGIN`).
 
 ## 7. Install the backend
 
@@ -148,9 +157,21 @@ The frontend is a Create React App project and starts on port `3000` by default.
 
 ## 9. Create the database schema
 
-The backend includes SQL migrations in `backend/migrations/`.
+The backend includes SQL migrations in `backend/migrations/` and a runner that applies
+them in filename order:
 
-Apply them to your PostgreSQL database in order:
+```bash
+cd backend
+npm run migrate
+```
+
+The runner records what it has applied in a `schema_migrations` table, so it is safe to
+run again after pulling new changes — only files that have never been applied are
+executed. Do not apply the `.sql` files by hand with `psql`: several of them (for
+example `001_create_users_table.sql`, which runs `CREATE TYPE`) are deliberately not
+idempotent and will fail on a second run.
+
+The current migration list is:
 
 1. `001_create_users_table.sql`
 2. `002_create_exercise_table.sql`
@@ -164,15 +185,8 @@ Apply them to your PostgreSQL database in order:
 10. `009_alter_exercise_columns_to_varchar.sql`
 11. `010_add_workout_visibility_settings.sql`
 
-You can apply them with `psql` or through a SQL client like pgAdmin.
-
-Example using `psql`:
-
-```bash
-psql -h localhost -U postgres -d gym_tracker -f backend/migrations/001_create_users_table.sql
-```
-
-Repeat for the remaining migration files.
+> The two `008_` files share a prefix. They are tracked by filename, so both are
+> applied correctly; the numbering is only cosmetic.
 
 ## 10. Start the application
 
