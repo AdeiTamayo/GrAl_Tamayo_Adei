@@ -1,10 +1,12 @@
 const path = require('path');
 
-// Load environment variables from parent directory
+// Load environment variables from the gym-tracker-app folder (one level up).
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const express = require('express');
 const fs = require('fs');
+const cors = require('cors');
+const { validateEnv } = require('./config/env');
 
 // Catch crashes as early as possible, before anything else can throw
 process.on('unhandledRejection', (reason) => {
@@ -14,9 +16,19 @@ process.on('uncaughtException', (err) => {
     console.error('[Uncaught Exception]', err);
 });
 
+// Validate before anything else is loaded: requiring the routes pulls in the
+// database module, which needs credentials. Skipped when the app is imported
+// (tests) so the suite can run without a real environment.
+if (require.main === module) {
+    try {
+        validateEnv();
+    } catch (error) {
+        console.error(`[Config] ${error.message}`);
+        process.exit(1);
+    }
+}
+
 // Import routes
-// const authRoutes = require('./routes/auth');
-// const profileRoutes = require('./routes/profile');
 const videoRoutes = require('./routes/videos');
 const exerciseRoutes = require('./routes/exercises');
 const routinesRoutes = require('./routes/routines');
@@ -29,6 +41,7 @@ const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 const port = process.env.PORT || 8000;
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Ensure directories exist
 const uploadsDir = path.join(__dirname, 'media/uploads');
@@ -47,17 +60,20 @@ app.use((req, res, next) => {
     next();
 });
 
-// CORS middleware
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(204);
-    }
-    next();
-});
+// CORS middleware.
+// The API authenticates with a Bearer token in the Authorization header, not
+// with cookies, so credentials are never allowed: that removes the risk of a
+// hostile site riding on the user's session. Set CORS_ORIGIN (comma-separated)
+// to lock the API down to a known frontend origin.
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+app.use(cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+    credentials: false,
+}));
 app.use(express.json());
 
 // Serve processed videos statically
@@ -86,11 +102,18 @@ app.use((req, res) => {
 // Global error handler
 app.use((err, req, res, next) => {
     console.error(`[Error] ${req.method} ${req.originalUrl}:`, err.message);
-    console.error(err.stack);
-    res.status(err.status || 500).json({
-        success: false,
-        error: err.message || 'Internal server error'
-    });
+    if (!isProduction) {
+        console.error(err.stack);
+    }
+
+    // In production only the status is trusted; the raw message can contain
+    // SQL or filesystem details that must not reach the client.
+    const status = err.status || 500;
+    const error = isProduction && status >= 500
+        ? 'Internal server error'
+        : (err.message || 'Internal server error');
+
+    res.status(status).json({ success: false, error });
 });
 
 if (require.main === module) {
