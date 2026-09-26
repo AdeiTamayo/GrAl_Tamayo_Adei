@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../utils/api";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
@@ -49,7 +48,6 @@ export default function CompareWorkouts() {
 
     useEffect(() => { window.scrollTo(0, 0); }, []);
 
-    const navigate = useNavigate();
     const token = localStorage.getItem("user_login_token");
     const headers = useMemo(() => ({
         Authorization: `Bearer ${token}`,
@@ -277,8 +275,6 @@ export default function CompareWorkouts() {
                             colorA: "text-blue-400",
                             colorB: "text-accent",
                         }].map(stat => {
-                            const total = stat.valA + stat.valB;
-                            const pctA = total > 0 ? (stat.valA / total) * 100 : 50;
                             const diff = stat.valB - stat.valA;
                             const diffPct = stat.valA !== 0 ? (diff / stat.valA) * 100 : 0;
                             const sign = diff > 0 ? "+" : "";

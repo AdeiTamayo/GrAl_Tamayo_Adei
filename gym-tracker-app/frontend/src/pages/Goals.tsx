@@ -5,7 +5,7 @@ import Button from "../components/Button";
 import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
 import TransparentNumericInput from "../components/TransparentNumericInput";
-import ExercisePicker, { Exercise as ExerciseMeta } from "../components/ExercisePicker";
+import ExercisePicker from "../components/ExercisePicker";
 import DeleteButton from "../components/DeleteButton";
 import EditButton from "../components/EditButton";
 import Calendar from "../components/Calendar";

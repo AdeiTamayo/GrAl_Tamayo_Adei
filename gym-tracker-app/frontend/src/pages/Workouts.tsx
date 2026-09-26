@@ -60,7 +60,6 @@ export default function WorkoutsManagement() {
 
     // ---- STATE MANAGEMENT ----
     const [workouts, setWorkouts] = useState<Workout[]>([]);
-    const [exercises, setExercises] = useState<Exercise[]>([]);
     const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
     const [isLoadingInit, setIsLoadingInit] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -148,7 +147,7 @@ export default function WorkoutsManagement() {
             console.error("Failed to fetch workouts", err);
             setError("Failed to fetch workouts");
         }
-    }, []);
+    }, [headers]);
 
     const fetchGoalsMap = useCallback(async () => {
         try {
@@ -166,19 +165,6 @@ export default function WorkoutsManagement() {
             console.error("Failed to fetch goals", err);
         }
     }, [headers]);
-
-    const fetchExercises = useCallback(async () => {
-        try {
-            const res = await apiFetch("/api/exercises", { headers });
-            const data = await res.json();
-            if (data.success) {
-                setExercises(data.data || data.exercises || []);
-            }
-        } catch (err: any) {
-            console.error("Failed to fetch exercises", err);
-            setError("Failed to fetch exercises");
-        }
-    }, []);
 
     const fetchWorkoutById = useCallback(async (id: number) => {
         try {
@@ -205,12 +191,12 @@ export default function WorkoutsManagement() {
 
     // Initial load
     useEffect(() => {
-        Promise.all([fetchWorkouts(), fetchExercises(), fetchGoalsMap()])
+        Promise.all([fetchWorkouts(), fetchGoalsMap()])
             .then(() => {
                 if (preselectedId) fetchWorkoutById(preselectedId);
             })
             .finally(() => setIsLoadingInit(false));
-    }, [fetchWorkouts, fetchExercises, fetchWorkoutById, fetchGoalsMap, preselectedId]);
+    }, [fetchWorkouts, fetchWorkoutById, fetchGoalsMap, preselectedId]);
 
 
 

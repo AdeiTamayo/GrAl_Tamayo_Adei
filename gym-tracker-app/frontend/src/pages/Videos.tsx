@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Video } from "../../types";
 import { apiFetch, apiBaseUrl } from "../utils/api";
 import Pagination from "../components/Pagination";
