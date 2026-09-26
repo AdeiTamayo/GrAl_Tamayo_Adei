@@ -108,17 +108,18 @@ class Workout {
         }
     }
 
-    // Update an existing workout
-    static async updateWorkout(id, name, date, note) {
+    // Update an existing workout. Scoped to the owner so one user can never
+    // edit another user's workout by guessing its id.
+    static async updateWorkout(id, userId, name, date, note) {
         try {
             const query = `
                 UPDATE workouts
                 SET name = $1, date = $2, note = $3
-                WHERE id = $4
+                WHERE id = $4 AND user_id = $5
                 RETURNING *;
             `;
-            const result = await pool.query(query, [name, date, note, id]);
-            return result.rows[0];
+            const result = await pool.query(query, [name, date, note, id, userId]);
+            return result.rows[0] || null;
         } catch (error) {
             console.error('[Workout Model] Error updating workout:', error.message);
             throw error;
@@ -141,9 +142,16 @@ class Workout {
         }
     }
 
-    // Insert a new set into a workout
-    static async addWorkoutExercise(workoutId, exerciseId, note = null) {
+    // Insert a new exercise into a workout owned by the given user.
+    // Returns null when the workout does not exist or belongs to someone else.
+    static async addWorkoutExercise(workoutId, userId, exerciseId, note = null) {
         try {
+            const ownershipCheck = await pool.query(
+                `SELECT id FROM workouts WHERE id = $1 AND user_id = $2`,
+                [workoutId, userId]
+            );
+            if (ownershipCheck.rows.length === 0) return null;
+
             const orderRes = await pool.query(
                 `SELECT COALESCE(MAX(exercise_order), 0) + 1 AS next_order
                  FROM workout_exercises
@@ -182,12 +190,23 @@ class Workout {
         }
     }
 
-    static async insertSet(workoutExerciseId, weight, reps, time, note, rpe) {
+    // Insert a new set into a workout exercise owned by the given user.
+    // Returns null when the workout exercise does not exist or is not theirs.
+    static async insertSet(workoutExerciseId, userId, weight, reps, time, note, rpe) {
         try {
             const isMissing = (v) => v === null || v === undefined;
             if (isMissing(weight) && isMissing(reps) && isMissing(time)) {
                 throw new Error('Cannot insert an empty set.');
             }
+
+            const ownershipCheck = await pool.query(
+                `SELECT we.id
+                 FROM workout_exercises we
+                 JOIN workouts w ON we.workout_id = w.id
+                 WHERE we.id = $1 AND w.user_id = $2`,
+                [workoutExerciseId, userId]
+            );
+            if (ownershipCheck.rows.length === 0) return null;
 
             const setNumRes = await pool.query(
                 `SELECT COALESCE(MAX(set_number), 0) + 1 AS next_set
@@ -218,17 +237,22 @@ class Workout {
         }
     }
 
-    // Update a specific set
-    static async updateSet(setId, weight, reps, time, rpe) {
+    // Update a specific set, scoped to its owner.
+    // Returns null when the set does not exist or belongs to another user.
+    static async updateSet(setId, userId, weight, reps, time, note, rpe) {
         try {
             const query = `
-                UPDATE sets
-                SET weight = $1, repetitions = $2, time = $3, rpe = $4
-                WHERE id = $5
-                RETURNING *;
+                UPDATE sets s
+                SET weight = $1, repetitions = $2, time = $3, note = $4, rpe = $5
+                FROM workout_exercises we, workouts w
+                WHERE s.workout_exercise_id = we.id
+                  AND we.workout_id = w.id
+                  AND s.id = $6
+                  AND w.user_id = $7
+                RETURNING s.*;
             `;
-            const result = await pool.query(query, [weight, reps, time, rpe || null, setId]);
-            return result.rows[0];
+            const result = await pool.query(query, [weight, reps, time, note, rpe || null, setId, userId]);
+            return result.rows[0] || null;
         } catch (error) {
             console.error('[Workout Model] Error updating set:', error.message);
             throw error;

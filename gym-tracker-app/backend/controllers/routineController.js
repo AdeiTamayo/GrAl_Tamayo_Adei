@@ -1,219 +1,183 @@
 const Routines = require('../models/routines');
+const { sendData, sendError } = require('../utils/httpResponses');
 
 exports.getUserRoutines = async (req, res) => {
-    console.log("Get all user routines request received");
     try {
         const routines = await Routines.getUserRoutines(req.userId);
-
-        if (!routines) {
-            console.log('Routines not found');
-            return res.status(404).json({
-                success: false,
-                error: 'Routines not found'
-            })
-        }
-
-        res.json({
-            success: true,
-            routines
-        })
-
+        return sendData(res, 200, { routines });
     } catch (error) {
-        console.log('Failed to fetch routines');
-        res.status(500).json({ success: false, error: 'Failed to fetch routines' });
+        console.error('[Routines] Error fetching routines:', error);
+        return sendError(res, 500, 'Failed to fetch routines');
     }
-}
+};
 
 exports.getRoutineById = async (req, res) => {
-    console.log("Get routines by id request received");
     try {
-        const routineId = req.params.id;
-        const routine = await Routines.getRoutineById(routineId, req.userId);
+        const routine = await Routines.getRoutineById(req.params.id, req.userId);
 
         if (!routine) {
-            console.log('Routine not found');
-            return res.status(404).json({
-                success: false,
-                error: 'Routine not found'
-            })
+            return sendError(res, 404, 'Routine not found');
         }
-
-        res.json({
-            success: true,
-            data: routine
-        })
+        return sendData(res, 200, { data: routine });
     } catch (error) {
-        console.log('Failed to fetch routine with id');
-        res.status(500).json({ success: false, error: 'Failed to fetch routine with id' });
+        console.error('[Routines] Error fetching routine:', error);
+        return sendError(res, 500, 'Failed to fetch routine with id');
     }
-}
+};
 
 exports.createRoutine = async (req, res) => {
-    console.log("Create user routine request received");
     try {
-        const userId = req.userId;
-        const { name } = req.body;
-
-        const routine = await Routines.createRoutine(userId, name);
+        const routine = await Routines.createRoutine(req.userId, req.body.name);
 
         if (!routine) {
-            console.log('Failed to create routine');
-            return res.status(404).json({
-                success: false,
-                error: 'Could not create routine'
-            })
+            return sendError(res, 404, 'Could not create routine');
         }
-
-        res.status(201).json({
-            success: true,
-            data: routine
-        })
+        return sendData(res, 201, { data: routine });
     } catch (error) {
-        console.log('Failed to create routine');
-        res.status(500).json({ success: false, error: 'Failed to create routine' });
+        console.error('[Routines] Error creating routine:', error);
+        return sendError(res, 500, 'Failed to create routine');
     }
-}
+};
 
 exports.updateRoutine = async (req, res) => {
-    console.log("Update routine request received");
     try {
-        const routineId = req.params.id;
-        const userId = req.userId;
         const { name, note } = req.body;
+        const routine = await Routines.updateRoutine(req.params.id, req.userId, name, note);
 
-        const updatedRoutine = await Routines.updateRoutine(routineId, userId, name, note);
-
-        if (!updatedRoutine) {
-            return res.status(404).json({
-                success: false,
-                error: 'Routine not found or you do not have permission to edit it.'
-            });
+        if (!routine) {
+            return sendError(res, 404, 'Routine not found or you do not have permission to edit it.');
         }
-
-        res.json({
-            success: true,
-            data: updatedRoutine
-        });
-
+        return sendData(res, 200, { data: routine });
     } catch (error) {
-        console.error("Error updating routine:", error);
-        return res.status(500).json({
-            success: false,
-            error: 'Failed to update routine'
-        });
+        console.error('[Routines] Error updating routine:', error);
+        return sendError(res, 500, 'Failed to update routine');
     }
-}
+};
 
 exports.deleteRoutine = async (req, res) => {
-    console.log("Delete routine request received");
     try {
-        const routineId = req.params.id;
-        const userId = req.userId;
-
-        const deleted = await Routines.deleteRoutine(routineId, userId);
+        const deleted = await Routines.deleteRoutine(req.params.id, req.userId);
 
         if (!deleted) {
-            return res.status(404).json({ success: false, error: 'Routine not found or unauthorized' });
+            return sendError(res, 404, 'Routine not found or unauthorized');
         }
-
-        res.json({ success: true, message: 'Routine deleted successfully' });
+        return sendData(res, 200, { message: 'Routine deleted successfully' });
     } catch (error) {
-        console.error("Error deleting routine:", error);
-        res.status(500).json({ success: false, error: 'Failed to delete routine' });
+        console.error('[Routines] Error deleting routine:', error);
+        return sendError(res, 500, 'Failed to delete routine');
     }
-}
+};
 
 exports.addExerciseToRoutine = async (req, res) => {
-    console.log("Add exercise to routine request received");
     try {
-        const routineId = req.params.id;
-        const userId = req.userId;
         const { exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note } = req.body;
 
-        const addedExercise = await Routines.addExerciseToRoutine(routineId, userId, exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note);
+        const exercise = await Routines.addExerciseToRoutine(
+            req.params.id, req.userId, exercise_id, exercise_order,
+            planned_sets, planned_reps, planned_weight, planned_time, note
+        );
 
-        if (!addedExercise) {
-            return res.status(404).json({ success: false, error: 'Failed to add exercise or unauthorized' });
+        if (!exercise) {
+            return sendError(res, 404, 'Failed to add exercise or unauthorized');
         }
-
-        res.json({ success: true, data: addedExercise });
+        return sendData(res, 200, { data: exercise });
     } catch (error) {
-        console.error("Error adding exercise:", error);
-        res.status(500).json({ success: false, error: 'Failed to add exercise to routine' });
+        console.error('[Routines] Error adding exercise:', error);
+        return sendError(res, 500, 'Failed to add exercise to routine');
     }
-}
+};
 
 exports.updateRoutineExercise = async (req, res) => {
-    console.log("Update routine exercise request received");
     try {
-        const itemId = req.params.item_id;
-        const userId = req.userId;
         const { exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note } = req.body;
 
-        const updatedExercise = await Routines.updateRoutineExercise(itemId, userId, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note);
+        const exercise = await Routines.updateRoutineExercise(
+            req.params.item_id, req.userId, exercise_order,
+            planned_sets, planned_reps, planned_weight, planned_time, note
+        );
 
-        if (!updatedExercise) {
-            return res.status(404).json({ success: false, error: 'Routine exercise not found or unauthorized' });
+        if (!exercise) {
+            return sendError(res, 404, 'Routine exercise not found or unauthorized');
         }
-
-        res.json({ success: true, data: updatedExercise });
+        return sendData(res, 200, { data: exercise });
     } catch (error) {
-        console.error("Error updating routine exercise:", error);
-        res.status(500).json({ success: false, error: 'Failed to update routine exercise' });
+        console.error('[Routines] Error updating routine exercise:', error);
+        return sendError(res, 500, 'Failed to update routine exercise');
     }
-}
+};
 
 exports.removeExerciseFromRoutine = async (req, res) => {
-    console.log("Remove exercise from routine request received");
     try {
-        const itemId = req.params.item_id;
-        const userId = req.userId;
-
-        const removed = await Routines.removeExerciseFromRoutine(itemId, userId);
+        const removed = await Routines.removeExerciseFromRoutine(req.params.item_id, req.userId);
 
         if (!removed) {
-            return res.status(404).json({ success: false, error: 'Routine exercise not found or unauthorized' });
+            return sendError(res, 404, 'Routine exercise not found or unauthorized');
         }
-
-        res.json({ success: true, message: 'Exercise removed successfully' });
+        return sendData(res, 200, { message: 'Exercise removed successfully' });
     } catch (error) {
-        console.error("Error removing exercise:", error);
-        res.status(500).json({ success: false, error: 'Failed to remove exercise from routine' });
+        console.error('[Routines] Error removing exercise:', error);
+        return sendError(res, 500, 'Failed to remove exercise from routine');
     }
-}
+};
 
 exports.addSetToRoutineExercise = async (req, res) => {
     try {
         const { set_number, planned_weight, planned_reps, planned_time } = req.body;
-        const set = await Routines.addSetToRoutineExercise(req.params.item_id, set_number, planned_weight, planned_reps, planned_time);
-        res.json({ success: true, set });
+
+        const set = await Routines.addSetToRoutineExercise(
+            req.params.item_id, req.userId, set_number, planned_weight, planned_reps, planned_time
+        );
+
+        if (!set) {
+            return sendError(res, 404, 'Routine exercise not found or unauthorized');
+        }
+        return sendData(res, 200, { set });
     } catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to add set' });
+        console.error('[Routines] Error adding set:', error);
+        return sendError(res, 500, 'Failed to add set');
     }
 };
 
 exports.updateRoutineSet = async (req, res) => {
     try {
         const { planned_weight, planned_reps, planned_time } = req.body;
-        if ((planned_weight && Math.abs(planned_weight) >= 1000) ||
-            (planned_reps && Math.abs(planned_reps) >= 1000) ||
-            (planned_time && Math.abs(planned_time) >= 1000)) {
-            return res.status(400).json({ success: false, error: 'Value must be less than 1000' });
+
+        // routine_sets caps these columns at 999.99; reject out-of-range values
+        // up front so the user gets a 400 instead of a database driver error.
+        if (isOutOfRange(planned_weight) || isOutOfRange(planned_reps) || isOutOfRange(planned_time)) {
+            return sendError(res, 400, 'Value must be less than 1000');
         }
-        const updated = await Routines.updateRoutineSet(req.params.set_id, planned_weight, planned_reps, planned_time);
-        res.json({ success: true, set: updated });
+
+        const set = await Routines.updateRoutineSet(req.params.set_id, req.userId, planned_weight, planned_reps, planned_time);
+
+        if (!set) {
+            return sendError(res, 404, 'Routine set not found or unauthorized');
+        }
+        return sendData(res, 200, { set });
     } catch (error) {
-        console.error('[Routine Controller] Error updating set:', error);
-        const msg = error?.code === '22003' ? 'Value exceeds maximum allowed (999.99)' : 'Failed to update set';
-        res.status(500).json({ success: false, error: msg });
+        console.error('[Routines] Error updating set:', error);
+        // 22003 is Postgres' numeric_value_out_of_range.
+        const message = error?.code === '22003'
+            ? 'Value exceeds maximum allowed (999.99)'
+            : 'Failed to update set';
+        return sendError(res, 500, message);
     }
 };
 
 exports.deleteRoutineSet = async (req, res) => {
     try {
-        const deleted = await Routines.deleteRoutineSet(req.params.set_id);
-        res.json({ success: deleted });
+        const deleted = await Routines.deleteRoutineSet(req.params.set_id, req.userId);
+
+        if (!deleted) {
+            return sendError(res, 404, 'Routine set not found or unauthorized');
+        }
+        return sendData(res, 200, {});
     } catch (error) {
-        res.status(500).json({ success: false, error: 'Failed to delete set' });
+        console.error('[Routines] Error deleting set:', error);
+        return sendError(res, 500, 'Failed to delete set');
     }
 };
+
+function isOutOfRange(value) {
+    return value != null && Math.abs(value) >= 1000;
+}

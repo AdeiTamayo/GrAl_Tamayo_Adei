@@ -1,190 +1,117 @@
 const Workout = require('../models/workout');
 const PR = require('../models/pr');
+const { sendData, sendError } = require('../utils/httpResponses');
 
 exports.getWorkouts = async (req, res) => {
-    console.log("Get all workouts request received");
-
     try {
-
-        const userId = req.userId;
-
-        const workouts = await Workout.getWorkouts(userId);
-
-        if (!workouts) {
-            return res.status(404).json({
-                success: false,
-                error: 'Workout not found'
-            });
-        }
-
-        res.json({
-            success: true,
-            data: workouts
-        });
+        const workouts = await Workout.getWorkouts(req.userId);
+        return sendData(res, 200, { data: workouts });
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            success: false,
-            error: 'Failed to get workouts'
-        });
+        console.error('[Workouts] Error fetching workouts:', error);
+        return sendError(res, 500, 'Failed to get workouts');
     }
-}
+};
 
-// getWorkoutById
 exports.getWorkoutById = async (req, res) => {
-    console.log("Get workout by id request received");
     try {
         const workout = await Workout.getWorkoutById(req.params.id, req.userId);
+
         if (!workout) {
-            return res.status(404).json({
-                success: false,
-                error: 'Workout not found'
-            });
+            return sendError(res, 404, 'Workout not found');
         }
-        res.json({
-            success: true,
-            data: workout
-        })
-
+        return sendData(res, 200, { data: workout });
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({
-            success: false,
-            error: 'Failed to get workout'
-        });
-
+        console.error('[Workouts] Error fetching workout:', error);
+        return sendError(res, 500, 'Failed to get workout');
     }
-
-
-}
+};
 
 exports.createWorkout = async (req, res) => {
-    console.log("Create workout request received");
     try {
-        const { name, date, note } = req.body
-        // ID is going to be created in the database so no need to pass            
-        // Date could be personalized /= from the current date
-
-        const userId = req.userId;
-
-        const workout = await Workout.createWorkout(userId, name, date, note);
-
-        if (!workout) {
-            console.log("Error creating new workout");
-            return res.status(404).json({
-                success: false,
-                error: 'Couldnt create workout'
-            })
-        }
-
-        return res.status(201).json({
-            success: true,
-            data: workout
-        });
-
-
-    } catch (error) {
-        console.log("Couldn't create the workout");
-        return res.status(500).json({
-            success: false,
-            error: 'Error creating new workout'
-        })
-    }
-}
-
-// updateWorkout
-exports.updateWorkout = async (req, res) => {
-    console.log("Modify workout request received");
-    try {
-        const id = req.params.id;
-
         const { name, date, note } = req.body;
 
-        const workout = await Workout.updateWorkout(id, name, date, note);
+        const workout = await Workout.createWorkout(req.userId, name, date, note);
 
         if (!workout) {
-            console.log("Error modifying new workout");
-            return res.status(404).json({
-                success: false,
-                error: 'Couldnt modify workout'
-            })
+            return sendError(res, 404, 'Could not create workout');
         }
-
-        return res.json({
-            success: true,
-            data: workout
-        })
-
+        return sendData(res, 201, { data: workout });
     } catch (error) {
-        console.log("Couldn't modify the workout");
-        return res.status(500).json({
-            success: false,
-            error: 'Error modifying workout'
-        })
+        console.error('[Workouts] Error creating workout:', error);
+        return sendError(res, 500, 'Error creating new workout');
     }
+};
 
-}
+exports.updateWorkout = async (req, res) => {
+    try {
+        const { name, date, note } = req.body;
+        const workout = await Workout.updateWorkout(req.params.id, req.userId, name, date, note);
 
-// deleteWorkout
+        if (!workout) {
+            return sendError(res, 404, 'Workout not found or unauthorized');
+        }
+        return sendData(res, 200, { data: workout });
+    } catch (error) {
+        console.error('[Workouts] Error updating workout:', error);
+        return sendError(res, 500, 'Error modifying workout');
+    }
+};
+
 exports.deleteWorkout = async (req, res) => {
-    console.log("Delete workout request received");
     try {
         const deleted = await Workout.deleteWorkout(req.params.id, req.userId);
 
         if (!deleted) {
-            return res.status(404).json({
-                success: false,
-                error: 'Workout not found or unauthorized'
-            });
+            return sendError(res, 404, 'Workout not found or unauthorized');
         }
-
-        return res.json({
-            success: true,
-        })
-
+        return sendData(res, 200, {});
     } catch (error) {
-        console.log("Couldn't delete the Workout");
-        return res.status(500).json({
-            success: false,
-            error: 'Error deleting Workout'
-        })
+        console.error('[Workouts] Error deleting workout:', error);
+        return sendError(res, 500, 'Error deleting Workout');
     }
-}
+};
 
 exports.addWorkoutExercise = async (req, res) => {
     try {
-        const workoutId = req.params.id;
         const { exercise_id, note } = req.body;
+        const row = await Workout.addWorkoutExercise(req.params.id, req.userId, exercise_id, note);
 
-        const row = await Workout.addWorkoutExercise(workoutId, exercise_id, note);
-        return res.status(201).json({ success: true, data: row });
+        if (!row) {
+            return sendError(res, 404, 'Workout not found or unauthorized');
+        }
+        return sendData(res, 201, { data: row });
     } catch (error) {
-        console.error('[Controller] Add Workout Exercise Error:', error);
-        return res.status(500).json({ success: false, error: 'Failed to add exercise' });
+        console.error('[Workouts] Error adding exercise:', error);
+        return sendError(res, 500, 'Failed to add exercise');
     }
 };
 
 exports.deleteWorkoutExercise = async (req, res) => {
     try {
-        const workoutExerciseId = req.params.workoutExerciseId;
-        const deleted = await Workout.deleteWorkoutExercise(workoutExerciseId, req.userId);
+        const deleted = await Workout.deleteWorkoutExercise(req.params.workoutExerciseId, req.userId);
+
         if (!deleted) {
-            return res.status(404).json({ success: false, error: 'Exercise not found or unauthorized' });
+            return sendError(res, 404, 'Exercise not found or unauthorized');
         }
-        return res.status(200).json({ success: true });
+        return sendData(res, 200, {});
     } catch (error) {
-        console.error('[Controller] Delete Workout Exercise Error:', error);
-        return res.status(500).json({ success: false, error: 'Failed to delete exercise from workout' });
+        console.error('[Workouts] Error deleting exercise:', error);
+        return sendError(res, 500, 'Failed to delete exercise from workout');
     }
 };
 
 exports.addSet = async (req, res) => {
     try {
-        const workoutExerciseId = req.params.workoutExerciseId;
         const { weight, reps, time, note, rpe } = req.body;
+        const workoutExerciseId = req.params.workoutExerciseId;
 
-        const row = await Workout.insertSet(workoutExerciseId, weight, reps, time, note, rpe);
+        const row = await Workout.insertSet(workoutExerciseId, req.userId, weight, reps, time, note, rpe);
+        if (!row) {
+            return sendError(res, 404, 'Exercise not found or unauthorized');
+        }
 
+        // A PR is a bonus, not a precondition: if the check fails the set is
+        // still saved, so logging a workout is never blocked by it.
         let isPr = false;
         try {
             const exerciseId = await Workout.getExerciseIdForWorkoutExercise(workoutExerciseId, req.userId);
@@ -193,49 +120,41 @@ exports.addSet = async (req, res) => {
                 isPr = pr !== null;
             }
         } catch (prError) {
-            console.error('[Controller] PR check failed (non-blocking):', prError.message);
+            console.error('[Workouts] PR check failed (non-blocking):', prError.message);
         }
 
-        return res.status(201).json({ success: true, data: row, isPr });
+        return sendData(res, 201, { data: row, isPr });
     } catch (error) {
-        console.error('[Controller] Add Set Error:', error);
-        return res.status(500).json({ success: false, error: 'Failed to add set' });
+        console.error('[Workouts] Error adding set:', error);
+        return sendError(res, 500, 'Failed to add set');
     }
 };
 
-
-// updateSet
 exports.updateSet = async (req, res) => {
     try {
-        const setId = req.params.setId;
         const { weight, reps, time, note, rpe } = req.body;
+        const set = await Workout.updateSet(req.params.setId, req.userId, weight, reps, time, note, rpe);
 
-        const query = `
-            UPDATE sets 
-            SET weight = $1, repetitions = $2, time = $3, note = $4, rpe = $5
-            WHERE id = $6 RETURNING *;
-        `;
-        const pool = require('../config/database');
-        const result = await pool.query(query, [weight, reps, time, note, rpe || null, setId]);
-
-        return res.status(200).json({ success: true, data: result.rows[0] });
+        if (!set) {
+            return sendError(res, 404, 'Set not found or unauthorized');
+        }
+        return sendData(res, 200, { data: set });
     } catch (error) {
-        console.error('[Controller] Update Set Error:', error);
-        return res.status(500).json({ success: false, error: 'Failed to update set' });
+        console.error('[Workouts] Error updating set:', error);
+        return sendError(res, 500, 'Failed to update set');
     }
 };
 
-// deleteSet
 exports.deleteSet = async (req, res) => {
     try {
-        const setId = req.params.setId;
-        const deleted = await Workout.deleteSet(setId, req.userId);
+        const deleted = await Workout.deleteSet(req.params.setId, req.userId);
+
         if (!deleted) {
-            return res.status(404).json({ success: false, error: 'Set not found or unauthorized' });
+            return sendError(res, 404, 'Set not found or unauthorized');
         }
-        return res.status(200).json({ success: true });
+        return sendData(res, 200, {});
     } catch (error) {
-        console.error('[Controller] Delete Set Error:', error);
-        return res.status(500).json({ success: false, error: 'Failed to delete set' });
+        console.error('[Workouts] Error deleting set:', error);
+        return sendError(res, 500, 'Failed to delete set');
     }
 };

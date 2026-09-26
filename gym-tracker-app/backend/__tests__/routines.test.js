@@ -103,10 +103,20 @@ describe('DELETE /api/routines/exercises/:item_id', () => {
 describe('POST /api/routines/exercises/:item_id/sets', () => {
   test('adds set to routine exercise', async () => {
     const db = require('../config/database');
-    db.query.mockReturnValueOnce(Promise.resolve({ rows: [{ id: 1, set_number: 1, planned_weight: 80 }] }));
+    db.query
+      .mockReturnValueOnce(Promise.resolve({ rows: [{ id: 1 }] })) // ownership check
+      .mockReturnValueOnce(Promise.resolve({ rows: [{ id: 1, set_number: 1, planned_weight: 80 }] }));
     const res = await request(app).post('/api/routines/exercises/1/sets').send({ set_number: 1, planned_weight: 80, planned_reps: 10 });
     expect(res.status).toBe(200);
     expect(res.body.set.planned_weight).toBe(80);
+  });
+
+  test('returns 404 when the routine exercise belongs to another user', async () => {
+    const db = require('../config/database');
+    db.query.mockReturnValueOnce(Promise.resolve({ rows: [] })); // ownership check fails
+    const res = await request(app).post('/api/routines/exercises/1/sets').send({ set_number: 1, planned_weight: 80 });
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
   });
 });
 
@@ -117,5 +127,31 @@ describe('PUT /api/routines/sets/:set_id', () => {
     const res = await request(app).put('/api/routines/sets/1').send({ planned_weight: 90 });
     expect(res.status).toBe(200);
     expect(res.body.set.planned_weight).toBe(90);
+  });
+
+  test('returns 404 when the routine set belongs to another user', async () => {
+    const db = require('../config/database');
+    db.query.mockReturnValueOnce(Promise.resolve({ rows: [] }));
+    const res = await request(app).put('/api/routines/sets/1').send({ planned_weight: 90 });
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+});
+
+describe('DELETE /api/routines/sets/:set_id', () => {
+  test('deletes a routine set', async () => {
+    const db = require('../config/database');
+    db.query.mockReturnValueOnce(Promise.resolve({ rowCount: 1, rows: [{ id: 1 }] }));
+    const res = await request(app).delete('/api/routines/sets/1');
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  test('returns 404 when the routine set belongs to another user', async () => {
+    const db = require('../config/database');
+    db.query.mockReturnValueOnce(Promise.resolve({ rowCount: 0, rows: [] }));
+    const res = await request(app).delete('/api/routines/sets/1');
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
   });
 });

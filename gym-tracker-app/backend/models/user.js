@@ -48,6 +48,21 @@ class User {
     }
 
     /**
+     * Check whether a user id still exists. Used by the auth middleware so a
+     * token that outlives its account (e.g. after account deletion) stops working.
+     */
+    static async userExists(id) {
+        try {
+            const query = 'SELECT 1 FROM users WHERE id = $1';
+            const result = await pool.query(query, [id]);
+            return result.rows.length > 0;
+        } catch (error) {
+            console.error('[User Model] Error checking user existence:', error.message);
+            throw error;
+        }
+    }
+
+    /**
      * Validate password
      */
     static async validatePassword(plainPassword, hashedPassword) {

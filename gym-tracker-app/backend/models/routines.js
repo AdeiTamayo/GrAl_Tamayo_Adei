@@ -164,8 +164,19 @@ class Routine {
         }
     }
 
-    static async addSetToRoutineExercise(routineExerciseId, setNumber, weight, reps, time) {
+    // Insert a planned set into a routine exercise owned by the given user.
+    // Returns null when the routine exercise does not exist or is not theirs.
+    static async addSetToRoutineExercise(routineExerciseId, userId, setNumber, weight, reps, time) {
         try {
+            const ownershipCheck = await pool.query(
+                `SELECT re.id
+                 FROM routine_exercises re
+                 JOIN routines r ON re.routine_id = r.id
+                 WHERE re.id = $1 AND r.user_id = $2`,
+                [routineExerciseId, userId]
+            );
+            if (ownershipCheck.rows.length === 0) return null;
+
             const query = `
             INSERT INTO routine_sets (routine_exercise_id, set_number, planned_weight, planned_reps, planned_time) 
             VALUES ($1, $2, $3, $4, $5) RETURNING *;
@@ -178,41 +189,61 @@ class Routine {
         }
     }
 
-    static async updateRoutineSet(setId, weight, reps, time) {
+    // Update a planned set, scoped to the routine owner. Omitted fields keep
+    // their stored value. Returns null when the set is not owned by the user.
+    static async updateRoutineSet(setId, userId, weight, reps, time) {
         try {
             const fields = [];
             const values = [];
             let idx = 1;
 
             if (weight !== undefined && weight !== null) {
-                fields.push(`planned_weight = $${idx++}`);
+                fields.push(`rs.planned_weight = $${idx++}`);
                 values.push(weight);
             }
             if (reps !== undefined && reps !== null) {
-                fields.push(`planned_reps = $${idx++}`);
+                fields.push(`rs.planned_reps = $${idx++}`);
                 values.push(reps);
             }
             if (time !== undefined && time !== null) {
-                fields.push(`planned_time = $${idx++}`);
+                fields.push(`rs.planned_time = $${idx++}`);
                 values.push(time);
             }
 
-            if (fields.length === 0) return;
+            if (fields.length === 0) return null;
 
-            values.push(setId);
-            const query = `UPDATE routine_sets SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *;`;
+            values.push(setId, userId);
+            const query = `
+                UPDATE routine_sets rs
+                SET ${fields.join(', ')}
+                FROM routine_exercises re, routines r
+                WHERE rs.routine_exercise_id = re.id
+                  AND re.routine_id = r.id
+                  AND rs.id = $${idx}
+                  AND r.user_id = $${idx + 1}
+                RETURNING rs.*;
+            `;
             const { rows } = await pool.query(query, values);
-            return rows[0];
+            return rows[0] || null;
         } catch (error) {
             console.error('[Routine Model] Error updating routine set:', error);
             throw error;
         }
     }
 
-    static async deleteRoutineSet(setId) {
+    // Delete a planned set, scoped to the routine owner.
+    static async deleteRoutineSet(setId, userId) {
         try {
-            const query = `DELETE FROM routine_sets WHERE id = $1 RETURNING id;`;
-            const { rowCount } = await pool.query(query, [setId]);
+            const query = `
+                DELETE FROM routine_sets rs
+                USING routine_exercises re, routines r
+                WHERE rs.routine_exercise_id = re.id
+                  AND re.routine_id = r.id
+                  AND rs.id = $1
+                  AND r.user_id = $2
+                RETURNING rs.id;
+            `;
+            const { rowCount } = await pool.query(query, [setId, userId]);
             return rowCount > 0;
         } catch (error) {
             console.error('[Routine Model] Error removing set from routine:', error);

@@ -77,6 +77,14 @@ describe('PUT /api/workouts/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body.data.name).toBe('Pull Day');
   });
+
+  test('returns 404 when the workout belongs to another user', async () => {
+    const db = require('../config/database');
+    db.query.mockReturnValueOnce(Promise.resolve({ rows: [] }));
+    const res = await request(app).put('/api/workouts/1').send({ name: 'Hijacked' });
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
 });
 
 describe('DELETE /api/workouts/:id', () => {
@@ -99,10 +107,21 @@ describe('DELETE /api/workouts/:id', () => {
 describe('POST /api/workouts/:id/exercises', () => {
   test('adds exercise to workout', async () => {
     const db = require('../config/database');
-    db.query.mockReturnValueOnce(Promise.resolve({ rows: [{ id: 10, workout_id: 1, exercise_id: 5 }] }));
+    db.query
+      .mockReturnValueOnce(Promise.resolve({ rows: [{ id: 1 }] })) // ownership check
+      .mockReturnValueOnce(Promise.resolve({ rows: [{ next_order: 1 }] }))
+      .mockReturnValueOnce(Promise.resolve({ rows: [{ id: 10, workout_id: 1, exercise_id: 5 }] }));
     const res = await request(app).post('/api/workouts/1/exercises').send({ exercise_id: 5 });
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
+  });
+
+  test('returns 404 when the workout belongs to another user', async () => {
+    const db = require('../config/database');
+    db.query.mockReturnValueOnce(Promise.resolve({ rows: [] })); // ownership check fails
+    const res = await request(app).post('/api/workouts/1/exercises').send({ exercise_id: 5 });
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
   });
 });
 
@@ -110,6 +129,7 @@ describe('POST /api/workouts/exercises/:workoutExerciseId/sets', () => {
   test('adds a set to a workout exercise', async () => {
     const db = require('../config/database');
     db.query
+      .mockReturnValueOnce(Promise.resolve({ rows: [{ id: 1 }] })) // ownership check
       .mockReturnValueOnce(Promise.resolve({ rows: [{ next_set: 1 }] }))
       .mockReturnValueOnce(Promise.resolve({ rows: [mockSet] }))
       .mockReturnValueOnce(Promise.resolve({ rows: [{ exercise_id: 1 }] }))
@@ -118,6 +138,14 @@ describe('POST /api/workouts/exercises/:workoutExerciseId/sets', () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data.weight).toBe(80);
+  });
+
+  test('returns 404 when the workout exercise belongs to another user', async () => {
+    const db = require('../config/database');
+    db.query.mockReturnValueOnce(Promise.resolve({ rows: [] })); // ownership check fails
+    const res = await request(app).post('/api/workouts/exercises/1/sets').send({ weight: 80, reps: 10 });
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
   });
 });
 
@@ -128,6 +156,14 @@ describe('PUT /api/workouts/sets/:setId', () => {
     const res = await request(app).put('/api/workouts/sets/1').send({ weight: 85, reps: 8 });
     expect(res.status).toBe(200);
     expect(res.body.data.weight).toBe(85);
+  });
+
+  test('returns 404 when the set belongs to another user', async () => {
+    const db = require('../config/database');
+    db.query.mockReturnValueOnce(Promise.resolve({ rows: [] }));
+    const res = await request(app).put('/api/workouts/sets/1').send({ weight: 85, reps: 8 });
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
   });
 });
 
