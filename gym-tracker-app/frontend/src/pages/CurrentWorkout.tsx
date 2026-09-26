@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { formatTime } from "../utils/helpers";
+import { formatTime, todayLocal } from "../utils/helpers";
+import { epley } from "../utils/biomechanics";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
@@ -14,7 +15,7 @@ import Card from "../components/Card";
 import { getUserRoutines, getRoutineById, createRoutine as createRoutineData, addExerciseToRoutine as addExerciseToRoutineData, addSetToRoutineExercise as addSetToRoutineExerciseData } from '../data/routines';
 import { getUserGoals } from '../data/goals';
 import { getPrSummary } from '../data/prs';
-import { createWorkout, addWorkoutExercise, addSet as addSetData } from '../data/workouts';
+import { createWorkout, addWorkoutExercise, addSet as addSetData, deleteWorkout } from '../data/workouts';
 import { Routine } from '../data/types';
 
 export default function CurrentWorkout() {
@@ -186,14 +187,22 @@ export default function CurrentWorkout() {
         }
 
         try {
-            const [createdWorkout, prSummary] = await Promise.all([
-                createWorkout({
-                    name: workoutName,
-                    date: new Date().toISOString().split('T')[0],
-                    note: `Duration: ${formatTime(elapsedTime)}`
-                }),
-                getPrSummary()
-            ]);
+            // The PR baseline is read first, and tolerantly: if it fails, PR
+            // detection is skipped but the save still proceeds. Creating the
+            // workout in the same Promise.all (as before) orphaned a row
+            // whenever the baseline fetch threw.
+            let prSummary: { exercise_id: number; weight: number }[] = [];
+            try {
+                prSummary = await getPrSummary();
+            } catch (baselineErr) {
+                console.error("PR baseline unavailable, skipping PR detection", baselineErr);
+            }
+
+            const createdWorkout = await createWorkout({
+                name: workoutName,
+                date: todayLocal(),
+                note: `Duration: ${formatTime(elapsedTime)}`
+            });
 
             const workoutId = createdWorkout.id;
             const prMap = new Map<number, number>(prSummary.map(p => [p.exercise_id, p.weight]));
@@ -239,6 +248,18 @@ export default function CurrentWorkout() {
                 } else {
                     failedCount++;
                 }
+            }
+
+            if (savedCount === 0) {
+                // Nothing persisted: remove the empty shell instead of keeping
+                // a workout with zero sets, and stay so the user can retry.
+                try {
+                    await deleteWorkout(workoutId);
+                } catch (cleanupErr) {
+                    console.error("Failed to remove empty workout", cleanupErr);
+                }
+                showNotification("No sets could be saved. Check your connection and try again.", "error");
+                return;
             }
 
             resetWorkout();
@@ -373,7 +394,7 @@ export default function CurrentWorkout() {
                                                 </span>
                                                 {bestWeight > 0 && (
                                                     <span className={`font-medium ${achieved ? 'text-accent' : 'text-amber-400'}`}>
-                                                        ({achieved ? '✓' : `${-diff.toFixed(1)} kg`})
+                                                        ({achieved ? '✓' : `${diff.toFixed(1)} kg to go`})
                                                     </span>
                                                 )}
                                             </div>
@@ -486,9 +507,9 @@ export default function CurrentWorkout() {
                                                 )}
                                                 {show1rm && (
                                                     <td className="py-2 px-2">
-                                                        {set.weight && set.repetitions ? (
+                                                        {Number(set.weight) > 0 && Number(set.repetitions) > 0 ? (
                                                             <span className="font-mono text-xs text-accent/80">
-                                                                {(Number(set.weight) * (1 + Number(set.repetitions) / 30)).toFixed(1)}
+                                                                {epley(Number(set.weight), Number(set.repetitions)).toFixed(1)}
                                                             </span>
                                                         ) : (
                                                             <span className="text-dim text-xs">—</span>
@@ -508,7 +529,7 @@ export default function CurrentWorkout() {
                                                             const achieved = diff <= 0;
                                                             return (
                                                                 <span className={`font-mono text-xs font-semibold ${achieved ? 'text-accent' : 'text-amber-400'}`}>
-                                                                    {achieved ? '✓' : `-${diff.toFixed(1)} kg`}
+                                                                    {achieved ? '✓' : `${diff.toFixed(1)} kg to go`}
                                                                 </span>
                                                             );
                                                         })()}

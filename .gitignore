@@ -13,3 +13,6 @@ legacy/backend/media/
 
 # Logs
 *.log
+
+
+/docs/

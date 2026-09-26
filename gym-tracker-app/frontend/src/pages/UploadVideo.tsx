@@ -1,7 +1,7 @@
 import { useState, useRef, DragEvent, useEffect } from 'react';
 import Card from '../components/Card';
 import { useNotification } from '../components/NotificationProvider';
-import { uploadRawVideo, createVideoRecord, uploadProcessedVideo, updateVideoRecord } from '../data/videos';
+import { uploadRawVideo, deleteRawVideo, createVideoRecord, uploadProcessedVideo, deleteProcessedVideo, updateVideoRecord } from '../data/videos';
 import { analyzeVideo, AnalysisMode } from '../utils/videoAnalysis';
 
 const ANALYSIS_MODES: { id: AnalysisMode; label: string; description: string; icon: string }[] = [
@@ -31,6 +31,25 @@ const PROCESS_TYPES: Record<AnalysisMode, string> = {
     barbell: 'barbell_tracking',
 };
 
+/** Matches the archived server's 500 MB upload ceiling. */
+const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
+const VIDEO_EXTENSIONS = ['mp4', 'mov', 'webm', 'mkv', 'avi', 'm4v'];
+
+/**
+ * Reject non-videos (and oversized files) before anything is uploaded.
+ * Some systems report an empty MIME type, so fall back to the extension.
+ * Returns a user-facing message, or null when the file is acceptable.
+ */
+function videoFileError(f: File): string | null {
+    const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
+    const looksVideo = f.type ? f.type.startsWith('video/') : VIDEO_EXTENSIONS.includes(ext);
+    if (!looksVideo) return 'Please choose a video file (MP4, MOV or WebM).';
+    if (f.size > MAX_VIDEO_BYTES) {
+        return `That video is ${(f.size / 1048576).toFixed(0)} MB — the limit is 500 MB.`;
+    }
+    return null;
+}
+
 export default function UploadVideo() {
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -58,11 +77,20 @@ export default function UploadVideo() {
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0] || null;
-        setFile(f);
         if (f) {
+            // The drop path validates; the picker must too (`accept` is advisory).
+            const rejection = videoFileError(f);
+            if (rejection) {
+                e.target.value = '';
+                setFile(null);
+                setError(rejection);
+                setProgress('');
+                return;
+            }
             if (previewUrl) URL.revokeObjectURL(previewUrl);
             setPreviewUrl(URL.createObjectURL(f));
         }
+        setFile(f);
         setError(null);
         setProgress('');
     };
@@ -94,10 +122,13 @@ export default function UploadVideo() {
         cancelRef.current = false;
 
         let recordId: number | null = null;
+        let rawVideoPath: string | null = null;
+        let processedVideoUrl: string | null = null;
+        let processedVideoLinked = false;
 
         try {
             setProgress('Uploading video...');
-            await uploadRawVideo(file);
+            rawVideoPath = await uploadRawVideo(file);
 
             const record = await createVideoRecord({
                 filename: file.name,
@@ -107,11 +138,14 @@ export default function UploadVideo() {
             recordId = record.id;
 
             const result = await analyzeVideo(file, mode, setProgress, () => cancelRef.current);
-            if (cancelRef.current) return;
+            if (cancelRef.current) {
+                throw new DOMException('Analysis cancelled', 'AbortError');
+            }
 
             setProgress('Uploading processed video...');
-            const publicUrl = await uploadProcessedVideo(result.blob, file.name);
-            await updateVideoRecord(recordId, { processed_url: publicUrl, status: 'completed' });
+            processedVideoUrl = await uploadProcessedVideo(result.blob, file.name);
+            await updateVideoRecord(recordId, { processed_url: processedVideoUrl, status: 'completed' });
+            processedVideoLinked = true;
 
             const summary = result.feedback.length > 0 ? ` — ${result.feedback.join('. ')}` : '';
             const successMsg = `${mode === 'squat' ? 'Squat analysis' : mode === 'barbell' ? 'Barbell tracking' : 'Pose estimation'} complete!${summary}`;
@@ -119,15 +153,25 @@ export default function UploadVideo() {
             showNotification(successMsg, 'success');
             resetFile();
         } catch (error) {
-            if (error instanceof DOMException && error.name === 'AbortError') return;
+            const wasCancelled = error instanceof DOMException && error.name === 'AbortError';
             if (recordId !== null) {
-                try { await updateVideoRecord(recordId, { status: 'failed' }); } catch { /* ignore */ }
+                try {
+                    await updateVideoRecord(recordId, { status: wasCancelled ? 'cancelled' : 'failed' });
+                } catch { /* ignore */ }
             }
-            const msg = error instanceof Error ? error.message : 'Video processing failed';
-            setError(msg);
-            setProgress('');
-            showNotification('Video processing failed', 'error');
+            if (!wasCancelled) {
+                const msg = error instanceof Error ? error.message : 'Video processing failed';
+                setError(msg);
+                setProgress('');
+                showNotification('Video processing failed', 'error');
+            }
         } finally {
+            if (rawVideoPath) {
+                try { await deleteRawVideo(rawVideoPath); } catch { /* cleanup is best effort */ }
+            }
+            if (processedVideoUrl && !processedVideoLinked) {
+                try { await deleteProcessedVideo(processedVideoUrl); } catch { /* cleanup is best effort */ }
+            }
             setIsProcessing(false);
             setActiveMode(null);
             cancelRef.current = false;
@@ -136,9 +180,7 @@ export default function UploadVideo() {
 
     const handleCancel = () => {
         cancelRef.current = true;
-        setIsProcessing(false);
-        setActiveMode(null);
-        setProgress('');
+        setProgress('Cancelling...');
     };
 
     const formatFileSize = (bytes: number) => {
@@ -268,9 +310,11 @@ export default function UploadVideo() {
                             ) : (
                                 <>
                                     <p className="text-sm text-accent font-bold tracking-wide font-mono leading-relaxed whitespace-pre-wrap">{progress}</p>
-                                    <button onClick={handleCancel} className="mt-3 text-xs font-semibold text-dim hover:text-rose-400 transition-colors">
-                                        Cancel
-                                    </button>
+                                    {isProcessing && (
+                                        <button onClick={handleCancel} className="mt-3 text-xs font-semibold text-dim hover:text-rose-400 transition-colors">
+                                            Cancel
+                                        </button>
+                                    )}
                                 </>
                             )}
                         </div>

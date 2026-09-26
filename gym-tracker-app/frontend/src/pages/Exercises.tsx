@@ -23,7 +23,7 @@ import {
 import { Exercise } from '../data/types';
 
 type ExercisePayload = {
-    exercice_name?: string;
+    exercise_name?: string;
     body_part?: string;
     target_muscle?: string;
     equipment?: string;
@@ -85,7 +85,6 @@ export default function Exercises() {
     const [success, setSuccess] = useState<string | null>(null);
 
     const [page, setPage] = useState(1);
-    const [exercisesOpen] = useState(true);
     const pageSize = 20;
 
     const filteredExercises = useMemo(() => {
@@ -230,7 +229,7 @@ export default function Exercises() {
             setSuccess(null);
 
             const createdExercise = await createExerciseData({
-                name: payload.exercice_name ?? '',
+                name: payload.exercise_name ?? '',
                 bodyPart: payload.body_part || null,
                 target: payload.target_muscle || null,
                 equipment: payload.equipment || null,
@@ -258,7 +257,7 @@ export default function Exercises() {
             setSuccess(null);
 
             const updatedExercise = await updateExerciseData(id, {
-                name: payload.exercice_name,
+                name: payload.exercise_name,
                 bodyPart: payload.body_part || null,
                 target: payload.target_muscle || null,
                 equipment: payload.equipment || null,
@@ -357,7 +356,7 @@ export default function Exercises() {
         }
 
         const payload: ExercisePayload = {
-            exercice_name: name,
+            exercise_name: name,
             body_part: bodyPart || undefined,
             target_muscle: targetMuscle || undefined,
             equipment,
@@ -513,7 +512,7 @@ export default function Exercises() {
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-xs font-bold text-muted uppercase tracking-wider">{filteredExercises.length} exercises</span>
                         </div>
-                        {exercisesOpen && (
+                        {
                             <ul className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {paginatedExercises.length > 0 ? (
                                     paginatedExercises.map(ex => (
@@ -546,7 +545,7 @@ export default function Exercises() {
                                     !loading && <p className="text-muted col-span-2">No exercises found.</p>
                                 )}
                             </ul>
-                        )}
+                        }
                         <Pagination
                             page={page}
                             totalPages={Math.max(1, Math.ceil(filteredExercises.length / pageSize))}

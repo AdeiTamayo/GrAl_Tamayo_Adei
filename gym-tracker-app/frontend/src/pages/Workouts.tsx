@@ -118,9 +118,12 @@ export default function WorkoutsManagement() {
   }, [workouts, searchQuery, dateFrom, dateTo]);
 
   const totalPages = Math.max(1, Math.ceil(filteredWorkouts.length / pageSize));
+  // Clamp after deletes: without this, removing the last item(s) on the final
+  // page strands the pager past the end on a phantom empty state.
+  const safePage = Math.min(currentPage, totalPages);
   const paginatedWorkouts = filteredWorkouts.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
+    (safePage - 1) * pageSize,
+    safePage * pageSize,
   );
 
   // Reset to page 1 when filters change
@@ -745,7 +748,7 @@ export default function WorkoutsManagement() {
                 </ul>
 
                 <Pagination
-                  page={currentPage}
+                  page={safePage}
                   totalPages={totalPages}
                   onPageChange={setCurrentPage}
                 />

@@ -3,12 +3,17 @@ import { getMyId } from "./client";
 import { UserProfile, UserSettings, WeightEntry } from "./types";
 
 export async function getProfile(): Promise<UserProfile | null> {
+    // Scoped to the signed-in user explicitly. RLS would also restrict this,
+    // but a single-row read must name its row so a policy change can never
+    // surface another account's profile here.
+    const userId = await getMyId();
     const { data, error } = await supabase
         .from('users')
         .select('id, name, surname, email, gender, weight, height, birth_date')
-        .single();
+        .eq('id', userId)
+        .maybeSingle();
     if (error) throw new Error(error.message);
-    return data as UserProfile;
+    return (data as UserProfile) ?? null;
 }
 
 export async function updateProfile(data: {
@@ -29,12 +34,17 @@ export async function updateProfile(data: {
     if (data.height !== undefined) update.height = data.height;
     if (data.birth_date !== undefined) update.birth_date = data.birth_date;
 
+    // An unscoped UPDATE would touch every row visible to the query, so the
+    // target row is named explicitly even though RLS also restricts it.
+    const userId = await getMyId();
     const { data: row, error } = await supabase
         .from('users')
         .update(update)
+        .eq('id', userId)
         .select('id, name, surname, email, gender, weight, height, birth_date')
-        .single();
+        .maybeSingle();
     if (error) throw new Error(error.message);
+    if (!row) throw new Error('Profile not found');
     return row as UserProfile;
 }
 
@@ -82,6 +92,19 @@ async function syncProfileWeight(userId: number): Promise<number | null> {
     if (error) throw new Error(error.message);
 
     const latestWeight = data?.weight ?? null;
+    if (latestWeight == null) {
+        // The history is empty (e.g. the last entry was just deleted). Writing
+        // NULL here would destroy the profile value, so leave it untouched and
+        // report whatever the profile currently holds.
+        const { data: current, error: currentError } = await supabase
+            .from('users')
+            .select('weight')
+            .eq('id', userId)
+            .maybeSingle();
+        if (currentError) throw new Error(currentError.message);
+        return (current?.weight as number | null) ?? null;
+    }
+
     const { error: updateError } = await supabase
         .from('users')
         .update({ weight: latestWeight })

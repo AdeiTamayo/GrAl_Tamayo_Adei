@@ -65,7 +65,7 @@ const secondaryNav = [
     icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
   },
   {
-    to: "/Weight_history",
+    to: "/weight-history",
     label: "Weight History",
     desc: "Track your body weight over time",
     icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
@@ -272,7 +272,7 @@ function WeightCard({ latestWeight }: { latestWeight: WeightEntry | null }) {
           Log your next weigh-in to track long-term progress.
         </p>
         <Link
-          to="/Weight_history"
+          to="/weight-history"
           className="mt-4 inline-flex rounded-lg bg-accent px-3 py-2 text-sm font-bold text-black hover:bg-accent-hover"
         >
           Add weight
@@ -294,7 +294,7 @@ function WeightCard({ latestWeight }: { latestWeight: WeightEntry | null }) {
         as of {latestWeight.date?.substring(0, 10)}
       </p>
       <Link
-        to="/Weight_history"
+        to="/weight-history"
         className="mt-4 block w-full rounded-xl border border-subtle bg-surface/40 px-4 py-2.5 text-center text-sm font-bold uppercase tracking-[0.12em] text-body transition-all hover:border-accent/40 hover:bg-elevated"
       >
         View weight history
@@ -471,11 +471,23 @@ export default function Hero() {
         setGoalDates(dates);
       }
 
+      // allSettled never rejects, so a failed section would otherwise leave a
+      // silently empty card. Say so instead of showing "—" with no feedback.
+      const failedSections = results.filter((r) => r.status === "rejected").length;
+      if (failedSections > 0) {
+        setDashboardError(
+          failedSections === results.length
+            ? "Failed to load dashboard data."
+            : `${failedSections} dashboard section(s) could not be loaded.`
+        );
+      }
+
       setLoading(false);
     }
 
     fetchDashboard().catch((err) => {
       setDashboardError("Failed to load dashboard data.");
+      setLoading(false);
       console.error(err);
     });
   }, [isAuthenticated]);

@@ -55,7 +55,8 @@ export function useWorkout() {
 
 export default function WorkoutProvider({ children }: { children: ReactNode }) {
     const { settings } = useSettings();
-    const defaultRest = settings?.default_rest_time || 60;
+    // Nullish (not `||`): an explicit 0 means "no rest" and must survive.
+    const defaultRest = settings?.default_rest_time ?? 60;
 
     const [isWorkoutActive, setIsWorkoutActive] = useState(false);
     const [startTime, setStartTime] = useState<number | null>(null);
@@ -117,7 +118,7 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
     }, [defaultRest]);
 
     const addExercise = useCallback((exercise: { id: number; name: string }) => {
-        const rest = settings?.default_rest_time || 60;
+        const rest = settings?.default_rest_time ?? 60;
         setExercises(prev => [...prev, {
             exercise_id: exercise.id,
             name: exercise.name,
@@ -129,6 +130,9 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
     const addSet = useCallback((exerciseIndex: number) => {
         setExercises(prev => {
             const updated = [...prev];
+            // A stale index (e.g. toggling right after deleting the exercise)
+            // must be a no-op, never a TypeError.
+            if (!updated[exerciseIndex]) return prev;
             const lastSet = updated[exerciseIndex].sets[updated[exerciseIndex].sets.length - 1];
             updated[exerciseIndex] = {
                 ...updated[exerciseIndex],
@@ -147,28 +151,35 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const toggleSetDone = useCallback((exerciseIndex: number, setIndex: number) => {
+        // Read the target from the render snapshot first. State updaters must
+        // stay pure (StrictMode invokes them twice) and must not fire side
+        // effects, so the rest-timer start happens outside, below.
+        const target = exercises[exerciseIndex]?.sets[setIndex];
+        if (!target) return;
+        const willBeDone = !target.is_done;
+
         setExercises(prev => {
+            const current = prev[exerciseIndex]?.sets[setIndex];
+            if (!current) return prev;
             const updated = [...prev];
-            const currentSet = { ...updated[exerciseIndex].sets[setIndex] };
-            currentSet.is_done = !currentSet.is_done;
             const newSets = [...updated[exerciseIndex].sets];
-            newSets[setIndex] = currentSet;
+            newSets[setIndex] = { ...current, is_done: !current.is_done };
             updated[exerciseIndex] = { ...updated[exerciseIndex], sets: newSets };
-
-            if (currentSet.is_done) {
-                const exerciseRestDuration = currentSet.rest_time ?? updated[exerciseIndex].rest_time;
-                setRestDuration(exerciseRestDuration);
-                setRestTime(exerciseRestDuration);
-                setRestStartTime(Date.now());
-                setIsRestTimerActive(true);
-            }
-
             return updated;
         });
-    }, []);
+
+        if (willBeDone) {
+            const exerciseRestDuration = target.rest_time ?? exercises[exerciseIndex].rest_time;
+            setRestDuration(exerciseRestDuration);
+            setRestTime(exerciseRestDuration);
+            setRestStartTime(Date.now());
+            setIsRestTimerActive(true);
+        }
+    }, [exercises]);
 
     const updateSet = useCallback((exerciseIndex: number, setIndex: number, field: keyof SetEntry, value: any) => {
         setExercises(prev => {
+            if (!prev[exerciseIndex]?.sets[setIndex]) return prev;
             const updated = [...prev];
             const newSets = [...updated[exerciseIndex].sets];
             newSets[setIndex] = { ...newSets[setIndex], [field]: value };
@@ -179,6 +190,7 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
 
     const updateExerciseRest = useCallback((exerciseIndex: number, value: number) => {
         setExercises(prev => {
+            if (!prev[exerciseIndex]) return prev;
             const updated = [...prev];
             updated[exerciseIndex] = { ...updated[exerciseIndex], rest_time: value < 0 ? 0 : value };
             return updated;
@@ -187,6 +199,7 @@ export default function WorkoutProvider({ children }: { children: ReactNode }) {
 
     const removeSet = useCallback((exerciseIndex: number, setIndex: number) => {
         setExercises(prev => {
+            if (!prev[exerciseIndex]) return prev;
             const updated = [...prev];
             const newSets = updated[exerciseIndex].sets.filter((_, i) => i !== setIndex)
                 .map((s, i) => ({ ...s, set_number: i + 1 }));

@@ -109,6 +109,9 @@ export default function PersonalRecords() {
     setIsCreating(true);
     setError(null);
     try {
+      // Capture the target before the form is cleared: comparing after the
+      // reset below would always be false and the open history would go stale.
+      const createdForExerciseId = formExerciseId;
       await createPR({
         exerciseId: Number(formExerciseId),
         weight: newWeight === "" ? 0 : Number(newWeight),
@@ -116,7 +119,7 @@ export default function PersonalRecords() {
         date: newDate || null,
         note: newNote || null,
       });
-      fetchPrSummary();
+      await fetchPrSummary().catch(() => undefined);
       setFormExerciseId("");
       setFormExerciseName("");
       setNewWeight("");
@@ -125,8 +128,8 @@ export default function PersonalRecords() {
       setNewNote("");
       setShowAddForm(false);
 
-      if (formExerciseId === selectedExerciseId && selectedExerciseName) {
-        fetchPrHistory(selectedExerciseId, selectedExerciseName);
+      if (createdForExerciseId === selectedExerciseId && selectedExerciseName) {
+        await fetchPrHistory(selectedExerciseId, selectedExerciseName).catch(() => undefined);
       }
     } catch (err) {
       setError(

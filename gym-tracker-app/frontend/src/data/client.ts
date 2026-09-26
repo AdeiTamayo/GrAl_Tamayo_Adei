@@ -1,5 +1,17 @@
 import { supabase } from "../utils/supabaseClient";
 
+/**
+ * Data-layer conventions (read before adding a query):
+ *
+ * 1. Authorisation is enforced by Postgres Row Level Security, not by these
+ *    modules. Most list queries intentionally carry no `user_id` filter.
+ * 2. Single-row reads and every UPDATE/DELETE name their row explicitly with
+ *    `.eq('id', ...)` anyway, so a policy change can never turn one of them
+ *    into a cross-user or mass write.
+ * 3. The numeric `users.id` is cached below for the lifetime of the SPA.
+ *    AuthContext clears it (`resetMyId`) whenever the signed-in identity
+ *    changes — never cache a user id anywhere else.
+ */
 let cachedMyId: number | null = null;
 
 export function resetMyId() {

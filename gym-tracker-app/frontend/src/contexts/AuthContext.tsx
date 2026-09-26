@@ -67,10 +67,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const lastUserIdRef = useRef<string | null>(null);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => {
-            setUser(data.session?.user ?? null);
-            setIsLoading(false);
-        });
+        // Restore the session, then make sure the profile row exists BEFORE
+        // anything below us queries it. SettingsProvider only waits for
+        // `isLoading`, so clearing it before ensureProfile resolves re-opens
+        // the "User profile not found" race on every cold start. A failure
+        // must still clear loading, never hang on a blank screen.
+        supabase.auth.getSession()
+            .then(async ({ data }) => {
+                const restored = data.session?.user ?? null;
+                if (restored) {
+                    lastUserIdRef.current = restored.id;
+                    try {
+                        await ensureProfile(restored);
+                    } catch (err) {
+                        console.error('[Auth] Failed to ensure profile row on restore:', err);
+                    }
+                }
+                setUser(restored);
+                setIsLoading(false);
+            })
+            .catch((err) => {
+                console.error('[Auth] Failed to restore session:', err);
+                setIsLoading(false);
+            });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             const nextUserId = session?.user?.id ?? null;

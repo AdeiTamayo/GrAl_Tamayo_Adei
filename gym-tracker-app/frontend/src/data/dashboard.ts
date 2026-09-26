@@ -1,4 +1,5 @@
 import { supabase } from "../utils/supabaseClient";
+import { computeStreak } from "../utils/helpers";
 import { getMyId } from "./client";
 import { DashboardStats } from "./types";
 
@@ -61,27 +62,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         weekStarts.set(ws.toISOString().split('T')[0], true);
     }
 
-    let currentStreak = 0;
-    if (weekStarts.size > 0) {
-        const sortedWeeks = Array.from(weekStarts.keys()).sort().reverse();
-        const nowWeek = weekStart.toISOString().split('T')[0];
-        const diffMs = new Date(nowWeek).getTime() - new Date(sortedWeeks[0]).getTime();
-        const diffWeeks = Math.round(diffMs / (7 * 24 * 60 * 60 * 1000));
-
-        if (diffWeeks <= 1) {
-            currentStreak = 1;
-            for (let i = 1; i < sortedWeeks.length; i++) {
-                const prev = new Date(sortedWeeks[i - 1]).getTime();
-                const cur = new Date(sortedWeeks[i]).getTime();
-                const weekDiff = Math.round((prev - cur) / (7 * 24 * 60 * 60 * 1000));
-                if (weekDiff === 1) {
-                    currentStreak++;
-                } else {
-                    break;
-                }
-            }
-        }
-    }
+    const sortedWeeks = Array.from(weekStarts.keys()).sort().reverse();
+    const currentStreak = computeStreak(sortedWeeks, weekStart.toISOString().split('T')[0]);
 
     return { workoutCount: workoutCount ?? 0, weeklyVolume, currentStreak };
 }

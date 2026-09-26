@@ -1,6 +1,9 @@
 # Gym Tracker
 
-**A full-stack workout tracking app with computer vision form analysis.**
+**A workout tracking web app with in-browser computer vision form analysis.**
+
+React frontend → Supabase (Postgres + Auth + Storage). Pose analysis runs entirely
+in the browser with MediaPipe. No application server.
 
 ---
 
@@ -14,74 +17,71 @@
 
 ---
 
-## Technology Requirements / Teknologia-beharrak
-
-| Category / Kategoria | Technologies / Teknologiak |
-|---|---|
-| Backend (API) | **Express.js** (Node.js) |
-| Frontend | **React**, **TypeScript**, **Tailwind CSS**, **React Router**, **Recharts** |
-| Computer Vision / Ikusmen konputazionala | **Python**, **OpenCV**, **MediaPipe**, **NumPy**, **SciPy**, **Roboflow** |
-| Database / Datu-basea | **PostgreSQL** |
-| Authentication / Autentifikazioa | **JWT**, **bcrypt** |
-| File Uploads / Fitxategi kargak | **Multer** |
-| HTTP Client / HTTP bezeroa | **Fetch API** |
-| Testing | **Jest**, **Supertest**, **React Testing Library** |
-| Video Processing / Bideo prozesamendua | **FFmpeg** |
-| Version Control / Bertsio-kontrola | **Git**, **GitHub** |
-
-### Prerequisites / Aurretiko beharrak
-
-- **Node.js** 18+ (LTS recommended)
-- **PostgreSQL** 15+
-- **Python** 3.10 – 3.12
-- **FFmpeg**
-- **npm** or **yarn**
-
----
-
 ## Description / Deskribapena
 
-**EN** — Gym Tracker analyzes exercise videos using computer vision to evaluate barbell path, velocity, and lifting technique. Users can log their workouts, upload videos, track personal records, set goals, and view visual analytics of their performance. The system uses an Express.js (Node.js) + React + PostgreSQL architecture, with a barbell tracking module implemented in Python using OpenCV and MediaPipe.
+**EN** — Gym Tracker logs strength-training sessions, tracks personal records,
+goals and body weight, and analyses lift videos to estimate squat depth and
+torso angle. The distinguishing feature is that the computer vision runs on the
+client: a video is decoded into a `<canvas>`, MediaPipe's Pose Landmarker runs on
+the GPU via WebAssembly, and the annotated result is re-encoded with
+`MediaRecorder` and uploaded to Supabase Storage. Authorisation is enforced by
+Postgres Row Level Security rather than by application code.
 
-**EU** — Aplikazioak ariketen bideoak aztertzen ditu ikusmen konputazionalaren bidez, barraren ibilbidea, abiadura eta teknika ebaluatzeko. Erabiltzaileek beren entrenamenduak gorde, bideoak igo, marka pertsonalak jarraitu, helburuak ezarri eta errendimenduaren analisi bisualak ikus ditzakete. Sistema honek Express.js (Node.js) + React + PostgreSQL arkitektura erabiltzen du, eta barbell tracking modulua Python-ez inplementatzen da OpenCV eta MediaPipe erabiliz.
+**EU** — Gym Tracker aplikazioak indartza-entrenamenduak erregistratzen ditu,
+marka pertsonalak, helburuak eta gorputz pisua jarraitzen ditu, eta bideoak
+aztertzen ditu squataren sakantzaren eta gorputzaren anguluaren ebaketa egiteko.
+Ezaugarri bereizgarria da ikusmen konputazionala aritzeko aldea: bideoa
+`canvas`-era deskodifikatzen da, MediaPipearen Pose Landmarker GPUan
+exekutatzen da WebAssembly bidez, eta emaitza anotatua `MediaRecorder`-ek
+berrezultatzen da. Baimena Postgres-enko Row Level Security-k ezartzen du,
+ez aplikazioaren koderan.
+
+---
 
 ## Architecture / Arkitektura
 
 ```mermaid
 flowchart TD
-    subgraph Frontend ["Frontend (React + TypeScript)"]
-        UI[React UI\nTailwind CSS]
-        Router[React Router\n18 routes]
-        Charts[Recharts\nGraphs & Analytics]
+    subgraph Browser ["Browser / Nabigatzailea"]
+        UI["React 19 UI<br/>Tailwind + design tokens"]
+        Router["React Router 7<br/>17 routes"]
+        Charts["Recharts<br/>progress analytics"]
+        CV["MediaPipe Pose Landmarker<br/>WASM + GPU delegate"]
+        Rec["MediaRecorder<br/>annotated re-encode"]
+        State["Contexts<br/>Auth · Settings · Workout · Theme"]
     end
 
-    subgraph Backend ["Backend (Express.js)"]
-        API[REST API\n/api/*]
-        Auth[JWT + bcrypt\nAuthentication]
-        Upload[Multer\nFile Upload]
-        VP[VideoProcessor\nPython Bridge]
+    subgraph Supabase ["Supabase (managed)"]
+        Auth["Auth<br/>email + password"]
+        PostgREST["PostgREST<br/>auto REST over Postgres"]
+        RLS[("Postgres<br/>14 tables · 36 RLS policies")]
+        Storage[("Storage<br/>uploads (private)<br/>processed (public)")]
     end
 
-    subgraph Database ["PostgreSQL"]
-        DB[(Users, Workouts,\nExercises, PRs,\nRoutines, Goals,\nVideos, Settings)]
-    end
+    UI --> Router
+    UI --> Charts
+    State --> UI
+    CV --> Rec
+    UI -->|"analyse frame-by-frame"| CV
+    Rec -->|"annotated video"| Storage
 
-    subgraph Vision ["Computer Vision (Python)"]
-        PT[Pose Estimation\nMediaPipe]
-        BT[Barbell Tracking\nYOLO + OpenCV CSRT]
-    end
+    UI --> Auth
+    UI -->|"supabase.from(...)|" PostgREST
+    PostgREST --> RLS
+    Auth -->|"auth.uid()"| RLS
+    UI --> Storage
 
-    UI -->|Fetch API| API
-    Router --> UI
-    Charts --> API
-    API --> Auth
-    API --> Upload
-    API --> VP
-    VP -->|spawn| PT
-    VP -->|spawn| BT
-    API --> DB
-    Upload -->|videos| VP
+    classDef browser fill:#18181b,stroke:#a3e635,color:#f4f4f5
+    classDef supa fill:#0c2a2a,stroke:#22d3ee,color:#f4f4f5
+    class UI,Router,Charts,CV,Rec,State browser
+    class Auth,PostgREST,RLS,Storage supa
 ```
+
+**There is no application server in this architecture.** The browser holds the
+Supabase publishable key and issues queries directly; every row is filtered by
+RLS policies keyed on `auth.uid()`. An earlier Express + PostgreSQL + JWT
+backend exists in [`legacy/`](legacy/README.md) and is documented for
+provenance, but nothing in `gym-tracker-app/` imports it.
 
 ---
 
@@ -89,109 +89,232 @@ flowchart TD
 
 | English | Euskera |
 |---------|---------|
-| **Dashboard** — View total workouts, weekly volume, streaks, and recent activity at a glance | **Panela** — Ikusi entrenamendu kopurua, asteko bolumena, jarraipenak eta azken jarduera begirada batean |
-| **Workout Logging** — Create, edit, and track workouts with sets, reps, weight, RPE, and rest timers | **Entrenamenduen erregistroa** — Sortu, editatu eta jarraitu entrenamenduak serie, errepikapen, pisu, RPE eta atseden-denborarekin |
-| **Routines** — Build reusable workout templates and schedule them on specific dates | **Errutinak** — Sortu berrerabil daitezkeen entrenamendu txantiloiak eta egutegian kokatu |
-| **Personal Records (PRs)** — Track your best lifts per exercise with history | **Marka pertsonalak (PR)** — Jarraitu zure altxaldi onenak ariketa bakoitzeko historian |
-| **Goals** — Set target weight and rep goals with deadline tracking | **Helburuak** — Ezarri pisu eta errepikapen helburuak epeekin |
-| **Video Analysis** — Upload workout videos for pose estimation and barbell tracking | **Bideo analisia** — Igo entrenamendu bideoak postura kalkulatzeko eta barraren ibilbidea aztertzeko |
-| **Pose Estimation** — MediaPipe-based full-body pose tracking with rep counting | **Postura kalkulua** — MediaPipe bidezko gorputz osoaren postura jarraipena errepikapen kontagailuarekin |
-| **Barbell Tracking** — Real-time barbell path visualization with velocity curves | **Barraren ibilbidea** — Barraren ibilbidearen bistaratzea denbora errealean abiadura kurbekin |
-| **Compare Workouts** — Side-by-side volume and exercise comparison | **Entrenamenduen konparazioa** — Bolumen eta ariketen konparazioa alboko ikuspegian |
-| **Exercise History** — Per-exercise progress charts over time | **Ariketa historiala** — Ariketa bakoitzaren aurrerapenaren grafikoak denboran zehar |
-| **Weight Tracking** — Log body weight and view trends | **Pisuaren jarraipena** — Gorputz pisua erregistratu eta joerak ikusi |
-| **Workout Calendar** — Visual calendar of all your logged sessions | **Entrenamendu egutegia** — Saio guztien egutegi bisuala |
-| **Dark / Light Theme** — Toggle between dark and light mode | **Gai iluna / argia** — Aldatu gai ilun eta argiaren artean |
-| **Customizable Settings** — Show/hide RPE, 1RM estimates, and rest timers | **Ezarpen pertsonalizagarriak** — Erakutsi/eskutatu RPE, 1RM estimazioak eta atseden-denbora |
+| **Dashboard** — total workouts, weekly volume, streaks, recent activity | **Panela** — entrenamendu kopurua, asteko bolumena, jarraipenak, azken jarduera |
+| **Workout Logging** — live set logging with rest timer, RPE and e1RM estimates | **Entrenamenduen erregistroa** — serieak atseden-denborarekin, RPE eta 1RM estimazioekin |
+| **Routines** — reusable templates, launchable straight into a live session | **Errutinak** — berrerabil daitezkeen txantiloiak, zuzenean saio bati |
+| **Personal Records** — best lift per exercise with a weight/rep history chart | **Marka pertsonalak** — ariketa bakoitzeko onen altxadua, grafikoarekin |
+| **Goals** — target weight and reps, with progress against your current PR | **Helburuak** — pisu eta errepikapen helburuak, uneko markarekin alderatuta |
+| **Video Analysis** — upload a set and get an annotated video back | **Bideo analisia** — igo una seriea eta jaso bideo anotatua |
+| **Squat Analysis** — auto rep count, knee- and hip-angle readouts, depth verdict | **Squat analisa** — errepikapen-kontagailu automatikoa, belarri eta hiparen anguluak |
+| **Pose Estimation** — full-body skeleton overlay | **Postura kalkulua** — gorputz osoaren eskeletoa |
+| **Barbell Path** — accumulated bar trajectory drawn over the clip | **Barraren ibilbidea** — barraren ibilbidea kliparen gainean |
+| **Exercise Library** — 800+ seeded exercises, searchable and filterable | **Ariketa liburutegia** — 800+ ariketa, bilatu eta iragazteko |
+| **Workout Comparison** — side-by-side set-by-set diff of two sessions | **Entrenamenduen konparazioa** — bi saioren alderaketa seriez serie |
+| **Calendar** — completed and planned sessions, per-day detail | **Egutegia** — egindako eta planifikatutako saioak |
+| **Body Weight Tracking** — log entries with a trend chart | **Pisuaren jarraipena** — pisu-sarrerak eta joerako grafikoa |
+| **Dark / Light Theme** — semantic design tokens, one class toggles it | **Gai iluna / argia** — semantikoak diren tokenak |
+| **Customisable Settings** — show/hide RPE, e1RM, goals, rest timers | **Ezarpen pertsonalizagarriak** — RPE, 1RM, helburuak eta atseden-denborrak |
+
+---
+
+## Technology / Teknologia
+
+| Layer | Choice |
+|---|---|
+| UI | React 19, TypeScript, Tailwind CSS 3.4 |
+| Routing | React Router 7 — 17 routes, 14 behind an auth guard |
+| Charts | Recharts 3 |
+| Build | Create React App 5 (`react-scripts`) |
+| Backend / Database | **Supabase** — Postgres, Auth, Storage, RLS |
+| Computer Vision | MediaPipe Tasks Vision (Pose Landmarker, WASM + GPU delegate) |
+| Video encoding | Browser `MediaRecorder` + `canvas.captureStream()` |
+| Testing | Jest, Supertest (legacy), React Testing Library |
+| CI / CD | GitHub Actions, Netlify |
+| Version control | Git, GitHub |
+
+### Why there is no backend server
+
+Supabase provides Postgres, authentication and object storage, and PostgREST
+exposes the database as a REST API that `@supabase/supabase-js` queries
+directly. Once video analysis moved into the browser, a custom API server would
+only have proxied queries and validated input — work RLS already does, with
+authorisation enforced in the database instead of in request handlers that can
+forget a `WHERE user_id = ?` clause. The full reasoning, including the
+trade-offs that were accepted, is in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ---
 
 ## Quick Start / Hasiera azkarra
 
-### 1. Clone the repository / Klonatu biltegia
+### Prerequisites / Aurretiko beharrak
+
+- **Node.js 18+** (developed on 24)
+- A **Supabase** project
+- npm
+
+### 1. Clone / Klonatu
 
 ```bash
 git clone https://github.com/AdeiTamayo/GrAl_Tamayo_Adei
-cd GrAl_Tamayo_Adei/gym-tracker-app
+cd GrAl_Tamayo_Adei
 ```
 
-### 2. Configure environment / Konfiguratu ingurunea
+### 2. Apply the database schema / Aplikatu eskema
 
-Create a `.env` file in the repository root (parent of `gym-tracker-app/`):
+Open your Supabase project → **SQL Editor** and run the contents of
+[`legacy/backend/migrations/schema.sql`](legacy/backend/migrations/schema.sql).
+
+Despite living under `legacy/`, this file is authoritative: it is the live
+schema, and it creates all 14 tables, the `current_user_id()` helper, 36 RLS
+policies and both storage buckets. It is written to be re-runnable — enums are
+guarded with `EXCEPTION WHEN duplicate_object`, tables use `IF NOT EXISTS`, and
+policies are dropped before being recreated.
+
+```bash
+# verify connectivity (optional, needs legacy/.env)
+cd legacy/backend && npm install && npm run db:check
+```
+
+### 3. Configure the frontend / Konfiguratu frontend-a
+
+```bash
+cd gym-tracker-app/frontend
+cp .env.example .env
+```
 
 ```env
-PORT=8000
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=gym_tracker
-DB_USER=postgres
-DB_PASSWORD=your_password
-JWT_SECRET=your_long_random_secret
+REACT_APP_SUPABASE_URL=https://your-project-ref.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your-publishable-anon-key
 ```
 
-### 3. Install & run backend / Instalatu eta exekutatu backend-a
+Use the **anon / publishable** key, never the service-role key. The frontend
+cannot enforce anything the service-role key can bypass.
+
+### 4. Seed the exercise catalogue (optional) / hautzeko ariketak
 
 ```bash
-cd backend
+cd legacy/backend
+cp .env.example .env      # add SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RAPIDAPI_KEY
 npm install
-python -m pip install -r requirements.txt
-node migrate.js
-npm start
+npm run seed
 ```
 
-### 4. Install & run frontend / Instalatu eta exekutatu frontend-a
+### 5. Run / Exekutatu
 
 ```bash
-cd frontend
+cd gym-tracker-app/frontend
 npm install
 npm start
 ```
 
-The API runs on `http://localhost:8000` and the frontend on `http://localhost:3000`.
+Open <http://localhost:3000> and register an account.
 
 ---
 
 ## Project Structure / Proiektuaren egitura
 
 ```
-gym-tracker-app/
-├── backend/
-│   ├── __tests__/          # Backend test suite
-│   ├── config/             # Database connection
-│   ├── controllers/        # Route handlers
-│   ├── middleware/         # Auth & file upload
-│   ├── migrations/         # SQL schema migrations
-│   ├── models/            # Database queries
-│   ├── python/            # Computer vision scripts
-│   │   ├── barbell_tracking.py   # YOLO + CSRT barbell tracking
-│   │   ├── landmarks_video.py    # MediaPipe pose estimation
-│   │   └── pose_landmarker_heavy.task  # ML model
-│   ├── routes/            # Express route definitions
-│   ├── scripts/           # Data population scripts
-│   ├── utils/             # Video processor & helpers
-│   ├── server.js          # Express app entry
-│   └── migrate.js         # Migration runner
-├── frontend/
-│   ├── public/            # Static assets
-│   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── pages/         # Page-level components
-│   │   ├── utils/         # API client & helpers
-│   │   ├── App.tsx        # Router & layout
-│   │   └── index.tsx      # React entry point
-│   ├── types.ts           # TypeScript type definitions
-│   └── package.json
-└── docs/
-    ├── INSTALLATION.md    # Detailed setup guide
-    └── database-schema.md # ER diagram & table reference
+GrAl_Tamayo_Adei/
+├── Readme.md
+├── Screenshots/
+├── docs/
+│   ├── ARCHITECTURE.md        # how the system fits together
+│   ├── DECISIONS.md           # why each major decision was made
+│   ├── INSTALLATION.md        # detailed setup
+│   ├── PRESENTATION.md        # deck outline, demo script, Q&A prep
+│   └── database-schema.md     # ER diagram and table reference
+├── legacy/                    # ARCHIVED — superseded Express backend
+│   ├── README.md
+│   └── backend/               # 56-endpoint API + Python CV pipeline
+└── gym-tracker-app/
+    └── frontend/
+        ├── public/
+        └── src/
+            ├── components/    # 31 components
+            │   ├── UI primitives (Button, Modal, Select, Calendar, …)
+            │   ├── ThemeContext.tsx / SettingsContext.tsx / WorkoutContext.tsx
+            │   └── __tests__/
+            ├── contexts/      # AuthContext.tsx
+            ├── data/          # 10 Supabase data modules + types.ts
+            ├── pages/         # 17 pages
+            ├── utils/         # supabaseClient, videoAnalysis (MediaPipe), helpers
+            ├── App.tsx        # routes
+            └── index.tsx      # provider composition
 ```
+
+---
+
+## Computer Vision / Ikusmen konputazionala
+
+`src/utils/videoAnalysis.ts` is the core of the analysis feature.
+
+1. The file is decoded into an off-DOM `<video>` and drawn to a `<canvas>`
+   capped at 960×720 to bound per-frame cost.
+2. The **lite float16 Pose Landmarker** is loaded once and memoised in a
+   module-level promise, with `delegate: 'GPU'` and `runningMode: 'VIDEO'`.
+3. Frames are driven by `requestVideoFrameCallback` so inference is tied to
+   actually-decoded frames rather than a blind timer. Every second frame is
+   inferred, halving GPU cost.
+4. Landmarks are drawn with MediaPipe's `DrawingUtils`; `captureStream(30)` +
+   `MediaRecorder` re-encode the annotated canvas in real time.
+5. The blob is uploaded to the `processed` bucket, verified with a
+   `Range: bytes=0-0` probe, and linked from the `videos` row.
+
+Three analysis modes share that pipeline and differ only in the overlay:
+
+| Mode | Overlay | Derived measurement |
+|---|---|---|
+| `pose` | 12-bone skeleton, cyan bones / amber joints | — |
+| `squat` | skeleton + per-knee angle labels | knee and hip angles via a 3-point law-of-cosines helper; rep count from a hysteresis state machine (down below 110°, up above 155°) |
+| `barbell` | accumulated trajectory polyline | bar path length and vertical drop in pixels |
+
+### Known limitations
+
+Stated deliberately — these are the limits of the current approach, not
+oversights:
+
+- **Barbell tracking is a shoulder-midpoint proxy**, not object detection. The
+  "bar" is estimated as the midpoint of landmarks 11 and 12, so it is a 2D
+  screen-space approximation and will not follow a real bar loaded with plates.
+  A detector (the archived Python pipeline used Roboflow YOLO + OpenCV CSRT)
+  would be the next step.
+- **No temporal smoothing.** Joint positions and the bar path are raw
+  per-frame values, so the trail visibly jitters.
+- **Frame skipping** means rep counting runs at roughly half the frame rate, so
+  very fast repetitions can be missed.
+- **The thresholds are hand-tuned constants** (110°, 155°, 90°, 60°), not
+  learned from data. They are not calibrated against a labelled dataset.
+- **Overlays are burned in at the downscaled resolution**, so they are not
+  resolution-independent.
+- **Model and WASM are fetched from Google and jsDelivr CDNs** at runtime, so
+  the feature needs network access to both.
+
+---
+
+## Testing / Testak
+
+```bash
+cd gym-tracker-app/frontend
+npm run typecheck     # tsc --noEmit
+npm test              # 38 tests
+npm run build         # production build, runs ESLint
+
+cd ../../../legacy/backend
+npm test              # 75 tests
+```
+
+GitHub Actions runs all four on every push and pull request.
+
+**Coverage is the honest weak point of this project.** The frontend has 38 tests:
+the `Button` component, time/date formatting, the dashboard streak rule, and —
+most valuably — the extracted coaching maths in `utils/biomechanics.ts` (joint
+angles, the hysteresis rep counter, squat feedback, Epley e1RM). Pages, contexts,
+data modules and `ProtectedRoute` are still untested. The 75 legacy tests are
+meaningful but, as [`legacy/README.md`](legacy/README.md) explains, they mock
+the data layer and so do not prove the production path worked.
 
 ---
 
 ## Documentation / Dokumentazioa
 
-- **Installation Guide / Instalazio gida:** [docs/INSTALLATION.md](gym-tracker-app/docs/INSTALLATION.md)
-- **Database Schema / Datu-basearen eskema:** [docs/database-schema.md](gym-tracker-app/docs/database-schema.md)
+| Document | Contents |
+|---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Request flows, data model, security model |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every major decision, its alternatives, and its cost |
+| [`docs/INSTALLATION.md`](docs/INSTALLATION.md) | Detailed setup and troubleshooting |
+| [`docs/database-schema.md`](docs/database-schema.md) | ER diagram and table reference |
+| [`docs/PRESENTATION.md`](docs/PRESENTATION.md) | Deck outline, live-demo script, likely questions |
+| [`legacy/README.md`](legacy/README.md) | The archived backend and why it was retired |
 
 ---
 

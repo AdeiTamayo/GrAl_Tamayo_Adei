@@ -1,4 +1,5 @@
 import { FilesetResolver, PoseLandmarker, DrawingUtils, NormalizedLandmark } from '@mediapipe/tasks-vision';
+import { angleDeg, updateRepState, squatFeedback } from './biomechanics';
 
 export type AnalysisMode = 'pose' | 'squat' | 'barbell';
 
@@ -38,18 +39,6 @@ async function getPoseLandmarker(onProgress?: (message: string) => void): Promis
         landmarkerPromise.catch(() => { landmarkerPromise = null; });
     }
     return landmarkerPromise;
-}
-
-function angleDeg(a: Landmark, b: Landmark, c: Landmark): number {
-    const v1x = a.x - b.x;
-    const v1y = a.y - b.y;
-    const v2x = c.x - b.x;
-    const v2y = c.y - b.y;
-    const dot = v1x * v2x + v1y * v2y;
-    const mag = Math.hypot(v1x, v1y) * Math.hypot(v2x, v2y);
-    if (mag === 0) return 180;
-    const cos = Math.min(1, Math.max(-1, dot / mag));
-    return (Math.acos(cos) * 180) / Math.PI;
 }
 
 function pickMimeType(): string {
@@ -97,11 +86,8 @@ function drawSkeleton(
         state.minKnee = Math.min(state.minKnee, avgKnee);
         state.minHip = Math.min(state.minHip, avgHip);
 
-        if (avgKnee < 110 && !state.down) state.down = true;
-        if (avgKnee > 155 && state.down) {
-            state.down = false;
-            state.reps++;
-        }
+        // Hysteresis rep counting lives in biomechanics.ts so it stays testable.
+        updateRepState(avgKnee, state);
 
         ctx.font = 'bold 16px monospace';
         ctx.fillStyle = '#facc15';
@@ -209,6 +195,10 @@ export async function analyzeVideo(
         await new Promise<void>((resolve, reject) => {
             let lastProgress = -1;
             let skipped = false;
+            // VIDEO mode requires strictly increasing millisecond timestamps.
+            // currentTime stalls while buffering, so clamp forward instead of
+            // reusing a stale value the model would reject.
+            let lastTimestampMs = -1;
 
             const rvf = (video as HTMLVideoElement & {
                 requestVideoFrameCallback?: (cb: (now: number, metadata: unknown) => void) => number;
@@ -233,7 +223,9 @@ export async function analyzeVideo(
 
                 if (!skipped) {
                     try {
-                        const result = await landmarker.detectForVideo(video, Math.max(0, Math.round(t * 1000)));
+                        const timestampMs = Math.max(lastTimestampMs + 1, Math.round(t * 1000));
+                        lastTimestampMs = timestampMs;
+                        const result = await landmarker.detectForVideo(video, timestampMs);
                         const lm = result.landmarks?.[0] as Landmark[] | undefined;
                         if (lm && lm.length >= 29) {
                             drawSkeleton(ctx, drawer, lm, w, h, mode, state);
@@ -272,17 +264,7 @@ export async function analyzeVideo(
 
         const feedback: string[] = [];
         if (mode === 'squat') {
-            feedback.push(`Reps detected: ${state.reps}`);
-            feedback.push(
-                state.minKnee <= 90
-                    ? 'Good squat depth (knee angle reached ~90° or less)'
-                    : 'Shallow squat — aim for deeper descent'
-            );
-            feedback.push(
-                state.minHip <= 60
-                    ? 'Torso leans too far forward — keep chest up'
-                    : 'Torso upright through the movement'
-            );
+            feedback.push(...squatFeedback(state.minKnee, state.minHip, state.reps));
         } else if (mode === 'barbell') {
             const path = state.barPath;
             if (path.length > 1) {

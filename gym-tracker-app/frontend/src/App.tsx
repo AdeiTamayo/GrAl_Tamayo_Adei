@@ -8,10 +8,10 @@ import Exercises from './pages/Exercises';
 import Goals from './pages/Goals';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Video from './pages/Videos';
-import Pr from './pages/Prs'
-import Routine from './pages/Routines';
-import WeightHistory from './pages/Weight_history';
+import Videos from './pages/Videos';
+import Prs from './pages/Prs'
+import Routines from './pages/Routines';
+import WeightHistory from './pages/WeightHistory';
 import WorkoutCalendar from './pages/WorkoutCalendar';
 import CurrentWorkout from './pages/CurrentWorkout';
 import CompareWorkouts from './pages/CompareWorkouts';
@@ -39,10 +39,10 @@ function AppContent() {
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
           <Route path="/goals" element={<ProtectedRoute><Goals /></ProtectedRoute>} />
-          <Route path="/videos" element={<ProtectedRoute><Video /></ProtectedRoute>} />
-          <Route path="/prs" element={<ProtectedRoute><Pr /></ProtectedRoute>} />
-          <Route path="/routines" element={<ProtectedRoute><Routine /></ProtectedRoute>} />
-          <Route path="/Weight_history" element={<ProtectedRoute><WeightHistory /></ProtectedRoute>} />
+          <Route path="/videos" element={<ProtectedRoute><Videos /></ProtectedRoute>} />
+          <Route path="/prs" element={<ProtectedRoute><Prs /></ProtectedRoute>} />
+          <Route path="/routines" element={<ProtectedRoute><Routines /></ProtectedRoute>} />
+          <Route path="/weight-history" element={<ProtectedRoute><WeightHistory /></ProtectedRoute>} />
           <Route path="/workout-calendar" element={<ProtectedRoute><WorkoutCalendar /></ProtectedRoute>} />
         </Routes>
       </div>

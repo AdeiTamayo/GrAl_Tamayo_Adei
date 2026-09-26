@@ -63,7 +63,6 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
     const [newDifficulty, setNewDifficulty] = useState('intermediate');
     const [newCategory, setNewCategory] = useState('');
     const [saving, setSaving] = useState(false);
-    const [exercisesOpen] = useState(true);
     const [exPage, setExPage] = useState(1);
     const EXERCISES_PER_PAGE = 5;
 
@@ -196,7 +195,7 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                             <div className="p-8 text-center text-dim animate-pulse">Loading exercises...</div>
                         ) : filteredExercises.length === 0 ? (
                             <div className="p-8 text-center text-dim">No exercises found</div>
-                        ) : !exercisesOpen ? null : (
+                        ) : (
                             <>
                                 <div className="space-y-1">
                                     {filteredExercises.slice((exPage - 1) * EXERCISES_PER_PAGE, exPage * EXERCISES_PER_PAGE).map(ex => (
@@ -285,7 +284,10 @@ export default function ExercisePicker({ onSelect, onClose, title = "Select Exer
                                 options={[
                                     { value: "beginner", label: "Beginner" },
                                     { value: "intermediate", label: "Intermediate" },
-                                    { value: "expert", label: "Expert" }
+                                    // Must match the difficulty_type enum and the
+                                    // Exercises page options: an unknown value
+                                    // fails the database insert.
+                                    { value: "advanced", label: "Advanced" }
                                 ]}
                                 className="[&>button]:text-xs [&>button]:py-1.5 [&>button]:px-2"
                             />

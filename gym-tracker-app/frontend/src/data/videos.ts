@@ -15,6 +15,11 @@ export async function uploadRawVideo(file: File): Promise<string> {
     return path;
 }
 
+export async function deleteRawVideo(path: string): Promise<void> {
+    const { error } = await supabase.storage.from(UPLOADS_BUCKET).remove([path]);
+    if (error) throw new Error(error.message);
+}
+
 export async function uploadProcessedVideo(blob: Blob, fileName: string): Promise<string> {
     const userId = await getMyId();
     const path = `${userId}/${crypto.randomUUID()}-${fileName}`;
@@ -35,6 +40,16 @@ export async function uploadProcessedVideo(blob: Blob, fileName: string): Promis
     }
 
     return data.publicUrl;
+}
+
+export async function deleteProcessedVideo(publicUrl: string): Promise<void> {
+    const marker = `/object/public/${PROCESSED_BUCKET}/`;
+    const index = publicUrl.indexOf(marker);
+    if (index === -1) return;
+
+    const path = decodeURIComponent(publicUrl.slice(index + marker.length));
+    const { error } = await supabase.storage.from(PROCESSED_BUCKET).remove([path]);
+    if (error) throw new Error(error.message);
 }
 
 export async function getVideos(): Promise<VideoRecord[]> {
@@ -95,15 +110,7 @@ export async function deleteVideoRecord(id: number): Promise<void> {
 
 export async function deleteVideo(id: number, processedUrl?: string | null): Promise<void> {
     if (processedUrl) {
-        const marker = `/object/public/${PROCESSED_BUCKET}/`;
-        const idx = processedUrl.indexOf(marker);
-        if (idx !== -1) {
-            const path = decodeURIComponent(processedUrl.slice(idx + marker.length));
-            await supabase.storage
-                .from(PROCESSED_BUCKET)
-                .remove([path])
-                .catch(() => undefined);
-        }
+        await deleteProcessedVideo(processedUrl).catch(() => undefined);
     }
     await deleteVideoRecord(id);
 }

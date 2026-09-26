@@ -24,13 +24,7 @@ export default function UserVideos() {
         try {
             const video = videos.find((v) => v.id === id);
             await deleteVideo(id, video?.processed_url);
-            setVideos((prev) => {
-                const remaining = prev.filter((v) => v.id !== id);
-                return remaining;
-            });
-            if (filteredVideos.length - 1 < (videosPage - 1) * pageSize + 1 && videosPage > 1) {
-                setVideosPage(videosPage - 1);
-            }
+            setVideos((prev) => prev.filter((v) => v.id !== id));
         } catch (err: any) {
             setError(err.message || "Failed to delete video");
         } finally {
@@ -76,8 +70,11 @@ export default function UserVideos() {
         }
 
         if (filterDateTo) {
-            const to = new Date(filterDateTo).getTime();
-            result = result.filter(v => new Date(v.created_at).getTime() <= to);
+            // The picker yields midnight, so compare against end-of-day:
+            // otherwise an inclusive "To" silently drops same-day videos.
+            const to = new Date(filterDateTo);
+            to.setHours(23, 59, 59, 999);
+            result = result.filter(v => new Date(v.created_at).getTime() <= to.getTime());
         }
 
         return [...result].sort((a, b) =>
@@ -92,7 +89,13 @@ export default function UserVideos() {
     }, [filterType, filterDateFrom, filterDateTo, sortOrder]);
 
     const totalPages = Math.max(1, Math.ceil(filteredVideos.length / pageSize));
-    const paginatedVideos = filteredVideos.slice((videosPage - 1) * pageSize, videosPage * pageSize);
+    // Deleting the last item(s) on the final page must step the pager back,
+    // otherwise the grid renders an empty page that looks like data loss.
+    useEffect(() => {
+        if (videosPage > totalPages) setVideosPage(totalPages);
+    }, [videosPage, totalPages]);
+    const safePage = Math.min(videosPage, totalPages);
+    const paginatedVideos = filteredVideos.slice((safePage - 1) * pageSize, safePage * pageSize);
 
     if (error) {
         return (
@@ -181,12 +184,8 @@ export default function UserVideos() {
                                             className="w-full h-full object-contain"
                                             controls
                                             preload="metadata"
-                                        >
-                                            <source
-                                                src={video.processed_url}
-                                                type="video/mp4"
-                                            />
-                                        </video>
+                                            src={video.processed_url}
+                                        />
                                     ) : video.status === 'failed' ? (
                                         <span className="px-4 text-center text-xs font-medium italic text-rose-400">
                                             Analysis failed — re-upload the video to try again
