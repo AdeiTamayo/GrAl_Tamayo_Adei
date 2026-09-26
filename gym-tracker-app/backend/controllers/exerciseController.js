@@ -1,220 +1,209 @@
 const Exercise = require('../models/exercise');
+const { getCachedExercises, setCachedExercises } = require('../utils/exerciseCache');
 
-let exercisesCache = null;
-let exercisesCacheTime = 0;
-const CACHE_TTL = 5 * 60 * 1000;
-
-const invalidateExercisesCache = () => {
-  exercisesCache = null;
-  exercisesCacheTime = 0;
-};
+/**
+ * Parse a positive integer query parameter, or return null when absent/invalid.
+ */
+function parsePositiveInt(value) {
+    if (value === undefined) return null;
+    const parsed = parseInt(value, 10);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
 
 exports.getExercises = async (req, res) => {
-  console.log("Get all exercises request received");
+    try {
+        const page = parsePositiveInt(req.query.page);
+        const limit = parsePositiveInt(req.query.limit);
 
-  try {
-    const page = req.query.page ? parseInt(req.query.page, 10) : null;
-    const limit = req.query.limit ? parseInt(req.query.limit, 10) : null;
+        // Only the full unpaginated list is cached; paginated results differ per request.
+        const cacheable = page === null && limit === null;
 
-    const useCache = !page && !limit;
+        if (cacheable) {
+            const cached = getCachedExercises();
+            if (cached) {
+                return res.status(200).json({
+                    success: true,
+                    data: cached.exercises,
+                    total: cached.total
+                });
+            }
+        }
 
-    if (useCache && exercisesCache && Date.now() - exercisesCacheTime < CACHE_TTL) {
-      return res.status(200).json({
-        success: true,
-        data: exercisesCache.exercises,
-        total: exercisesCache.total
-      });
+        const result = await Exercise.getExercises(page, limit);
+
+        if (cacheable) {
+            setCachedExercises(result);
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: result.exercises,
+            total: result.total
+        });
+    } catch (error) {
+        console.error('[Exercises] Error fetching exercises:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to get exercises'
+        });
     }
+};
 
-    const result = await Exercise.getExercises(page, limit);
-
-    if (!result) {
-      return res.status(404).json({
-        success: false,
-        error: 'Exercises not found'
-      });
-    }
-
-    if (useCache) {
-      exercisesCache = result;
-      exercisesCacheTime = Date.now();
-    }
-
-    res.status(200).json({
-      success: true,
-      data: result.exercises,
-      total: result.total
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to get exercises'
-    });
-  }
-}
-
-
-// getExerciseById
 exports.getExerciseById = async (req, res) => {
-  console.log("Get exercices by id request received");
-  try {
-    const exercice = await Exercise.getExerciseById(req.params.id);
-    if (!exercice) {
-      return res.status(404).json({
-        success: false,
-        error: 'Exercise not found'
-      });
+    try {
+        const exercise = await Exercise.getExerciseById(req.params.id);
+
+        if (!exercise) {
+            return res.status(404).json({
+                success: false,
+                error: 'Exercise not found'
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: exercise
+        });
+    } catch (error) {
+        console.error('[Exercises] Error fetching exercise by id:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to get exercise'
+        });
     }
+};
 
-    res.status(200).json({
-      success: true,
-      data: exercice
-    })
-
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to get exercices, error'
-    });
-
-  }
-}
-// createExercise
 exports.createExercise = async (req, res) => {
-  console.log("Create exercices request received");
-  try {
+    try {
+        // `exercice_name` is the historical request field name; the database
+        // column is `name`. Kept as-is so existing clients keep working.
+        const { exercice_name, body_part, target_muscle, secondary_muscles, equipment, difficulty, category, description, instructions } = req.body;
 
-    const { exercice_name, body_part, target_muscle, secondary_muscles, equipment, difficulty, category, description, instructions } = req.body;
+        if (!exercice_name) {
+            return res.status(400).json({
+                success: false,
+                error: 'Exercise name is required'
+            });
+        }
 
-    const exercice = await Exercise.createExercise(exercice_name, body_part, target_muscle, secondary_muscles, equipment, difficulty, category, description, instructions);
+        const exercise = await Exercise.createExercise(
+            exercice_name, body_part, target_muscle, secondary_muscles,
+            equipment, difficulty, category, description, instructions
+        );
 
-    if (!exercice) {
-      console.log("Error creating new exercise");
-      return res.status(404).json({
-        success: false,
-        error: 'Couldnt create exercise'
-      })
+        if (!exercise) {
+            return res.status(404).json({
+                success: false,
+                error: 'Could not create exercise'
+            });
+        }
+
+        return res.status(201).json({
+            success: true,
+            data: exercise
+        });
+    } catch (error) {
+        console.error('[Exercises] Error creating exercise:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Error creating new exercise'
+        });
     }
+};
 
-    invalidateExercisesCache();
-
-    return res.status(201).json({
-      success: true,
-      data: exercice
-    })
-  } catch (error) {
-    console.log("Couldn't create the exercise");
-    return res.status(500).json({
-      success: false,
-      error: 'Error creating new exercise'
-    })
-  }
-}
-// modifyExercise
 exports.modifyExercise = async (req, res) => {
-  console.log("Modify exercise request received");
-  try {
-    const id = req.params.id;
+    try {
+        const { exercice_name, body_part, target_muscle, secondary_muscles, equipment, difficulty, category, description, instructions } = req.body;
 
-    const { exercice_name, body_part, target_muscle, secondary_muscles, equipment, difficulty, category, description, instructions } = req.body;
+        const exercise = await Exercise.modifyExercise(
+            req.params.id, exercice_name, body_part, target_muscle, secondary_muscles,
+            equipment, difficulty, category, description, instructions
+        );
 
-    const exercice = await Exercise.modifyExercise(id, exercice_name, body_part, target_muscle, secondary_muscles, equipment, difficulty, category, description, instructions);
+        if (!exercise) {
+            return res.status(404).json({
+                success: false,
+                error: 'Exercise not found'
+            });
+        }
 
-    if (!exercice) {
-      console.log("Error creating new exercise");
-      return res.status(404).json({
-        success: false,
-        error: 'Couldnt modify exercise'
-      })
+        return res.status(200).json({
+            success: true,
+            data: exercise
+        });
+    } catch (error) {
+        console.error('[Exercises] Error modifying exercise:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Error modifying exercise'
+        });
     }
+};
 
-    invalidateExercisesCache();
-
-    return res.status(200).json({
-      success: true,
-      data: exercice
-    })
-
-  } catch (error) {
-    console.log("Couldn't modify the exercise");
-    return res.status(500).json({
-      success: false,
-      error: 'Error modifying new exercise'
-    })
-  }
-
-}
-// deleteExercise
 exports.deleteExercise = async (req, res) => {
-  console.log("Delete exercise request received");
-  try {
-    await Exercise.deleteExercise(req.params.id);
+    try {
+        const deleted = await Exercise.deleteExercise(req.params.id);
 
-    invalidateExercisesCache();
+        if (!deleted) {
+            return res.status(404).json({
+                success: false,
+                error: 'Exercise not found'
+            });
+        }
 
-    return res.status(200).json({
-      success: true,
-    })
-
-  } catch (error) {
-    console.log("Couldn't delete the exercise");
-    return res.status(500).json({
-      success: false,
-      error: 'Error deleting exercise'
-    })
-  }
-}
-
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        console.error('[Exercises] Error deleting exercise:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Error deleting exercise'
+        });
+    }
+};
 
 exports.getFilterOptions = async (req, res) => {
-  console.log("Get filter options request received");
+    try {
+        const filters = await Exercise.getFilterOptions();
 
-  try {
-    const filters = await Exercise.getFilterOptions();
+        if (!filters) {
+            return res.status(404).json({
+                success: false,
+                error: 'Filter options not found'
+            });
+        }
 
-    if (!filters) {
-      return res.status(404).json({
-        success: false,
-        error: 'Filter options not found'
-      });
+        return res.status(200).json({
+            success: true,
+            data: filters
+        });
+    } catch (error) {
+        console.error('[Exercises] Error fetching filter options:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve filter options'
+        });
     }
-
-    res.status(200).json({
-      success: true,
-      data: filters
-    });
-
-  } catch (error) {
-    console.error("Error fetching filter options:", error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve filter options'
-    });
-  }
-}
+};
 
 exports.getExerciseHistory = async (req, res) => {
-  try {
-    const exerciseId = parseInt(req.params.id);
-    const userId = req.userId;
+    try {
+        const exerciseId = parseInt(req.params.id, 10);
 
-    if (isNaN(exerciseId)) {
-      return res.status(400).json({ success: false, error: 'Invalid Exercise ID' });
+        if (!Number.isInteger(exerciseId) || exerciseId <= 0) {
+            return res.status(400).json({ success: false, error: 'Invalid Exercise ID' });
+        }
+
+        const history = await Exercise.getExerciseHistory(req.userId, exerciseId);
+
+        return res.status(200).json({
+            success: true,
+            data: history
+        });
+    } catch (error) {
+        console.error('[Exercises] Error fetching exercise history:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve exercise history'
+        });
     }
-
-    const history = await Exercise.getExerciseHistory(userId, exerciseId);
-
-    res.status(200).json({
-      success: true,
-      data: history
-    });
-  } catch (error) {
-    console.error("Error fetching exercise history:", error);
-    return res.status(500).json({
-      success: false,
-      error: 'Failed to retrieve exercise history'
-    });
-  }
-}
+};
