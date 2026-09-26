@@ -14,21 +14,24 @@ import { AuthProvider } from './contexts/AuthContext';
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+// Provider order matters: AuthProvider must sit above any provider that reads
+// user-scoped data, so those providers can wait for the session (and for
+// AuthContext to create the `users` profile row) before issuing queries.
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
       <ThemeProvider>
         <NotificationProvider>
-          <SettingsProvider>
-          <WorkoutProvider>
-            <AuthProvider>
-            <BrowserRouter>
-              < Navbar />
-              <App />
-            </BrowserRouter >
-            </AuthProvider>
-          </WorkoutProvider>
-          </SettingsProvider>
+          <AuthProvider>
+            <SettingsProvider>
+              <WorkoutProvider>
+                <BrowserRouter>
+                  <Navbar />
+                  <App />
+                </BrowserRouter>
+              </WorkoutProvider>
+            </SettingsProvider>
+          </AuthProvider>
         </NotificationProvider>
       </ThemeProvider>
     </ErrorBoundary>

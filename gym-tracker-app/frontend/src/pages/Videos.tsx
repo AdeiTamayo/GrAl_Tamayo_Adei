@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getVideos, deleteVideo } from "../data/videos";
 import { VideoRecord } from "../data/types";
 import Pagination from "../components/Pagination";
@@ -187,8 +187,26 @@ export default function UserVideos() {
                                                 type="video/mp4"
                                             />
                                         </video>
+                                    ) : video.status === 'failed' ? (
+                                        <span className="px-4 text-center text-xs font-medium italic text-rose-400">
+                                            Analysis failed — re-upload the video to try again
+                                        </span>
+                                    ) : video.status === 'processing' ? (
+                                        <span className="px-4 text-center text-xs font-medium italic text-muted">
+                                            Analysis in progress…
+                                        </span>
                                     ) : (
                                         <span className="text-dim text-xs font-medium italic">No processed video available</span>
+                                    )}
+
+                                    {video.status !== 'completed' && (
+                                        <span className={`absolute top-2 left-2 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] ${
+                                            video.status === 'failed'
+                                                ? 'border-rose-500/40 bg-rose-500/15 text-rose-400'
+                                                : 'border-amber-500/40 bg-amber-500/15 text-amber-400'
+                                        }`}>
+                                            {video.status}
+                                        </span>
                                     )}
                                 </div>
 

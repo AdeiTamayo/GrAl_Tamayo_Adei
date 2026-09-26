@@ -55,7 +55,7 @@ export default function CurrentWorkout() {
     const [showSaveRoutineModal, setShowSaveRoutineModal] = useState(false);
     const [routineName, setRoutineName] = useState("");
 
-    const getLoadedRestTime = (exercise: any) => {
+    const getLoadedRestTime = useCallback((exercise: any) => {
         const parsedExerciseTime = Number(exercise.planned_time);
         if (Number.isFinite(parsedExerciseTime) && parsedExerciseTime > 0) {
             return parsedExerciseTime;
@@ -66,7 +66,7 @@ export default function CurrentWorkout() {
             .find((time: number) => Number.isFinite(time) && time > 0);
 
         return setTime || 60;
-    };
+    }, []);
 
     // Goals state
     const [goals, setGoals] = useState<Record<number, { target_weight: number | null; target_reps: number | null }>>({});
@@ -119,7 +119,7 @@ export default function CurrentWorkout() {
         fetchGoals();
     }, [fetchRoutines, fetchGoals]);
 
-    const loadRoutine = async (routineId: number) => {
+    const loadRoutine = useCallback(async (routineId: number) => {
         try {
             const routine = await getRoutineById(routineId);
             if (routine) {
@@ -158,7 +158,7 @@ export default function CurrentWorkout() {
             console.error("Failed to load routine", err);
             showNotification("Failed to load routine", "error");
         }
-    };
+    }, [getLoadedRestTime, setExercises, setShowRoutinePicker, setWorkoutName, showNotification, startWorkout]);
 
     useEffect(() => {
         const loadRoutineId = searchParams.get('loadRoutine');
@@ -171,7 +171,7 @@ export default function CurrentWorkout() {
                 navigate('/active-workout', { replace: true });
             }
         }
-    }, [searchParams, navigate]);
+    }, [searchParams, navigate, setWorkoutName, loadRoutine]);
 
     const handleAddExercise = (exercise: ExerciseMeta) => {
         addExercise(exercise);

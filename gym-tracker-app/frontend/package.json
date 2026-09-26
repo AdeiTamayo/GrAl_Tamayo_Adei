@@ -1,7 +1,8 @@
 {
-  "name": "my-app",
-  "version": "0.1.0",
+  "name": "gym-tracker-frontend",
+  "version": "1.0.0",
   "private": true,
+  "description": "Gym Tracker - React client. Talks directly to Supabase (PostgREST + Auth + Storage) and runs MediaPipe pose analysis in the browser.",
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1",
     "@supabase/supabase-js": "^2.112.3",
@@ -19,13 +20,13 @@
     "react-scripts": "5.0.1",
     "recharts": "^3.8.1",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "typescript": "^4.9.5"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --verbose --watchAll=false --silent",
+    "typecheck": "tsc --noEmit",
     "eject": "react-scripts eject",
     "tailwind:init": "tailwindcss init"
   },
@@ -47,7 +48,6 @@
       "last 1 safari version"
     ]
   },
-  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
   "main": "index.js",
   "keywords": [],
   "author": "",

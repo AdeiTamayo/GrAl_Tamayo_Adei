@@ -3,787 +3,1072 @@ import { useLocation, useSearchParams } from "react-router-dom";
 import Button from "../components/Button";
 import Modal from "../components/Modal";
 import Pagination from "../components/Pagination";
-import EditableExerciseCard from '../components/EditableExerciseCard';
-import ExercisePicker, { Exercise as ExerciseMeta } from '../components/ExercisePicker';
-import DatePicker from '../components/DatePicker';
-import ConfirmModal from '../components/ConfirmModal';
-import DeleteButton from '../components/DeleteButton';
-import CloseButton from '../components/CloseButton';
-import ErrorBanner from '../components/ErrorBanner';
-import LoadingSkeleton from '../components/LoadingSkeleton';
+import EditableExerciseCard from "../components/EditableExerciseCard";
+import ExercisePicker, {
+  Exercise as ExerciseMeta,
+} from "../components/ExercisePicker";
+import DatePicker from "../components/DatePicker";
+import ConfirmModal from "../components/ConfirmModal";
+import DeleteButton from "../components/DeleteButton";
+import ErrorBanner from "../components/ErrorBanner";
+import LoadingSkeleton from "../components/LoadingSkeleton";
 import { useNotification } from "../components/NotificationProvider";
-import Input from '../components/Input';
-import Card from '../components/Card';
-import EmptyState from '../components/EmptyState';
+import Input from "../components/Input";
+import Card from "../components/Card";
+import EmptyState from "../components/EmptyState";
 import {
-    getWorkouts,
-    getWorkoutById,
-    createWorkout as createWorkoutData,
-    updateWorkout as updateWorkoutData,
-    deleteWorkout as deleteWorkoutData,
-    addWorkoutExercise,
-    deleteWorkoutExercise as deleteWorkoutExerciseData,
-    addSet as addSetData,
-    updateSet as updateSetData,
-    deleteSet as deleteSetData
-} from '../data/workouts';
+  getWorkouts,
+  getWorkoutById,
+  createWorkout as createWorkoutData,
+  updateWorkout as updateWorkoutData,
+  deleteWorkout as deleteWorkoutData,
+  addWorkoutExercise,
+  deleteWorkoutExercise as deleteWorkoutExerciseData,
+  addSet as addSetData,
+  updateSet as updateSetData,
+  deleteSet as deleteSetData,
+} from "../data/workouts";
 import {
-    createRoutine as createRoutineData,
-    addExerciseToRoutine as addExerciseToRoutineData,
-    addSetToRoutineExercise as addSetToRoutineExerciseData
-} from '../data/routines';
-import { getUserGoals } from '../data/goals';
-import { Workout, WorkoutExercise, WorkoutSet } from '../data/types';
+  createRoutine as createRoutineData,
+  addExerciseToRoutine as addExerciseToRoutineData,
+  addSetToRoutineExercise as addSetToRoutineExerciseData,
+} from "../data/routines";
+import { getUserGoals } from "../data/goals";
+import { Workout, WorkoutExercise, WorkoutSet } from "../data/types";
 
 type EditableSetField = "weight" | "repetitions" | "time" | "note";
 
 export default function WorkoutsManagement() {
-    const location = useLocation();
-    const [searchParams] = useSearchParams();
-    const preselectedId = (location.state as { preselectedWorkoutId?: number })?.preselectedWorkoutId;
-    const { showNotification } = useNotification();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const preselectedId = (location.state as { preselectedWorkoutId?: number })
+    ?.preselectedWorkoutId;
+  const { showNotification } = useNotification();
 
-    // ---- STATE MANAGEMENT ----
-    const [workouts, setWorkouts] = useState<Workout[]>([]);
-    const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
-    const [isLoadingInit, setIsLoadingInit] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  // ---- STATE MANAGEMENT ----
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+  const [isLoadingInit, setIsLoadingInit] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    // Toggle Dropdowns UI States
-    const [showDetailsDropdown, setShowDetailsDropdown] = useState(false);
+  // Toggle Dropdowns UI States
+  const [showDetailsDropdown, setShowDetailsDropdown] = useState(false);
 
-    // Create new workout form
-    const urlDate = searchParams.get('date');
-    const [newWorkoutName, setNewWorkoutName] = useState("");
-    const [newWorkoutDate, setNewWorkoutDate] = useState(urlDate || new Date().toLocaleDateString('en-CA'));
-    const [newWorkoutNote, setNewWorkoutNote] = useState("");
-    // Edit workout form
-    const [editName, setEditName] = useState("");
-    const [editDate, setEditDate] = useState("");
-    const [editNote, setEditNote] = useState("");
+  // Create new workout form
+  const urlDate = searchParams.get("date");
+  const [newWorkoutName, setNewWorkoutName] = useState("");
+  const [newWorkoutDate, setNewWorkoutDate] = useState(
+    urlDate || new Date().toLocaleDateString("en-CA"),
+  );
+  const [newWorkoutNote, setNewWorkoutNote] = useState("");
+  // Edit workout form
+  const [editName, setEditName] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editNote, setEditNote] = useState("");
 
-    // Add exercise search
-    const [showPicker, setShowPicker] = useState(false);
+  // Add exercise search
+  const [showPicker, setShowPicker] = useState(false);
 
-    // Goals state
-    const [goals, setGoals] = useState<Record<number, number>>({});
+  // Goals state
+  const [goals, setGoals] = useState<Record<number, number>>({});
 
-    const [deleteWorkoutConfirmId, setDeleteWorkoutConfirmId] = useState<number | null>(null);
-    const [deleteExerciseConfirmId, setDeleteExerciseConfirmId] = useState<number | null>(null);
+  const [deleteWorkoutConfirmId, setDeleteWorkoutConfirmId] = useState<
+    number | null
+  >(null);
+  const [deleteExerciseConfirmId, setDeleteExerciseConfirmId] = useState<
+    number | null
+  >(null);
 
-    // Save as routine state
-    const [showSaveRoutineModal, setShowSaveRoutineModal] = useState(false);
-    const [routineName, setRoutineName] = useState("");
+  // Save as routine state
+  const [showSaveRoutineModal, setShowSaveRoutineModal] = useState(false);
+  const [routineName, setRoutineName] = useState("");
 
-    // Sidebar toggle
-    const [sidebarHidden, setSidebarHidden] = useState(false);
+  // Sidebar toggle
+  const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [workoutCardExpanded, setWorkoutCardExpanded] = useState(true);
 
-    // Search, filter, pagination
-    const [searchQuery, setSearchQuery] = useState("");
-    const [dateFrom, setDateFrom] = useState("");
-    const [dateTo, setDateTo] = useState("");
+  // Search, filter, pagination
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-    // Calendar control – only one date picker open at a time
-    const [activeDatePicker, setActiveDatePicker] = useState<'from' | 'to' | null>(null);
+  // Calendar control – only one date picker open at a time
+  const [activeDatePicker, setActiveDatePicker] = useState<
+    "from" | "to" | null
+  >(null);
 
-    // Pagination
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 20;
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
-    const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-    // ---- COMPUTED VALUES ----
-    const filteredWorkouts = useMemo(() => {
-        return workouts.filter(w => {
-            if (searchQuery && !w.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-            if (dateFrom && w.date && w.date < dateFrom) return false;
-            if (dateTo && w.date && w.date > dateTo) return false;
-            return true;
-        });
-    }, [workouts, searchQuery, dateFrom, dateTo]);
+  // ---- COMPUTED VALUES ----
+  const filteredWorkouts = useMemo(() => {
+    return workouts.filter((w) => {
+      if (
+        searchQuery &&
+        !w.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+        return false;
+      if (dateFrom && w.date && w.date < dateFrom) return false;
+      if (dateTo && w.date && w.date > dateTo) return false;
+      return true;
+    });
+  }, [workouts, searchQuery, dateFrom, dateTo]);
 
-    const totalPages = Math.max(1, Math.ceil(filteredWorkouts.length / pageSize));
-    const paginatedWorkouts = filteredWorkouts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredWorkouts.length / pageSize));
+  const paginatedWorkouts = filteredWorkouts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
 
-    // Reset to page 1 when filters change
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchQuery, dateFrom, dateTo]);
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, dateFrom, dateTo]);
 
-    // ---- DATA FETCHING HANDLERS ----
-    const fetchWorkouts = useCallback(async () => {
-        try {
-            const data = await getWorkouts();
-            setWorkouts(data || []);
-        } catch (err: any) {
-            console.error("Failed to fetch workouts", err);
-            setError("Failed to fetch workouts");
-        }
-    }, []);
-
-    const fetchGoalsMap = useCallback(async () => {
-        try {
-            const goals = await getUserGoals();
-            const gMap: Record<number, number> = {};
-            for (const g of goals || []) {
-                const w = Number(g.target_weight);
-                if (w) gMap[g.exercise_id] = w;
-            }
-            setGoals(gMap);
-        } catch (err: any) {
-            console.error("Failed to fetch goals", err);
-        }
-    }, []);
-
-    const fetchWorkoutById = useCallback(async (id: number) => {
-        try {
-            setError(null);
-            const workoutData = await getWorkoutById(id);
-            if (workoutData) {
-                setSelectedWorkout(workoutData);
-                setShowDetailsDropdown(false);
-            } else {
-                setError("Failed to load workout details");
-            }
-        } catch (err: any) {
-            setError("Failed to load workout details");
-        }
-    }, []);
-
-    // Initial load
-    useEffect(() => {
-        Promise.all([fetchWorkouts(), fetchGoalsMap()])
-            .then(() => {
-                if (preselectedId) fetchWorkoutById(preselectedId);
-            })
-            .finally(() => setIsLoadingInit(false));
-    }, [fetchWorkouts, fetchWorkoutById, fetchGoalsMap, preselectedId]);
-
-
-
-    // ---- WORKOUT OPERATIONS ----
-    async function createWorkout(e: FormEvent) {
-        e.preventDefault();
-        setError(null);
-
-        const tempId = -Date.now();
-        const tempWorkout: Workout = {
-            id: tempId,
-            name: newWorkoutName,
-            date: newWorkoutDate,
-            note: newWorkoutNote || null,
-            exercises: [],
-        };
-
-        setWorkouts((prev) => [tempWorkout, ...prev]);
-        setNewWorkoutName("");
-        setNewWorkoutNote("");
-        setShowCreateModal(false);
-
-        try {
-            const created = await createWorkoutData({
-                name: tempWorkout.name,
-                date: tempWorkout.date,
-                note: tempWorkout.note,
-            });
-            setWorkouts((prev) =>
-                prev.map((w) => (w.id === tempId ? { ...w, id: created.id } : w))
-            );
-            setSelectedWorkout({ ...created, exercises: [] });
-        } catch (err: any) {
-            setError("Failed to create workout");
-            setWorkouts((prev) => prev.filter((w) => w.id !== tempId));
-        }
+  // ---- DATA FETCHING HANDLERS ----
+  const fetchWorkouts = useCallback(async () => {
+    try {
+      const data = await getWorkouts();
+      setWorkouts(data || []);
+    } catch (err: any) {
+      console.error("Failed to fetch workouts", err);
+      setError("Failed to fetch workouts");
     }
+  }, []);
 
-    function openEditWorkout() {
-        if (!selectedWorkout) return;
-        setEditName(selectedWorkout.name);
-        setEditDate(selectedWorkout.date?.substring(0, 10));
-        setEditNote(selectedWorkout.note || "");
-        setShowDetailsDropdown(true);
+  const fetchGoalsMap = useCallback(async () => {
+    try {
+      const goals = await getUserGoals();
+      const gMap: Record<number, number> = {};
+      for (const g of goals || []) {
+        const w = Number(g.target_weight);
+        if (w) gMap[g.exercise_id] = w;
+      }
+      setGoals(gMap);
+    } catch (err: any) {
+      console.error("Failed to fetch goals", err);
     }
+  }, []);
 
-    async function saveWorkoutEdit() {
-        if (!selectedWorkout) return;
-        if (!editName.trim()) { setError("Workout name cannot be empty."); return; }
-
-        try {
-            const updated = await updateWorkoutData(selectedWorkout.id, {
-                name: editName,
-                date: editDate,
-                note: editNote,
-            });
-
-            if (updated) {
-                setSelectedWorkout({ ...updated, exercises: selectedWorkout.exercises || [] });
-                setWorkouts((prev) =>
-                    prev.map((w) => (w.id === selectedWorkout.id ? updated : w))
-                );
-                setShowDetailsDropdown(false);
-            } else {
-                setError("Update failed");
-            }
-        } catch (err: any) {
-            console.error(err);
-            setError("Failed to update workout");
-        }
+  const fetchWorkoutById = useCallback(async (id: number) => {
+    try {
+      setError(null);
+      const workoutData = await getWorkoutById(id);
+      if (workoutData) {
+        setSelectedWorkout(workoutData);
+        setShowDetailsDropdown(false);
+      } else {
+        setError("Failed to load workout details");
+      }
+    } catch (err: any) {
+      setError("Failed to load workout details");
     }
+  }, []);
 
-    async function deleteWorkout(id: number) {
-        setWorkouts((prev) => prev.filter((w) => w.id !== id));
-        if (selectedWorkout && selectedWorkout.id === id) {
-            setSelectedWorkout(null);
-        }
+  // Initial load
+  useEffect(() => {
+    Promise.all([fetchWorkouts(), fetchGoalsMap()])
+      .then(() => {
+        if (preselectedId) fetchWorkoutById(preselectedId);
+      })
+      .finally(() => setIsLoadingInit(false));
+  }, [fetchWorkouts, fetchWorkoutById, fetchGoalsMap, preselectedId]);
 
-        try {
-            await deleteWorkoutData(id);
-        } catch (err: any) {
-            console.error("Delete workout failed", err);
-            setError("Failed to delete workout");
-            await fetchWorkouts();
-        }
-    }
+  // ---- WORKOUT OPERATIONS ----
+  async function createWorkout(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
 
-    // ---- EXERCISE MANAGEMENT ----
-    async function handleAddExercise(exerciseToHub: ExerciseMeta) {
-        if (!selectedWorkout) return;
-        setError(null);
-
-        const tempId = -Date.now();
-        const selectedExName = exerciseToHub.name;
-        const selectedExId = exerciseToHub.id;
-
-        setSelectedWorkout((prev) => {
-            if (!prev) return prev;
-            return {
-                ...prev,
-                exercises: [
-                    ...(prev.exercises || []),
-                    {
-                        id: tempId,
-                        exercise_id: selectedExId,
-                        exercise_order: (prev.exercises?.length || 0) + 1,
-                        name: selectedExName,
-                        sets: [],
-                    },
-                ],
-            };
-        });
-
-        setShowPicker(false);
-
-        try {
-            const created = await addWorkoutExercise(selectedWorkout.id, selectedExId);
-
-            setSelectedWorkout((prev) => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    exercises: prev.exercises?.map((ex) =>
-                        ex.id === tempId
-                            ? { ...ex, id: created.id, exercise_order: created.exercise_order }
-                            : ex
-                    ),
-                };
-            });
-        } catch (err: any) {
-            setError("Failed to add exercise");
-            setSelectedWorkout((prev) => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    exercises: prev.exercises?.filter((ex) => ex.id !== tempId),
-                };
-            });
-        }
-    }
-
-    async function deleteWorkoutExercise(workoutExerciseId: number) {
-        if (!selectedWorkout) return;
-
-        try {
-            await deleteWorkoutExerciseData(workoutExerciseId);
-            setSelectedWorkout((prev) =>
-                prev ? { ...prev, exercises: prev.exercises?.filter((ex) => ex.id !== workoutExerciseId) } : prev
-            );
-        } catch (err: any) {
-            setError("Failed to remove exercise");
-        }
-    }
-
-    // ---- SET MANAGEMENT ----
-    async function submitNewSet(exercise: WorkoutExercise, weight: any, reps: any, time: any, note?: any) {
-        if (!selectedWorkout) return;
-
-        try {
-            const newSet = await addSetData(exercise.id, {
-                weight: weight === "" || weight === null ? null : Number(weight),
-                repetitions: reps === "" || reps === null ? null : Number(reps),
-                time: time === "" || time === null ? null : Number(time),
-                note: !note || note.trim() === "" ? null : note.trim(),
-            });
-
-            setSelectedWorkout((prev) => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    exercises: prev.exercises?.map((ex) =>
-                        ex.id === exercise.id ? { ...ex, sets: [...ex.sets, newSet] } : ex
-                    ),
-                };
-            });
-        } catch (err: any) {
-            setError("Failed to add set");
-        }
-    }
-
-    async function handleRemoveSet(setId: number) {
-        if (!selectedWorkout) return;
-
-        try {
-            await deleteSetData(setId);
-            setSelectedWorkout((prev) => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    exercises: prev.exercises?.map((ex) => ({
-                        ...ex,
-                        sets: ex.sets.filter((s) => s.id !== setId),
-                    })),
-                };
-            });
-        } catch (err: any) {
-            setError("Failed to remove set");
-        }
-    }
-
-    function handleSetChange(
-        workoutExerciseId: number,
-        setId: number,
-        field: EditableSetField,
-        value: string
-    ) {
-        if (!selectedWorkout) return;
-
-        const updatedExercises = selectedWorkout.exercises?.map((ex) => {
-            if (ex.id !== workoutExerciseId) return ex;
-
-            const updatedSets = ex.sets?.map((set) => {
-                if (set.id !== setId) return set;
-
-                if (field === "note") {
-                    return { ...set, note: value === "" ? null : value };
-                }
-
-                const numericValue = value === "" ? null : Number(value);
-                if (field === "weight") return { ...set, weight: numericValue };
-                if (field === "repetitions") return { ...set, repetitions: numericValue };
-                return { ...set, time: numericValue };
-            });
-
-            return { ...ex, sets: updatedSets };
-        });
-
-        setSelectedWorkout({ ...selectedWorkout, exercises: updatedExercises });
-    }
-
-    async function handleSetBlur(workoutExerciseId: number, setId: number) {
-        if (!selectedWorkout) return;
-
-        const exercise = selectedWorkout.exercises?.find((ex) => ex.id === workoutExerciseId);
-        const set = exercise?.sets?.find((s) => s.id === setId);
-        if (!set) return;
-
-        try {
-            await updateSetData(setId, {
-                weight: set.weight,
-                repetitions: set.repetitions,
-                time: set.time,
-                note: set.note ?? null,
-            });
-        } catch (err: any) {
-            console.error("Failed to save set update");
-            setError("Failed to save set update");
-        }
-    }
-
-    // ---- SAVE AS ROUTINE ----
-    const saveAsRoutine = async () => {
-        if (!routineName.trim()) {
-            showNotification("Please enter a routine name", "error");
-            return;
-        }
-        if (!selectedWorkout || !selectedWorkout.exercises || selectedWorkout.exercises.length === 0) {
-            showNotification("No exercises to save.", "error");
-            return;
-        }
-        try {
-            const routine = await createRoutineData(routineName.trim());
-            const routineId = routine.id;
-
-            await Promise.all(selectedWorkout.exercises.map(async (ex) => {
-                const reps = ex.sets.map(s => Number(s.repetitions) || 0).filter(r => r > 0);
-                const avgReps = reps.length > 0 ? Math.round(reps.reduce((a, b) => a + b, 0) / reps.length) : 10;
-                const weights = ex.sets.map(s => Number(s.weight) || 0).filter(w => w > 0);
-                const avgWeight = weights.length > 0 ? (weights.reduce((a, b) => a + b, 0) / weights.length) : 0;
-
-                const routineExercise = await addExerciseToRoutineData(routineId, {
-                    exercise_id: ex.exercise_id,
-                    exercise_order: ex.exercise_order,
-                    planned_sets: ex.sets.length,
-                    planned_reps: avgReps,
-                    planned_weight: avgWeight,
-                    planned_time: 0
-                });
-                if (routineExercise.item_id) {
-                    await Promise.all(ex.sets.map((s, i) =>
-                        addSetToRoutineExerciseData(routineExercise.item_id, {
-                            set_number: i + 1,
-                            planned_weight: Number(s.weight) || 0,
-                            planned_reps: Number(s.repetitions) || 0,
-                            planned_time: 0
-                        })
-                    ));
-                }
-            }));
-
-            setShowSaveRoutineModal(false);
-            setRoutineName("");
-            showNotification(`Routine created with ${selectedWorkout.exercises.length} exercise(s)!`, "success");
-        } catch (err) {
-            console.error("Failed to save routine", err);
-            showNotification("Error saving routine.", "error");
-        }
+    const tempId = -Date.now();
+    const tempWorkout: Workout = {
+      id: tempId,
+      name: newWorkoutName,
+      date: newWorkoutDate,
+      note: newWorkoutNote || null,
+      exercises: [],
     };
 
-    if (isLoadingInit) return <LoadingSkeleton type="page" />;
+    setWorkouts((prev) => [tempWorkout, ...prev]);
+    setNewWorkoutName("");
+    setNewWorkoutNote("");
+    setShowCreateModal(false);
 
-    return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
-            {/* Top Toolbar Level */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-subtle pb-5">
-                <div>
-                    <h1 className="font-display text-4xl font-bold tracking-tight uppercase italic text-accent">Workouts Management</h1>
-                </div>
+    try {
+      const created = await createWorkoutData({
+        name: tempWorkout.name,
+        date: tempWorkout.date,
+        note: tempWorkout.note,
+      });
+      setWorkouts((prev) =>
+        prev.map((w) => (w.id === tempId ? { ...w, id: created.id } : w)),
+      );
+      setSelectedWorkout({ ...created, exercises: [] });
+    } catch (err: any) {
+      setError("Failed to create workout");
+      setWorkouts((prev) => prev.filter((w) => w.id !== tempId));
+    }
+  }
 
-                <Button
-                    type="button"
-                    variant="primary"
-                    onClick={() => setShowCreateModal(true)}
-                    className="font-display rounded-xl py-3 px-5"
-                >
-                    Create New Workout
-                </Button>
+  function openEditWorkout() {
+    if (!selectedWorkout) return;
+    setEditName(selectedWorkout.name);
+    setEditDate(selectedWorkout.date?.substring(0, 10));
+    setEditNote(selectedWorkout.note || "");
+    setShowDetailsDropdown(true);
+  }
 
-                <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} maxWidth="sm">
-                    <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <h3 className="font-display text-lg font-bold text-accent mb-4">Create New Workout</h3>
-                        <form onSubmit={createWorkout} className="flex flex-col gap-4">
-                            <div>
-                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Workout Name</label>
-                                <Input
-                                    type="text"
-                                    value={newWorkoutName}
-                                    onChange={(e) => setNewWorkoutName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Session Date</label>
-                                <DatePicker value={newWorkoutDate} onChange={setNewWorkoutDate} />
-                            </div>
-                            <div>
-                                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Notes (Optional)</label>
-                                <Input
-                                    type="text"
-                                    value={newWorkoutNote}
-                                    onChange={(e) => setNewWorkoutNote(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex gap-2 justify-end mt-1">
-                                <Button type="button" onClick={() => setShowCreateModal(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
-                                <Button type="submit" variant="primary" className="px-4 py-2 text-xs">Confirm & Save</Button>
-                            </div>
-                        </form>
-                    </Card>
-                </Modal>
-            </div>
+  async function saveWorkoutEdit() {
+    if (!selectedWorkout) return;
+    if (!editName.trim()) {
+      setError("Workout name cannot be empty.");
+      return;
+    }
 
-            {error && (
-                <ErrorBanner message={error} />
-            )}
+    try {
+      const updated = await updateWorkoutData(selectedWorkout.id, {
+        name: editName,
+        date: editDate,
+        note: editNote,
+      });
 
-            <div className="flex gap-6 items-start flex-col xl:flex-row">
-                {/* Left Listing Sidebar */}
-                <div className={`flex-none w-full animate-in fade-in duration-200 ${sidebarHidden ? 'hidden' : 'xl:w-[400px]'}`}>
-                    <Card variant="surface" padding="md" className="shadow-md">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase">Saved Logs List</h2>
-                            <button
-                                onClick={() => setSidebarHidden(true)}
-                                className="p-1.5 rounded-lg text-dim hover:text-body hover:bg-surface/80 transition-colors"
-                                title="Hide sidebar"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                                </svg>
-                            </button>
-                        </div>
+      if (updated) {
+        setSelectedWorkout({
+          ...updated,
+          exercises: selectedWorkout.exercises || [],
+        });
+        setWorkouts((prev) =>
+          prev.map((w) => (w.id === selectedWorkout.id ? updated : w)),
+        );
+        setShowDetailsDropdown(false);
+      } else {
+        setError("Update failed");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to update workout");
+    }
+  }
 
-                        {/* Search & Filter Bar */}
-                        <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                            <Input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search by name..."
-                                inputSize="sm"
-                                className="flex-1"
-                            />
-                            <div className="flex gap-2 items-center">
-                                <DatePicker
-                                    value={dateFrom}
-                                    onChange={(d) => { setDateFrom(d); setActiveDatePicker(null); }}
-                                    placeholder="From"
-                                    buttonClassName="w-auto rounded-xl px-3 py-2 text-xs"
-                                    open={activeDatePicker === 'from'}
-                                    onOpenChange={(o) => setActiveDatePicker(o ? 'from' : null)}
-                                />
-                                <DatePicker
-                                    value={dateTo}
-                                    onChange={(d) => { setDateTo(d); setActiveDatePicker(null); }}
-                                    placeholder="To"
-                                    buttonClassName="w-auto rounded-xl px-3 py-2 text-xs"
-                                    open={activeDatePicker === 'to'}
-                                    onOpenChange={(o) => setActiveDatePicker(o ? 'to' : null)}
-                                    menuAlign="right"
-                                />
-                            </div>
-                        </div>
+  async function deleteWorkout(id: number) {
+    setWorkouts((prev) => prev.filter((w) => w.id !== id));
+    if (selectedWorkout && selectedWorkout.id === id) {
+      setSelectedWorkout(null);
+    }
 
-                        {filteredWorkouts.length === 0 ? (
-                            <EmptyState message={workouts.length === 0 ? "No sessions logged yet." : "No workouts match your filters."} />
-                        ) : (
-                            <>
-                                <ul className="space-y-2.5 list-none p-0 m-0">
-                                    {paginatedWorkouts.map((w) => (
-                                        <li
-                                            key={w.id}
-                                            onClick={() => fetchWorkoutById(w.id)}
-                                            className={`flex justify-between items-center p-3.5 border rounded-xl transition-all group cursor-pointer ${selectedWorkout?.id === w.id ? 'bg-surface border-accent/50' : 'bg-card/40 border-subtle/80 hover:border-hover'}`}
-                                        >
-                                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                <div className="min-w-0">
-                                                    <span className="text-sm stroke-zinc-100 font-semibold text-heading block truncate">{w.name}</span>
-                                                    <span className="font-mono text-xs text-dim mt-0.5 block">{w.date?.substring(0, 10)}</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                                <DeleteButton onClick={() => setDeleteWorkoutConfirmId(w.id)} />
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
+    try {
+      await deleteWorkoutData(id);
+    } catch (err: any) {
+      console.error("Delete workout failed", err);
+      setError("Failed to delete workout");
+      await fetchWorkouts();
+    }
+  }
 
-                                <Pagination
-                                    page={currentPage}
-                                    totalPages={totalPages}
-                                    onPageChange={setCurrentPage}
-                                />
-                            </>
-                        )}
-                    </Card>
-                </div>
+  // ---- EXERCISE MANAGEMENT ----
+  async function handleAddExercise(exerciseToHub: ExerciseMeta) {
+    if (!selectedWorkout) return;
+    setError(null);
 
-                {/* Right Interactive Workspace Panel */}
-                {sidebarHidden && !selectedWorkout && (
-                    <div className="flex-1 w-full text-center py-12">
-                        <button
-                            onClick={() => setSidebarHidden(false)}
-                            className="bg-surface border border-subtle rounded-xl px-6 py-3 text-sm font-semibold text-muted hover:text-body hover:border-hover transition-all inline-flex items-center gap-2"
-                        >
-                            Show workouts
-                        </button>
-                    </div>
-                )}
-                {selectedWorkout && (
-                    <Card variant="surface" padding="lg" className="flex-1 w-full shadow-md space-y-6 relative animate-in fade-in slide-in-from-right-4 duration-300">
+    const tempId = -Date.now();
+    const selectedExName = exerciseToHub.name;
+    const selectedExId = exerciseToHub.id;
 
-                        {/* Header Details Wrapper */}
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="flex-1 mr-4">
-                                {sidebarHidden && (
-                                    <button
-                                        onClick={() => setSidebarHidden(false)}
-                                        className="text-xs font-semibold text-dim hover:text-body transition-colors mb-2 block"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                                        </svg>
+    setSelectedWorkout((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        exercises: [
+          ...(prev.exercises || []),
+          {
+            id: tempId,
+            exercise_id: selectedExId,
+            exercise_order: (prev.exercises?.length || 0) + 1,
+            name: selectedExName,
+            sets: [],
+          },
+        ],
+      };
+    });
 
-                                    </button>
-                                )}
-                                <h2 className="font-display text-3xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
-                                    {selectedWorkout.name}
-                                </h2>
-                                <p className="font-mono text-xs text-dim mt-1">{selectedWorkout.date?.substring(0, 10)}</p>
-                                {selectedWorkout.note && (
-                                    <p className="font-sans text-sm text-muted mt-2 bg-card/30 p-3 rounded-xl border border-subtle/40">{selectedWorkout.note}</p>
-                                )}
-                            </div>
+    setShowPicker(false);
 
-                            <div className="flex gap-2 shrink-0">
-                                <Button
-                                    type="button"
-                                    onClick={() => { openEditWorkout(); setShowDetailsDropdown(true); }}
-                                    variant="secondary"
-                                    className="px-3 py-1.5 text-xs font-medium"
-                                >
-                                    Modify Details
-                                </Button>
+    try {
+      const created = await addWorkoutExercise(
+        selectedWorkout.id,
+        selectedExId,
+      );
 
-                                <Button type="button" onClick={() => { setRoutineName(selectedWorkout.name || ""); setShowSaveRoutineModal(true); }} variant="secondary" className="px-3 py-1.5 text-xs font-medium">
-                                    Save as Routine
-                                </Button>
+      setSelectedWorkout((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          exercises: prev.exercises?.map((ex) =>
+            ex.id === tempId
+              ? {
+                  ...ex,
+                  id: created.id,
+                  exercise_order: created.exercise_order,
+                }
+              : ex,
+          ),
+        };
+      });
+    } catch (err: any) {
+      setError("Failed to add exercise");
+      setSelectedWorkout((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          exercises: prev.exercises?.filter((ex) => ex.id !== tempId),
+        };
+      });
+    }
+  }
 
-                                <CloseButton onClick={() => setSelectedWorkout(null)} floating={false} />
-                            </div>
-                        </div>
+  async function deleteWorkoutExercise(workoutExerciseId: number) {
+    if (!selectedWorkout) return;
 
-                        <hr className="border-none border-t border-subtle/60" />
+    try {
+      await deleteWorkoutExerciseData(workoutExerciseId);
+      setSelectedWorkout((prev) =>
+        prev
+          ? {
+              ...prev,
+              exercises: prev.exercises?.filter(
+                (ex) => ex.id !== workoutExerciseId,
+              ),
+            }
+          : prev,
+      );
+    } catch (err: any) {
+      setError("Failed to remove exercise");
+    }
+  }
 
-                        {/* Exercises List Display Block */}
-                        <h3 className="font-sans text-xs font-bold tracking-widest text-accent uppercase">Recorded Exercises and Sets</h3>
-                        {!selectedWorkout.exercises || selectedWorkout.exercises.length === 0 ? (
-                            <p className="text-xs text-dim font-sans py-6 text-center border border-dashed border-subtle rounded-xl bg-card/20">
-                                No exercises logged for this workout yet. Search and select from the menu below to start.
-                            </p>
-                        ) : (
-                            <ul className="list-none p-0 m-0 space-y-4">
-                                {selectedWorkout.exercises.map((ex: WorkoutExercise) => (
-                                    <EditableExerciseCard
-                                        key={ex.id}
-                                        exerciseName={ex.name || "Unknown Exercise " + ex.exercise_id}
-                                        exerciseOrder={ex.exercise_order}
-                                        showNotesField={true}
-                                        goalWeight={goals[ex.exercise_id]}
-                                        sets={ex.sets.map((s: WorkoutSet) => ({
-                                            id: s.id,
-                                            set_number: s.set_number,
-                                            weight: s.weight,
-                                            reps: s.repetitions,
-                                            time: s.time,
-                                            note: s.note
-                                        }))}
-                                        onRemoveExercise={() => setDeleteExerciseConfirmId(ex.id)}
-                                        onAddSet={(weight, reps, time, note) => submitNewSet(ex, weight, reps, time, note)}
-                                        onRemoveSet={(setId) => handleRemoveSet(setId)}
-                                        onUpdateSet={(setId, field, value) => {
-                                            const mapField = field === 'reps' ? 'repetitions' : (field as EditableSetField);
-                                            handleSetChange(ex.id, setId, mapField, value);
-                                        }}
-                                        onBlurSet={(setId) => handleSetBlur(ex.id, setId)}
-                                    />
-                                ))}
-                            </ul>
-                        )}
+  // ---- SET MANAGEMENT ----
+  async function submitNewSet(
+    exercise: WorkoutExercise,
+    weight: any,
+    reps: any,
+    time: any,
+    note?: any,
+  ) {
+    if (!selectedWorkout) return;
 
-                        {/* Search Exercises Dropdown Selection Panel */}
-                        <div className="pt-6 border-t border-subtle/60">
-                            <h3 className="font-sans text-xs font-bold tracking-widest text-accent uppercase mb-3">Add New Exercise to Workout</h3>
+    try {
+      const newSet = await addSetData(exercise.id, {
+        weight: weight === "" || weight === null ? null : Number(weight),
+        repetitions: reps === "" || reps === null ? null : Number(reps),
+        time: time === "" || time === null ? null : Number(time),
+        note: !note || note.trim() === "" ? null : note.trim(),
+      });
 
-                            <div className="flex flex-col gap-4">
-                                <Button
-                                    variant="secondary"
-                                    fullWidth
-                                    className="py-4 border-dashed border-subtle hover:border-accent/50 hover:bg-accent/5 transition-all text-sm font-semibold"
-                                    onClick={() => setShowPicker(true)}
-                                >
-                                    + Add New Exercise Entry
-                                </Button>
-                                <Modal open={showPicker} onClose={() => setShowPicker(false)} maxWidth="xl">
-                                    <ExercisePicker
-                                        title="Add Exercise to Workout"
-                                        onSelect={handleAddExercise}
-                                        onClose={() => setShowPicker(false)}
-                                    />
-                                </Modal>
-                            </div>
-                        </div>
-                    </Card>
-                )}
-            </div>
+      setSelectedWorkout((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          exercises: prev.exercises?.map((ex) =>
+            ex.id === exercise.id ? { ...ex, sets: [...ex.sets, newSet] } : ex,
+          ),
+        };
+      });
+    } catch (err: any) {
+      setError("Failed to add set");
+    }
+  }
 
-            {deleteWorkoutConfirmId !== null && (
-                <ConfirmModal
-                    message="Are you sure you want to delete this workout?"
-                    onConfirm={() => deleteWorkout(deleteWorkoutConfirmId)}
-                    onCancel={() => setDeleteWorkoutConfirmId(null)}
-                    confirmLabel="Delete"
-                />
-            )}
+  async function handleRemoveSet(setId: number) {
+    if (!selectedWorkout) return;
 
-            {deleteExerciseConfirmId !== null && (
-                <ConfirmModal
-                    message="Remove this exercise from the workout? All sets will be lost."
-                    onConfirm={() => {
-                        deleteWorkoutExercise(deleteExerciseConfirmId);
-                        setDeleteExerciseConfirmId(null);
-                    }}
-                    onCancel={() => setDeleteExerciseConfirmId(null)}
-                    confirmLabel="Remove"
-                />
-            )}
+    try {
+      await deleteSetData(setId);
+      setSelectedWorkout((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          exercises: prev.exercises?.map((ex) => ({
+            ...ex,
+            sets: ex.sets.filter((s) => s.id !== setId),
+          })),
+        };
+      });
+    } catch (err: any) {
+      setError("Failed to remove set");
+    }
+  }
 
-            <Modal open={showDetailsDropdown} onClose={() => setShowDetailsDropdown(false)} maxWidth="sm">
-                <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                    <h3 className="font-display text-lg font-bold text-accent mb-4">Edit Core Metadata</h3>
-                    <div className="flex flex-col gap-3">
-                        <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Workout name" />
-                        <DatePicker value={editDate} onChange={setEditDate} />
-                        <Input value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Note description" />
-                    </div>
-                    <div className="flex gap-2 justify-end mt-4">
-                        <Button type="button" onClick={() => setShowDetailsDropdown(false)} variant="secondary" className="px-4 py-2 text-xs">Cancel</Button>
-                        <Button type="button" onClick={saveWorkoutEdit} variant="primary" className="px-4 py-2 text-xs">Save Changes</Button>
-                    </div>
-                </Card>
-            </Modal>
+  function handleSetChange(
+    workoutExerciseId: number,
+    setId: number,
+    field: EditableSetField,
+    value: string,
+  ) {
+    if (!selectedWorkout) return;
 
-            <Modal open={showSaveRoutineModal} onClose={() => { setShowSaveRoutineModal(false); setRoutineName(""); }} maxWidth="sm">
-                <Card variant="default" padding="lg" className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-                    <h3 className="font-display text-lg font-bold text-accent mb-4">Save as Routine</h3>
-                    <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">Routine Name</label>
-                    <Input
-                        type="text"
-                        value={routineName}
-                        onChange={(e) => setRoutineName(e.target.value)}
-                        placeholder="e.g. Push Day"
-                        className="mb-4"
-                        autoFocus
-                    />
-                    <div className="flex gap-3 justify-end">
-                        <Button
-                            type="button"
-                            onClick={() => { setShowSaveRoutineModal(false); setRoutineName(""); }}
-                            variant="secondary"
-                            className="px-4 py-2 text-xs"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="button"
-                            onClick={saveAsRoutine}
-                            variant="primary"
-                            className="px-4 py-2 text-xs"
-                        >
-                            Create Routine
-                        </Button>
-                    </div>
-                </Card>
-            </Modal>
-        </div>
+    const updatedExercises = selectedWorkout.exercises?.map((ex) => {
+      if (ex.id !== workoutExerciseId) return ex;
+
+      const updatedSets = ex.sets?.map((set) => {
+        if (set.id !== setId) return set;
+
+        if (field === "note") {
+          return { ...set, note: value === "" ? null : value };
+        }
+
+        const numericValue = value === "" ? null : Number(value);
+        if (field === "weight") return { ...set, weight: numericValue };
+        if (field === "repetitions")
+          return { ...set, repetitions: numericValue };
+        return { ...set, time: numericValue };
+      });
+
+      return { ...ex, sets: updatedSets };
+    });
+
+    setSelectedWorkout({ ...selectedWorkout, exercises: updatedExercises });
+  }
+
+  async function handleSetBlur(workoutExerciseId: number, setId: number) {
+    if (!selectedWorkout) return;
+
+    const exercise = selectedWorkout.exercises?.find(
+      (ex) => ex.id === workoutExerciseId,
     );
-}
+    const set = exercise?.sets?.find((s) => s.id === setId);
+    if (!set) return;
 
+    try {
+      await updateSetData(setId, {
+        weight: set.weight,
+        repetitions: set.repetitions,
+        time: set.time,
+        note: set.note ?? null,
+      });
+    } catch (err: any) {
+      console.error("Failed to save set update");
+      setError("Failed to save set update");
+    }
+  }
+
+  // ---- SAVE AS ROUTINE ----
+  const saveAsRoutine = async () => {
+    if (!routineName.trim()) {
+      showNotification("Please enter a routine name", "error");
+      return;
+    }
+    if (
+      !selectedWorkout ||
+      !selectedWorkout.exercises ||
+      selectedWorkout.exercises.length === 0
+    ) {
+      showNotification("No exercises to save.", "error");
+      return;
+    }
+    try {
+      const routine = await createRoutineData(routineName.trim());
+      const routineId = routine.id;
+
+      await Promise.all(
+        selectedWorkout.exercises.map(async (ex) => {
+          const reps = ex.sets
+            .map((s) => Number(s.repetitions) || 0)
+            .filter((r) => r > 0);
+          const avgReps =
+            reps.length > 0
+              ? Math.round(reps.reduce((a, b) => a + b, 0) / reps.length)
+              : 10;
+          const weights = ex.sets
+            .map((s) => Number(s.weight) || 0)
+            .filter((w) => w > 0);
+          const avgWeight =
+            weights.length > 0
+              ? weights.reduce((a, b) => a + b, 0) / weights.length
+              : 0;
+
+          const routineExercise = await addExerciseToRoutineData(routineId, {
+            exercise_id: ex.exercise_id,
+            exercise_order: ex.exercise_order,
+            planned_sets: ex.sets.length,
+            planned_reps: avgReps,
+            planned_weight: avgWeight,
+            planned_time: 0,
+          });
+          if (routineExercise.item_id) {
+            await Promise.all(
+              ex.sets.map((s, i) =>
+                addSetToRoutineExerciseData(routineExercise.item_id, {
+                  set_number: i + 1,
+                  planned_weight: Number(s.weight) || 0,
+                  planned_reps: Number(s.repetitions) || 0,
+                  planned_time: 0,
+                }),
+              ),
+            );
+          }
+        }),
+      );
+
+      setShowSaveRoutineModal(false);
+      setRoutineName("");
+      showNotification(
+        `Routine created with ${selectedWorkout.exercises.length} exercise(s)!`,
+        "success",
+      );
+    } catch (err) {
+      console.error("Failed to save routine", err);
+      showNotification("Error saving routine.", "error");
+    }
+  };
+
+  if (isLoadingInit) return <LoadingSkeleton type="page" />;
+
+  return (
+    <div className="max-w-7xl mx-auto p-4 md:p-8 mt-4 md:mt-8 space-y-8 animate-in fade-in duration-200">
+      {/* Top Toolbar Level */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-subtle pb-5">
+        <div>
+          <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight uppercase italic text-accent">
+            Workouts Management
+          </h1>
+        </div>
+
+        <Button
+          type="button"
+          variant="primary"
+          onClick={() => setShowCreateModal(true)}
+          className="font-display rounded-xl py-3 px-5 w-full md:w-auto"
+        >
+          Create New Workout
+        </Button>
+
+        <Modal
+          open={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          maxWidth="sm"
+        >
+          <Card
+            variant="default"
+            padding="lg"
+            className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+          >
+            <h3 className="font-display text-lg font-bold text-accent mb-4">
+              Create New Workout
+            </h3>
+            <form onSubmit={createWorkout} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">
+                  Workout Name
+                </label>
+                <Input
+                  type="text"
+                  value={newWorkoutName}
+                  onChange={(e) => setNewWorkoutName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">
+                  Session Date
+                </label>
+                <DatePicker
+                  value={newWorkoutDate}
+                  onChange={setNewWorkoutDate}
+                />
+              </div>
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">
+                  Notes (Optional)
+                </label>
+                <Input
+                  type="text"
+                  value={newWorkoutNote}
+                  onChange={(e) => setNewWorkoutNote(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2 justify-end mt-1">
+                <Button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  variant="secondary"
+                  className="px-4 py-2 text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="px-4 py-2 text-xs"
+                >
+                  Confirm & Save
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </Modal>
+      </div>
+
+      {error && <ErrorBanner message={error} />}
+
+      <div className="flex gap-6 items-start flex-col xl:flex-row">
+        {/* Left Listing Sidebar */}
+        <div
+          className={`flex-none w-full animate-in fade-in duration-200 ${sidebarHidden ? "hidden" : "xl:w-[400px]"}`}
+        >
+          <Card variant="surface" padding="md" className="shadow-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-sm font-bold text-muted tracking-wider uppercase">
+                Saved Logs List
+              </h2>
+              <button
+                onClick={() => setSidebarHidden(true)}
+                className="p-1.5 rounded-lg text-dim hover:text-body hover:bg-surface/80 transition-colors"
+                title="Hide sidebar"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Search & Filter Bar */}
+            <div className="flex flex-col gap-2 mb-4">
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name..."
+                inputSize="sm"
+                className="w-full"
+              />
+              <div className="flex gap-2 items-center flex-col sm:flex-row">
+                <DatePicker
+                  value={dateFrom}
+                  onChange={(d) => {
+                    setDateFrom(d);
+                    setActiveDatePicker(null);
+                  }}
+                  placeholder="From"
+                  buttonClassName="w-full sm:w-auto rounded-xl px-3 py-2 text-xs"
+                  open={activeDatePicker === "from"}
+                  onOpenChange={(o) => setActiveDatePicker(o ? "from" : null)}
+                />
+                <DatePicker
+                  value={dateTo}
+                  onChange={(d) => {
+                    setDateTo(d);
+                    setActiveDatePicker(null);
+                  }}
+                  placeholder="To"
+                  buttonClassName="w-full sm:w-auto rounded-xl px-3 py-2 text-xs"
+                  open={activeDatePicker === "to"}
+                  onOpenChange={(o) => setActiveDatePicker(o ? "to" : null)}
+                  menuAlign="right"
+                />
+              </div>
+            </div>
+
+            {filteredWorkouts.length === 0 ? (
+              <EmptyState
+                message={
+                  workouts.length === 0
+                    ? "No sessions logged yet."
+                    : "No workouts match your filters."
+                }
+              />
+            ) : (
+              <>
+                <ul className="space-y-2.5 list-none p-0 m-0">
+                  {paginatedWorkouts.map((w) => (
+                    <li
+                      key={w.id}
+                      className={`border rounded-xl transition-all group ${selectedWorkout?.id === w.id ? "bg-surface border-accent/50" : "bg-card/40 border-subtle/80 hover:border-hover"}`}
+                    >
+                      <div className="flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            fetchWorkoutById(w.id);
+                            setWorkoutCardExpanded(true);
+                          }}
+                          className="flex-1 min-w-0 text-left"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <span className="text-sm font-semibold text-heading block truncate">
+                                {w.name}
+                              </span>
+                              <span className="font-mono text-xs text-dim mt-0.5 block">
+                                {w.date?.substring(0, 10)}
+                              </span>
+                            </div>
+                            <span className="rounded-full border border-subtle bg-surface px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-dim">
+                              {w.exercises?.length ?? 0} ex
+                            </span>
+                          </div>
+                        </button>
+
+                        <div
+                          className="flex w-full gap-2 sm:w-auto sm:shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="flex-1 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] sm:flex-none"
+                            onClick={() => {
+                              fetchWorkoutById(w.id);
+                              setWorkoutCardExpanded(true);
+                            }}
+                          >
+                            Open
+                          </Button>
+                          <DeleteButton
+                            onClick={() => setDeleteWorkoutConfirmId(w.id)}
+                          />
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <Pagination
+                  page={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </>
+            )}
+          </Card>
+        </div>
+
+        {/* Right Interactive Workspace Panel */}
+        {sidebarHidden && !selectedWorkout && (
+          <div className="flex-1 w-full text-center py-12">
+            <button
+              onClick={() => setSidebarHidden(false)}
+              className="bg-surface border border-subtle rounded-xl px-6 py-3 text-sm font-semibold text-muted hover:text-body hover:border-hover transition-all inline-flex items-center gap-2"
+            >
+              Show workouts
+            </button>
+          </div>
+        )}
+        {selectedWorkout && !workoutCardExpanded ? (
+          <div className="flex-1 min-w-0 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => setWorkoutCardExpanded(true)}
+              className="rounded-xl border border-subtle bg-card px-5 py-3 text-sm font-bold uppercase tracking-[0.12em] text-body hover:border-accent/40 hover:bg-surface"
+            >
+              Open workout
+            </button>
+          </div>
+        ) : (
+          selectedWorkout && (
+            <Card
+              variant="surface"
+              padding="lg"
+              className="flex-1 w-full shadow-md space-y-6 relative animate-in fade-in slide-in-from-right-4 duration-300"
+            >
+              {/* Header Details Wrapper */}
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex-1 mr-4">
+                  {sidebarHidden && (
+                    <button
+                      onClick={() => setSidebarHidden(false)}
+                      className="text-xs font-semibold text-dim hover:text-body transition-colors mb-2 block"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                  <h2 className="font-display text-3xl font-bold text-accent uppercase tracking-wide flex items-center gap-3">
+                    {selectedWorkout.name}
+                  </h2>
+                  <p className="font-mono text-xs text-dim mt-1">
+                    {selectedWorkout.date?.substring(0, 10)}
+                  </p>
+                  {selectedWorkout.note && (
+                    <p className="font-sans text-sm text-muted mt-2 bg-card/30 p-3 rounded-xl border border-subtle/40">
+                      {selectedWorkout.note}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-2 shrink-0">
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      openEditWorkout();
+                      setShowDetailsDropdown(true);
+                    }}
+                    variant="secondary"
+                    className="px-3 py-1.5 text-xs font-medium"
+                  >
+                    Modify Details
+                  </Button>
+
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setRoutineName(selectedWorkout.name || "");
+                      setShowSaveRoutineModal(true);
+                    }}
+                    variant="secondary"
+                    className="px-3 py-1.5 text-xs font-medium"
+                  >
+                    Save as Routine
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkoutCardExpanded(false);
+                      setSelectedWorkout(null);
+                    }}
+                    className="rounded-lg border border-subtle bg-surface p-2 text-dim hover:text-body hover:border-hover transition-colors"
+                    aria-label="Close workout"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      strokeWidth="2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <hr className="border-none border-t border-subtle/60" />
+
+              {/* Exercises List Display Block */}
+              <h3 className="font-sans text-xs font-bold tracking-widest text-accent uppercase">
+                Recorded Exercises and Sets
+              </h3>
+              {!selectedWorkout.exercises ||
+              selectedWorkout.exercises.length === 0 ? (
+                <p className="text-xs text-dim font-sans py-6 text-center border border-dashed border-subtle rounded-xl bg-card/20">
+                  No exercises logged for this workout yet. Search and select
+                  from the menu below to start.
+                </p>
+              ) : (
+                <ul className="list-none p-0 m-0 space-y-4">
+                  {selectedWorkout.exercises.map((ex: WorkoutExercise) => (
+                    <EditableExerciseCard
+                      key={ex.id}
+                      exerciseName={
+                        ex.name || "Unknown Exercise " + ex.exercise_id
+                      }
+                      exerciseOrder={ex.exercise_order}
+                      showNotesField={true}
+                      goalWeight={goals[ex.exercise_id]}
+                      sets={ex.sets.map((s: WorkoutSet) => ({
+                        id: s.id,
+                        set_number: s.set_number,
+                        weight: s.weight,
+                        reps: s.repetitions,
+                        time: s.time,
+                        note: s.note,
+                      }))}
+                      onRemoveExercise={() => setDeleteExerciseConfirmId(ex.id)}
+                      onAddSet={(weight, reps, time, note) =>
+                        submitNewSet(ex, weight, reps, time, note)
+                      }
+                      onRemoveSet={(setId) => handleRemoveSet(setId)}
+                      onUpdateSet={(setId, field, value) => {
+                        const mapField =
+                          field === "reps"
+                            ? "repetitions"
+                            : (field as EditableSetField);
+                        handleSetChange(ex.id, setId, mapField, value);
+                      }}
+                      onBlurSet={(setId) => handleSetBlur(ex.id, setId)}
+                    />
+                  ))}
+                </ul>
+              )}
+
+              {/* Search Exercises Dropdown Selection Panel */}
+              <div className="pt-6 border-t border-subtle/60">
+                <h3 className="font-sans text-xs font-bold tracking-widest text-accent uppercase mb-3">
+                  Add New Exercise to Workout
+                </h3>
+
+                <div className="flex flex-col gap-4">
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    className="py-4 border-dashed border-subtle hover:border-accent/50 hover:bg-accent/5 transition-all text-sm font-semibold"
+                    onClick={() => setShowPicker(true)}
+                  >
+                    + Add New Exercise Entry
+                  </Button>
+                  <Modal
+                    open={showPicker}
+                    onClose={() => setShowPicker(false)}
+                    maxWidth="xl"
+                  >
+                    <ExercisePicker
+                      title="Add Exercise to Workout"
+                      onSelect={handleAddExercise}
+                      onClose={() => setShowPicker(false)}
+                    />
+                  </Modal>
+                </div>
+              </div>
+            </Card>
+          )
+        )}
+      </div>
+
+      {deleteWorkoutConfirmId !== null && (
+        <ConfirmModal
+          message="Are you sure you want to delete this workout?"
+          onConfirm={() => deleteWorkout(deleteWorkoutConfirmId)}
+          onCancel={() => setDeleteWorkoutConfirmId(null)}
+          confirmLabel="Delete"
+        />
+      )}
+
+      {deleteExerciseConfirmId !== null && (
+        <ConfirmModal
+          message="Remove this exercise from the workout? All sets will be lost."
+          onConfirm={() => {
+            deleteWorkoutExercise(deleteExerciseConfirmId);
+            setDeleteExerciseConfirmId(null);
+          }}
+          onCancel={() => setDeleteExerciseConfirmId(null)}
+          confirmLabel="Remove"
+        />
+      )}
+
+      <Modal
+        open={showDetailsDropdown}
+        onClose={() => setShowDetailsDropdown(false)}
+        maxWidth="sm"
+      >
+        <Card
+          variant="default"
+          padding="lg"
+          className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+        >
+          <h3 className="font-display text-lg font-bold text-accent mb-4">
+            Edit Core Metadata
+          </h3>
+          <div className="flex flex-col gap-3">
+            <Input
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              placeholder="Workout name"
+            />
+            <DatePicker value={editDate} onChange={setEditDate} />
+            <Input
+              value={editNote}
+              onChange={(e) => setEditNote(e.target.value)}
+              placeholder="Note description"
+            />
+          </div>
+          <div className="flex gap-2 justify-end mt-4">
+            <Button
+              type="button"
+              onClick={() => setShowDetailsDropdown(false)}
+              variant="secondary"
+              className="px-4 py-2 text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={saveWorkoutEdit}
+              variant="primary"
+              className="px-4 py-2 text-xs"
+            >
+              Save Changes
+            </Button>
+          </div>
+        </Card>
+      </Modal>
+
+      <Modal
+        open={showSaveRoutineModal}
+        onClose={() => {
+          setShowSaveRoutineModal(false);
+          setRoutineName("");
+        }}
+        maxWidth="sm"
+      >
+        <Card
+          variant="default"
+          padding="lg"
+          className="rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+        >
+          <h3 className="font-display text-lg font-bold text-accent mb-4">
+            Save as Routine
+          </h3>
+          <label className="block text-xs uppercase tracking-wider text-muted font-bold mb-1.5">
+            Routine Name
+          </label>
+          <Input
+            type="text"
+            value={routineName}
+            onChange={(e) => setRoutineName(e.target.value)}
+            placeholder="e.g. Push Day"
+            className="mb-4"
+            autoFocus
+          />
+          <div className="flex gap-3 justify-end">
+            <Button
+              type="button"
+              onClick={() => {
+                setShowSaveRoutineModal(false);
+                setRoutineName("");
+              }}
+              variant="secondary"
+              className="px-4 py-2 text-xs"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={saveAsRoutine}
+              variant="primary"
+              className="px-4 py-2 text-xs"
+            >
+              Create Routine
+            </Button>
+          </div>
+        </Card>
+      </Modal>
+    </div>
+  );
+}

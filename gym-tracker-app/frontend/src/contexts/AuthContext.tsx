@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "../utils/supabaseClient";
+import { resetMyId } from "../data/client";
 
 export interface RegisterProfile {
     name?: string | null;
@@ -59,6 +60,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    // The numeric `users.id` is memoised in data/client.ts for the lifetime of
+    // the SPA. It must be dropped whenever the signed-in identity changes,
+    // otherwise signing out and back in as someone else keeps writing rows
+    // stamped with the previous account's id.
+    const lastUserIdRef = useRef<string | null>(null);
+
     useEffect(() => {
         supabase.auth.getSession().then(({ data }) => {
             setUser(data.session?.user ?? null);
@@ -66,6 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            const nextUserId = session?.user?.id ?? null;
+            if (nextUserId !== lastUserIdRef.current) {
+                lastUserIdRef.current = nextUserId;
+                resetMyId();
+            }
             setUser(session?.user ?? null);
             if (session?.user) {
                 ensureProfile(session.user);
@@ -95,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const logout = async () => {
         await supabase.auth.signOut();
+        resetMyId();
     };
 
     return (

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { getSettings, updateSettings as updateSettingsData } from '../data/user';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Settings {
     show_rpe: boolean;
@@ -36,8 +37,21 @@ export function useSettings() {
 export default function SettingsProvider({ children }: { children: ReactNode }) {
     const [settings, setSettings] = useState<Settings>(defaultSettings);
     const [loading, setLoading] = useState(true);
+    const { isAuthenticated, isLoading: authLoading } = useAuth();
 
+    // Settings are per-user rows, so the read has to wait until Supabase has
+    // restored the session *and* AuthContext has inserted the `users` profile
+    // row that `getMyId()` looks up. Querying earlier fails with
+    // "User profile not found" and silently falls back to defaults.
     useEffect(() => {
+        if (authLoading) return;
+        if (!isAuthenticated) {
+            setSettings(defaultSettings);
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
         getSettings()
             .then(data => {
                 setSettings({
@@ -48,9 +62,11 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
                     default_rest_time: data.default_rest_time ?? defaultSettings.default_rest_time,
                 });
             })
-            .catch(() => { })
+            .catch((err) => {
+                console.error('[Settings] Failed to load settings, using defaults:', err);
+            })
             .finally(() => setLoading(false));
-    }, []);
+    }, [authLoading, isAuthenticated]);
 
     const updateSettings = useCallback(async (data: Partial<Settings>) => {
         const result = await updateSettingsData(data);

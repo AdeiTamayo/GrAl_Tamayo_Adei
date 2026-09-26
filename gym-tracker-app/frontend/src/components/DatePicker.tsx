@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Calendar from "./Calendar";
 import CloseButton from "./CloseButton";
 
@@ -17,6 +17,11 @@ export default function DatePicker({ value, onChange, placeholder = "Select date
     const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const setOpen = useCallback((v: boolean) => {
+        if (onOpenChange) onOpenChange(v);
+        setInternalOpen(v);
+    }, [onOpenChange]);
+
     useEffect(() => {
         if (!open) return;
         function handleClick(e: MouseEvent) {
@@ -26,12 +31,7 @@ export default function DatePicker({ value, onChange, placeholder = "Select date
         }
         document.addEventListener("mousedown", handleClick);
         return () => document.removeEventListener("mousedown", handleClick);
-    }, [open]);
-
-    const setOpen = (v: boolean) => {
-        if (onOpenChange) onOpenChange(v);
-        setInternalOpen(v);
-    };
+    }, [open, setOpen]);
 
     const displayDate = value
         ? new Date(value + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

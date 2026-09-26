@@ -1,425 +1,824 @@
-import { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import Calendar from '../components/Calendar';
-import ErrorBanner from '../components/ErrorBanner';
-import { useAuth } from '../contexts/AuthContext';
-import { getDashboardStats } from '../data/dashboard';
-import { getWorkouts } from '../data/workouts';
-import { getVideos } from '../data/videos';
-import { getWeightHistory } from '../data/user';
-import { getPlannedWorkouts } from '../data/plannedWorkouts';
-import { getUserGoals } from '../data/goals';
-import { Workout, VideoRecord, WeightEntry, DashboardStats, PlannedWorkout, Goal } from '../data/types';
+import { useEffect, useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import Calendar from "../components/Calendar";
+import ErrorBanner from "../components/ErrorBanner";
+import { useAuth } from "../contexts/AuthContext";
+import { getDashboardStats } from "../data/dashboard";
+import { getWorkouts } from "../data/workouts";
+import { getVideos } from "../data/videos";
+import { getWeightHistory } from "../data/user";
+import { getPlannedWorkouts } from "../data/plannedWorkouts";
+import { getUserGoals } from "../data/goals";
+import {
+  Workout,
+  VideoRecord,
+  WeightEntry,
+  DashboardStats,
+  PlannedWorkout,
+  Goal,
+} from "../data/types";
 
 const primaryNav = [
-    { to: '/active-workout', label: 'Active Workout', desc: 'Start or continue a training session', icon: 'M8 5v14l11-7z' },
-    { to: '/workouts', label: 'Workouts', desc: 'View logs, compare sessions, track history & calendar', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-    { to: '/routines', label: 'Routines', desc: 'Create and manage training routines', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
-    { to: '/prs', label: 'PRs', desc: 'Personal records and achievements', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z' },
-    { to: '/goals', label: 'Goals', desc: 'Set and track your fitness goals', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
+  {
+    to: "/active-workout",
+    label: "Active Workout",
+    desc: "Start or continue a training session",
+    icon: "M8 5v14l11-7z",
+  },
+  {
+    to: "/workouts",
+    label: "Workouts",
+    desc: "View logs, compare sessions, track history & calendar",
+    icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+  },
+  {
+    to: "/routines",
+    label: "Routines",
+    desc: "Create and manage training routines",
+    icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15",
+  },
+  {
+    to: "/prs",
+    label: "PRs",
+    desc: "Personal records and achievements",
+    icon: "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z",
+  },
+  {
+    to: "/goals",
+    label: "Goals",
+    desc: "Set and track your fitness goals",
+    icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+  },
 ];
 
 const secondaryNav = [
-    { to: '/compare-workouts', label: 'Compare Workouts', desc: 'Side-by-side workout comparison', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
-    { to: '/exercise-history', label: 'Exercise History', desc: 'Track progress for each exercise', icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
-    { to: '/Weight_history', label: 'Weight History', desc: 'Track your body weight over time', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { to: '/exercises', label: 'Exercises', desc: 'Browse the exercise library', icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z' },
-    { to: '/videos', label: 'Videos', desc: 'View your recorded video sessions', icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
-    { to: '/upload', label: 'Upload', desc: 'Upload a new video for analysis', icon: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' },
+  {
+    to: "/compare-workouts",
+    label: "Compare Workouts",
+    desc: "Side-by-side workout comparison",
+    icon: "M4 6h16M4 10h16M4 14h16M4 18h16",
+  },
+  {
+    to: "/exercise-history",
+    label: "Exercise History",
+    desc: "Track progress for each exercise",
+    icon: "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6",
+  },
+  {
+    to: "/Weight_history",
+    label: "Weight History",
+    desc: "Track your body weight over time",
+    icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+  },
+  {
+    to: "/exercises",
+    label: "Exercises",
+    desc: "Browse the exercise library",
+    icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z",
+  },
+  {
+    to: "/videos",
+    label: "Videos",
+    desc: "View your recorded video sessions",
+    icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z",
+  },
+  {
+    to: "/upload",
+    label: "Upload",
+    desc: "Upload a new video for analysis",
+    icon: "M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12",
+  },
 ];
 
-export default function Hero() {
-    const { isAuthenticated } = useAuth();
+function DashboardHeader() {
+  return (
+    <header className="flex flex-col gap-4 pb-6 border-b border-subtle md:flex-row md:items-center md:justify-between">
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-dim">
+          Performance overview
+        </p>
+        <h1 className="mt-2 font-display text-3xl font-bold tracking-tight uppercase italic text-accent md:text-4xl">
+          Dashboard
+        </h1>
+      </div>
 
-    const [workoutCount, setWorkoutCount] = useState<number | null>(null);
-    const [weeklyVolume, setWeeklyVolume] = useState<number | null>(null);
-    const [currentStreak, setCurrentStreak] = useState<number | null>(null);
-    const [allWorkouts, setAllWorkouts] = useState<Workout[]>([]);
-    const [recentWorkouts, setRecentWorkouts] = useState<Workout[]>([]);
-    const [videos, setVideos] = useState<VideoRecord[]>([]);
-    const [latestWeight, setLatestWeight] = useState<WeightEntry | null>(null);
-    const [plannedDates, setPlannedDates] = useState<Set<string>>(new Set());
-    const [goalDates, setGoalDates] = useState<Set<string>>(new Set());
-    const [loading, setLoading] = useState(true);
-    const [dashboardError, setDashboardError] = useState<string | null>(null);
-    const [showActions, setShowActions] = useState(false);
+      <Link
+        to="/active-workout"
+        className="inline-flex items-center gap-2 self-start rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-black transition-all hover:bg-accent-hover hover:scale-[1.01] active:scale-[0.99] md:self-center"
+      >
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2.5"
+            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>Start Workout</span>
+      </Link>
+    </header>
+  );
+}
 
-    useEffect(() => {
-        if (!isAuthenticated) {
-            setLoading(false);
-            return;
-        }
+function OverviewCard({ currentStreak }: { currentStreak: number | null }) {
+  return (
+    <div className="rounded-2xl border border-subtle bg-card p-5 md:p-6">
+      <div className="flex items-center justify-between gap-3 border-b border-subtle pb-4">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">
+            Today’s plan
+          </p>
+          <h2 className="mt-2 text-2xl font-bold text-heading">
+            Training overview
+          </h2>
+        </div>
+        <span className="inline-flex w-fit items-center rounded-full border border-subtle bg-surface px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted">
+          {currentStreak && currentStreak > 0
+            ? `${currentStreak} ${currentStreak === 1 ? "wk" : "wks"} streak`
+            : "New routine"}
+        </span>
+      </div>
 
-        async function fetchDashboard() {
-            const results = await Promise.allSettled([
-                getDashboardStats(),
-                getWorkouts(),
-                getVideos(),
-                getWeightHistory({ page: 1, limit: 1 }),
-                getPlannedWorkouts(),
-                getUserGoals(),
-            ]);
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <Link
+          to="/workouts"
+          className="rounded-xl border border-subtle bg-surface/40 p-4 transition-all hover:border-accent/40 hover:bg-surface/60"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">
+            Recent
+          </p>
+          <p className="mt-3 text-lg font-bold text-heading">Workouts</p>
+          <p className="mt-1 text-sm text-muted">
+            Review your latest sessions.
+          </p>
+        </Link>
+        <Link
+          to="/routines"
+          className="rounded-xl border border-subtle bg-surface/40 p-4 transition-all hover:border-accent/40 hover:bg-surface/60"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">
+            Program
+          </p>
+          <p className="mt-3 text-lg font-bold text-heading">Routines</p>
+          <p className="mt-1 text-sm text-muted">
+            Manage your training blocks.
+          </p>
+        </Link>
+        <Link
+          to="/goals"
+          className="rounded-xl border border-subtle bg-surface/40 p-4 transition-all hover:border-accent/40 hover:bg-surface/60"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">
+            Target
+          </p>
+          <p className="mt-3 text-lg font-bold text-heading">Goals</p>
+          <p className="mt-1 text-sm text-muted">
+            Keep your focus on progress.
+          </p>
+        </Link>
+      </div>
+    </div>
+  );
+}
 
-            const [statsData, workoutData, videoData, weightData, plannedData, goalsData] = results.map(r =>
-                r.status === 'fulfilled' ? r.value : null
-            ) as [DashboardStats | null, Workout[] | null, VideoRecord[] | null, { rows: WeightEntry[]; total: number } | null, PlannedWorkout[] | null, Goal[] | null];
+function MomentumCard({
+  weeklyVolume,
+  workoutCount,
+  currentStreak,
+}: {
+  weeklyVolume: number | null;
+  workoutCount: number | null;
+  currentStreak: number | null;
+}) {
+  return (
+    <div className="rounded-2xl border border-subtle bg-card p-5 md:p-6">
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">
+        Momentum
+      </p>
+      <div className="mt-4 space-y-4">
+        <div>
+          <p className="text-xs uppercase tracking-[0.2em] text-dim">
+            This week
+          </p>
+          <p className="mt-2 text-3xl font-bold font-mono text-heading">
+            {weeklyVolume != null
+              ? `${(weeklyVolume / 1000).toFixed(1)}k`
+              : "—"}
+          </p>
+          <p className="mt-1 text-xs text-muted">Total volume</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-subtle bg-surface/40 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">
+              Sessions
+            </p>
+            <p className="mt-2 text-2xl font-bold font-mono text-heading">
+              {workoutCount ?? "—"}
+            </p>
+          </div>
+          <div className="rounded-xl border border-subtle bg-surface/40 p-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">
+              Streak
+            </p>
+            <p className="mt-2 text-2xl font-bold font-mono text-heading">
+              {currentStreak ?? "—"}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            if (statsData) {
-                setWorkoutCount(statsData.workoutCount);
-                setWeeklyVolume(statsData.weeklyVolume);
-                setCurrentStreak(statsData.currentStreak);
-            }
-            if (workoutData) {
-                const w = workoutData;
-                setAllWorkouts(w);
-                setRecentWorkouts(w.slice(0, 5));
-            }
-            if (videoData) {
-                setVideos(videoData.slice(0, 3));
-            }
-            if (weightData) {
-                const entries: WeightEntry[] = weightData.rows;
-                entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-                if (entries.length > 0) setLatestWeight(entries[0]);
-            }
-            if (plannedData) {
-                const dates = new Set<string>();
-                plannedData.forEach((p) => {
-                    if (p.date) dates.add(p.date.substring(0, 10));
-                });
-                setPlannedDates(dates);
-            }
-            if (goalsData) {
-                const dates = new Set<string>();
-                goalsData.forEach((g) => {
-                    if (g.expected_date) dates.add(g.expected_date.substring(0, 10));
-                });
-                setGoalDates(dates);
-            }
+function MetricCard({
+  label,
+  value,
+  helper,
+}: {
+  label: string;
+  value: string;
+  helper?: string;
+}) {
+  return (
+    <div className="bg-card border border-subtle rounded-2xl p-5">
+      <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">
+        {label}
+      </p>
+      <p className="mt-3 text-3xl font-bold text-heading font-mono">{value}</p>
+      {helper && <p className="mt-1 text-[10px] text-dim">{helper}</p>}
+    </div>
+  );
+}
 
-            setLoading(false);
-        }
+function WeightCard({ latestWeight }: { latestWeight: WeightEntry | null }) {
+  if (!latestWeight) {
+    return (
+      <div className="rounded-2xl border border-dashed border-subtle bg-card/30 p-5">
+        <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">
+          Weight tracking
+        </p>
+        <p className="mt-3 text-base text-muted">
+          Log your next weigh-in to track long-term progress.
+        </p>
+        <Link
+          to="/Weight_history"
+          className="mt-4 inline-flex rounded-lg bg-accent px-3 py-2 text-sm font-bold text-black hover:bg-accent-hover"
+        >
+          Add weight
+        </Link>
+      </div>
+    );
+  }
 
-        fetchDashboard().catch(err => { setDashboardError("Failed to load dashboard data."); console.error(err); });
-    }, [isAuthenticated]);
+  return (
+    <div className="rounded-2xl border border-subtle bg-card p-5">
+      <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">
+        Latest body weight
+      </p>
+      <p className="mt-3 text-3xl font-bold text-heading font-mono">
+        {Number(latestWeight.weight)}{" "}
+        <span className="text-lg text-dim font-normal">kg</span>
+      </p>
+      <p className="mt-1 text-[10px] text-dim">
+        as of {latestWeight.date?.substring(0, 10)}
+      </p>
+      <Link
+        to="/Weight_history"
+        className="mt-4 block w-full rounded-xl border border-subtle bg-surface/40 px-4 py-2.5 text-center text-sm font-bold uppercase tracking-[0.12em] text-body transition-all hover:border-accent/40 hover:bg-elevated"
+      >
+        View weight history
+      </Link>
+    </div>
+  );
+}
 
-    const workoutEvents = useMemo(() => {
-        const events: Record<string, { date: string; status: 'completed' }> = {};
-        allWorkouts.forEach(w => {
-            if (w.date) {
-                const dateStr = w.date.substring(0, 10);
-                events[dateStr] = { date: dateStr, status: 'completed' };
-            }
-        });
-        return events;
-    }, [allWorkouts]);
+function RecentWorkoutCard({ recentWorkouts }: { recentWorkouts: Workout[] }) {
+  return (
+    <div className="bg-surface/30 border border-subtle rounded-2xl p-5 flex-1">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">
+          Recent workouts
+        </h2>
+        <Link
+          to="/workouts"
+          className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent hover:text-accent-hover"
+        >
+          View all
+        </Link>
+      </div>
 
-    if (!isAuthenticated) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-body text-body p-4">
-                <div className="w-full max-w-md text-center space-y-8">
-                    <div className="space-y-3">
-                        <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight text-accent uppercase">Gym Tracker</h1>
-                        <p className="text-muted text-lg font-medium max-w-sm mx-auto">Track your workouts, analyze your form, and crush your goals.</p>
-                    </div>
-                    <div className="bg-card border border-subtle rounded-2xl p-8 shadow-xl space-y-4">
-                        <div className="space-y-1">
-                            <h2 className="font-display text-lg font-bold uppercase tracking-tight text-heading">Welcome back</h2>
-                            <p className="text-sm text-dim font-medium">Sign in to access your dashboard.</p>
-                        </div>
-                        <div className="flex flex-col gap-3 pt-2">
-                            <Link to="/login" className="w-full bg-accent text-black font-bold rounded-lg hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98] border border-transparent px-6 py-3 transition-all text-center block">Log In</Link>
-                            <Link to="/register" className="w-full px-4 py-3 bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-lg transition-all text-center block">Create an account</Link>
-                        </div>
-                    </div>
+      {recentWorkouts.length === 0 ? (
+        <div className="mt-4 rounded-xl border border-dashed border-subtle/60 bg-card/40 px-4 py-10 text-center">
+          <p className="text-sm text-muted">No workouts logged yet.</p>
+          <p className="mt-2 text-xs text-dim">
+            Start your first session to build momentum.
+          </p>
+        </div>
+      ) : (
+        <ul className="mt-4 space-y-3">
+          {recentWorkouts.slice(0, 3).map((w) => (
+            <li key={w.id}>
+              <Link
+                to="/workouts"
+                state={{ preselectedWorkoutId: w.id }}
+                className="block rounded-xl border border-subtle bg-card/40 p-3 transition-all hover:border-accent/40 hover:bg-surface/40"
+              >
+                <p className="text-sm font-semibold text-heading truncate">
+                  {w.name}
+                </p>
+                <div className="mt-1 flex items-center gap-3">
+                  <span className="text-xs font-mono text-dim">
+                    {w.date?.substring(0, 10)}
+                  </span>
+                  {w.exercises && (
+                    <span className="text-xs text-dim">
+                      {w.exercises.length} exercises
+                    </span>
+                  )}
                 </div>
-            </div>
-        );
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function VideoCard({ video }: { video: VideoRecord }) {
+  return (
+    <Link
+      key={video.id}
+      to="/videos"
+      className="group overflow-hidden rounded-2xl border border-subtle bg-card transition-all hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5"
+    >
+      <div className="bg-black aspect-video flex items-center justify-center">
+        {video.processed_url ? (
+          <video
+            className="w-full h-full object-contain"
+            src={video.processed_url}
+            preload="metadata"
+          />
+        ) : (
+          <span className="px-3 text-center text-xs font-medium italic text-dim">
+            Processing…
+          </span>
+        )}
+      </div>
+      <div className="p-3">
+        <p className="truncate text-xs font-bold uppercase tracking-[0.15em] text-accent">
+          {video.process_type}
+        </p>
+        <p className="mt-1 text-[10px] font-mono text-dim">
+          {new Date(video.created_at).toLocaleDateString()}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+export default function Hero() {
+  const { isAuthenticated } = useAuth();
+
+  const [workoutCount, setWorkoutCount] = useState<number | null>(null);
+  const [weeklyVolume, setWeeklyVolume] = useState<number | null>(null);
+  const [currentStreak, setCurrentStreak] = useState<number | null>(null);
+  const [allWorkouts, setAllWorkouts] = useState<Workout[]>([]);
+  const [recentWorkouts, setRecentWorkouts] = useState<Workout[]>([]);
+  const [videos, setVideos] = useState<VideoRecord[]>([]);
+  const [latestWeight, setLatestWeight] = useState<WeightEntry | null>(null);
+  const [plannedDates, setPlannedDates] = useState<Set<string>>(new Set());
+  const [goalDates, setGoalDates] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [showActions, setShowActions] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
     }
 
+    async function fetchDashboard() {
+      const results = await Promise.allSettled([
+        getDashboardStats(),
+        getWorkouts(),
+        getVideos(),
+        getWeightHistory({ page: 1, limit: 1 }),
+        getPlannedWorkouts(),
+        getUserGoals(),
+      ]);
+
+      const [
+        statsData,
+        workoutData,
+        videoData,
+        weightData,
+        plannedData,
+        goalsData,
+      ] = results.map((r) => (r.status === "fulfilled" ? r.value : null)) as [
+        DashboardStats | null,
+        Workout[] | null,
+        VideoRecord[] | null,
+        { rows: WeightEntry[]; total: number } | null,
+        PlannedWorkout[] | null,
+        Goal[] | null,
+      ];
+
+      if (statsData) {
+        setWorkoutCount(statsData.workoutCount);
+        setWeeklyVolume(statsData.weeklyVolume);
+        setCurrentStreak(statsData.currentStreak);
+      }
+      if (workoutData) {
+        const w = workoutData;
+        setAllWorkouts(w);
+        setRecentWorkouts(w.slice(0, 5));
+      }
+      if (videoData) {
+        setVideos(videoData.slice(0, 3));
+      }
+      if (weightData) {
+        const entries: WeightEntry[] = weightData.rows;
+        entries.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+        );
+        if (entries.length > 0) setLatestWeight(entries[0]);
+      }
+      if (plannedData) {
+        const dates = new Set<string>();
+        plannedData.forEach((p) => {
+          if (p.date) dates.add(p.date.substring(0, 10));
+        });
+        setPlannedDates(dates);
+      }
+      if (goalsData) {
+        const dates = new Set<string>();
+        goalsData.forEach((g) => {
+          if (g.expected_date) dates.add(g.expected_date.substring(0, 10));
+        });
+        setGoalDates(dates);
+      }
+
+      setLoading(false);
+    }
+
+    fetchDashboard().catch((err) => {
+      setDashboardError("Failed to load dashboard data.");
+      console.error(err);
+    });
+  }, [isAuthenticated]);
+
+  const workoutEvents = useMemo(() => {
+    const events: Record<string, { date: string; status: "completed" }> = {};
+    allWorkouts.forEach((w) => {
+      if (w.date) {
+        const dateStr = w.date.substring(0, 10);
+        events[dateStr] = { date: dateStr, status: "completed" };
+      }
+    });
+    return events;
+  }, [allWorkouts]);
+
+  if (!isAuthenticated) {
     return (
-        <div className="min-h-screen bg-body text-body p-4 md:p-8 pb-24 md:pb-8">
-            <div className="max-w-6xl mx-auto space-y-8">
-                <header className="flex flex-col gap-4 pb-6 border-b border-subtle md:flex-row md:items-center md:justify-between">
-                    <div>
-                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-dim">Performance overview</p>
-                        <h1 className="mt-2 font-display text-3xl font-bold tracking-tight uppercase italic text-accent md:text-4xl">Dashboard</h1>
-                    </div>
+      <div className="flex items-center justify-center min-h-screen bg-body text-body p-4">
+        <div className="w-full max-w-md text-center space-y-8">
+          <div className="space-y-3">
+            <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight text-accent uppercase">
+              Gym Tracker
+            </h1>
+            <p className="text-muted text-lg font-medium max-w-sm mx-auto">
+              Track your workouts, analyze your form, and crush your goals.
+            </p>
+          </div>
+          <div className="bg-card border border-subtle rounded-2xl p-8 shadow-xl space-y-4">
+            <div className="space-y-1">
+              <h2 className="font-display text-lg font-bold uppercase tracking-tight text-heading">
+                Welcome back
+              </h2>
+              <p className="text-sm text-dim font-medium">
+                Sign in to access your dashboard.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 pt-2">
+              <Link
+                to="/login"
+                className="w-full bg-accent text-black font-bold rounded-lg hover:bg-accent-hover hover:scale-[1.02] active:scale-[0.98] border border-transparent px-6 py-3 transition-all text-center block"
+              >
+                Log In
+              </Link>
+              <Link
+                to="/register"
+                className="w-full px-4 py-3 bg-elevated hover:bg-hover text-body font-bold border border-subtle text-sm rounded-lg transition-all text-center block"
+              >
+                Create an account
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-                    <Link to="/active-workout" className="inline-flex items-center gap-2 self-start rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-black transition-all hover:bg-accent-hover hover:scale-[1.01] active:scale-[0.99] md:self-center">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Start Workout</span>
-                    </Link>
-                </header>
+  return (
+    <div className="min-h-screen bg-body text-body p-4 md:p-8 pb-24 md:pb-8">
+      <div className="max-w-6xl mx-auto space-y-8">
+        <DashboardHeader />
 
-                {dashboardError && (
-                    <ErrorBanner message={dashboardError} />
-                )}
+        {dashboardError && <ErrorBanner message={dashboardError} />}
 
-                <section className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
-                    <div className="rounded-2xl border border-subtle bg-card p-5 md:p-6">
-                        <div className="flex items-center justify-between gap-3 border-b border-subtle pb-4">
-                            <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Today’s plan</p>
-                                <h2 className="mt-2 text-2xl font-bold text-heading">Training overview</h2>
-                            </div>
-                            <span className="inline-flex w-fit items-center rounded-full border border-subtle bg-surface px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-muted">
-                                {currentStreak ? `${currentStreak} wk streak` : 'New routine'}
-                            </span>
-                        </div>
+        <section className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
+          <OverviewCard currentStreak={currentStreak} />
+          <MomentumCard
+            weeklyVolume={weeklyVolume}
+            workoutCount={workoutCount}
+            currentStreak={currentStreak}
+          />
+        </section>
 
-                        <div className="mt-5 grid gap-3 md:grid-cols-3">
-                            <Link to="/workouts" className="rounded-xl border border-subtle bg-surface/40 p-4 transition-all hover:border-accent/40 hover:bg-surface/60">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Recent</p>
-                                <p className="mt-3 text-lg font-bold text-heading">Workouts</p>
-                                <p className="mt-1 text-sm text-muted">Review your latest sessions.</p>
-                            </Link>
-                            <Link to="/routines" className="rounded-xl border border-subtle bg-surface/40 p-4 transition-all hover:border-accent/40 hover:bg-surface/60">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Program</p>
-                                <p className="mt-3 text-lg font-bold text-heading">Routines</p>
-                                <p className="mt-1 text-sm text-muted">Manage your training blocks.</p>
-                            </Link>
-                            <Link to="/goals" className="rounded-xl border border-subtle bg-surface/40 p-4 transition-all hover:border-accent/40 hover:bg-surface/60">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Target</p>
-                                <p className="mt-3 text-lg font-bold text-heading">Goals</p>
-                                <p className="mt-1 text-sm text-muted">Keep your focus on progress.</p>
-                            </Link>
-                        </div>
-                    </div>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="bg-surface/60 border border-subtle rounded-xl p-5 space-y-3"
+              >
+                <div className="h-3 w-20 bg-elevated rounded" />
+                <div className="h-8 w-16 bg-elevated rounded" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <MetricCard
+              label="Total sessions"
+              value={String(workoutCount ?? "—")}
+            />
+            <MetricCard
+              label="Weekly volume"
+              value={
+                weeklyVolume != null
+                  ? `${(weeklyVolume / 1000).toFixed(1)}k`
+                  : "—"
+              }
+              helper="total kg this week"
+            />
+            <MetricCard
+              label="Workout streak"
+              value={String(currentStreak ?? "—")}
+              helper={
+                currentStreak != null && currentStreak > 0
+                  ? `${currentStreak === 1 ? "week" : "weeks"} straight`
+                  : undefined
+              }
+            />
+          </div>
+        )}
 
-                    <div className="rounded-2xl border border-subtle bg-card p-5 md:p-6">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Momentum</p>
-                        <div className="mt-4 space-y-4">
-                            <div>
-                                <p className="text-xs uppercase tracking-[0.2em] text-dim">This week</p>
-                                <p className="mt-2 text-3xl font-bold font-mono text-heading">{weeklyVolume != null ? `${(weeklyVolume / 1000).toFixed(1)}k` : '—'}</p>
-                                <p className="mt-1 text-xs text-muted">Total volume</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="rounded-xl border border-subtle bg-surface/40 p-3">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Sessions</p>
-                                    <p className="mt-2 text-2xl font-bold font-mono text-heading">{workoutCount ?? '—'}</p>
-                                </div>
-                                <div className="rounded-xl border border-subtle bg-surface/40 p-3">
-                                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-dim">Streak</p>
-                                    <p className="mt-2 text-2xl font-bold font-mono text-heading">{currentStreak ?? '—'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          <div className="flex flex-col gap-4">
+            <div className="rounded-2xl border border-subtle bg-card p-4 md:p-5">
+              <Calendar
+                events={workoutEvents}
+                plannedDates={plannedDates}
+                goalDates={goalDates}
+                compact
+              />
+            </div>
+            <Link
+              to="/workout-calendar"
+              className="w-full rounded-xl border border-subtle bg-elevated px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-body transition-all hover:border-accent/40 hover:bg-hover"
+            >
+              View full calendar
+            </Link>
+          </div>
 
-                {loading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-pulse">
-                        {[1, 2, 3].map(n => (
-                            <div key={n} className="bg-surface/60 border border-subtle rounded-xl p-5 space-y-3">
-                                <div className="h-3 w-20 bg-elevated rounded" />
-                                <div className="h-8 w-16 bg-elevated rounded" />
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="bg-card border border-subtle rounded-2xl p-5">
-                            <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Total sessions</p>
-                            <p className="mt-3 text-3xl font-bold text-heading font-mono">{workoutCount ?? '—'}</p>
-                        </div>
-                        <div className="bg-card border border-subtle rounded-2xl p-5">
-                            <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Weekly volume</p>
-                            <p className="mt-3 text-3xl font-bold text-heading font-mono">{weeklyVolume != null ? `${(weeklyVolume / 1000).toFixed(1)}k` : '—'}</p>
-                            <p className="mt-1 text-[10px] text-dim">total kg this week</p>
-                        </div>
-                        <div className="bg-card border border-subtle rounded-2xl p-5">
-                            <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Workout streak</p>
-                            <p className="mt-3 text-3xl font-bold text-heading font-mono">{currentStreak ?? '—'}</p>
-                            {currentStreak != null && currentStreak > 0 && (
-                                <p className="mt-1 text-[10px] text-dim">{currentStreak === 1 ? 'week' : 'weeks'} straight</p>
-                            )}
-                        </div>
-                    </div>
-                )}
+          <div className="flex flex-col gap-4">
+            <WeightCard latestWeight={latestWeight} />
+            <RecentWorkoutCard recentWorkouts={recentWorkouts} />
+          </div>
+        </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-                    <div className="flex flex-col gap-4">
-                        <div className="rounded-2xl border border-subtle bg-card p-4 md:p-5">
-                            <Calendar events={workoutEvents} plannedDates={plannedDates} goalDates={goalDates} compact />
-                        </div>
-                        <Link to="/workout-calendar" className="w-full rounded-xl border border-subtle bg-elevated px-4 py-3 text-center text-sm font-bold uppercase tracking-[0.12em] text-body transition-all hover:border-accent/40 hover:bg-hover">
-                            View full calendar
-                        </Link>
-                    </div>
+        {!loading && videos.length > 0 && (
+          <div>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">
+                Recent videos
+              </h2>
+              <Link
+                to="/upload"
+                className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent hover:text-accent-hover"
+              >
+                Upload video
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {videos.map((video) => (
+                <VideoCard key={video.id} video={video} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
-                    <div className="flex flex-col gap-4">
-                        {latestWeight ? (
-                            <div className="rounded-2xl border border-subtle bg-card p-5">
-                                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Latest body weight</p>
-                                <p className="mt-3 text-3xl font-bold text-heading font-mono">{Number(latestWeight.weight)} <span className="text-lg text-dim font-normal">kg</span></p>
-                                <p className="mt-1 text-[10px] text-dim">as of {latestWeight.date?.substring(0, 10)}</p>
-                                <Link to="/Weight_history" className="mt-4 block w-full rounded-xl border border-subtle bg-surface/40 px-4 py-2.5 text-center text-sm font-bold uppercase tracking-[0.12em] text-body transition-all hover:border-accent/40 hover:bg-elevated">View weight history</Link>
-                            </div>
-                        ) : (
-                            <div className="rounded-2xl border border-dashed border-subtle bg-card/30 p-5">
-                                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Weight tracking</p>
-                                <p className="mt-3 text-base text-muted">Log your next weigh-in to track long-term progress.</p>
-                                <Link to="/Weight_history" className="mt-4 inline-flex rounded-lg bg-accent px-3 py-2 text-sm font-bold text-black hover:bg-accent-hover">Add weight</Link>
-                            </div>
-                        )}
-
-                        <div className="bg-surface/30 border border-subtle rounded-2xl p-5 flex-1">
-                            <div className="flex items-center justify-between gap-3">
-                                <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Recent workouts</h2>
-                                <Link to="/workouts" className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent hover:text-accent-hover">View all</Link>
-                            </div>
-
-                            {recentWorkouts.length === 0 ? (
-                                <div className="mt-4 rounded-xl border border-dashed border-subtle/60 bg-card/40 px-4 py-10 text-center">
-                                    <p className="text-sm text-muted">No workouts logged yet.</p>
-                                    <p className="mt-2 text-xs text-dim">Start your first session to build momentum.</p>
-                                </div>
-                            ) : (
-                                <ul className="mt-4 space-y-3">
-                                    {recentWorkouts.slice(0, 3).map(w => (
-                                        <li key={w.id}>
-                                            <Link to="/workouts" state={{ preselectedWorkoutId: w.id }} className="block rounded-xl border border-subtle bg-card/40 p-3 transition-all hover:border-accent/40 hover:bg-surface/40">
-                                                <p className="text-sm font-semibold text-heading truncate">{w.name}</p>
-                                                <div className="mt-1 flex items-center gap-3">
-                                                    <span className="text-xs font-mono text-dim">{w.date?.substring(0, 10)}</span>
-                                                    {w.exercises && <span className="text-xs text-dim">{w.exercises.length} exercises</span>}
-                                                </div>
-                                            </Link>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {!loading && videos.length > 0 && (
-                    <div>
-                        <div className="mb-4 flex items-center justify-between gap-3">
-                            <h2 className="text-[10px] font-bold tracking-[0.2em] uppercase text-dim">Recent videos</h2>
-                            <Link to="/upload" className="text-[10px] font-bold uppercase tracking-[0.12em] text-accent hover:text-accent-hover">
-                                Upload video
-                            </Link>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            {videos.map(video => (
-                                <Link key={video.id} to="/videos" className="group overflow-hidden rounded-2xl border border-subtle bg-card transition-all hover:border-accent/40 hover:shadow-lg hover:shadow-accent/5">
-                                    <div className="bg-black aspect-video flex items-center justify-center">
-                                        {video.processed_url ? (
-                                            <video className="w-full h-full object-contain" src={video.processed_url} preload="metadata" />
-                                        ) : (
-                                            <span className="px-3 text-center text-xs font-medium italic text-dim">Processing…</span>
-                                        )}
-                                    </div>
-                                    <div className="p-3">
-                                        <p className="truncate text-xs font-bold uppercase tracking-[0.15em] text-accent">{video.process_type}</p>
-                                        <p className="mt-1 text-[10px] font-mono text-dim">{new Date(video.created_at).toLocaleDateString()}</p>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-
+      {/* Fixed Sidebar wrapper */}
+      <div
+        className={`fixed left-0 top-16 bottom-0 z-40 flex items-start pointer-events-none transition-transform duration-300 ease-in-out transform ${
+          showActions ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* SIDEBAR CONTAINER */}
+        <div className="h-full w-[25vw] max-w-[calc(50vw_-_36rem)] min-w-[280px] bg-card border-r border-subtle shadow-2xl overflow-y-auto pointer-events-auto">
+          <div className="p-5 space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold tracking-[0.15em] uppercase text-heading">
+                Modules
+              </h3>
+              <button
+                onClick={() => setShowActions(false)}
+                className="p-1.5 rounded-lg hover:bg-rose-500/10 text-muted hover:text-rose-400 transition-colors"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
 
-            {/* Fixed Sidebar wrapper */}
-            <div
-                className={`fixed left-0 top-16 bottom-0 z-40 flex items-start pointer-events-none transition-transform duration-300 ease-in-out transform ${showActions ? 'translate-x-0' : '-translate-x-full'
-                    }`}
-            >
-                {/* SIDEBAR CONTAINER */}
-                <div className="h-full w-[25vw] max-w-[calc(50vw_-_36rem)] min-w-[280px] bg-card border-r border-subtle shadow-2xl overflow-y-auto pointer-events-auto">
-                    <div className="p-5 space-y-5">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-bold tracking-[0.15em] uppercase text-heading">Modules</h3>
-                            <button
-                                onClick={() => setShowActions(false)}
-                                className="p-1.5 rounded-lg hover:bg-rose-500/10 text-muted hover:text-rose-400 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/settings"
+                className="flex items-center gap-2 flex-1 bg-surface/30 border border-subtle rounded-lg px-3 py-2 hover:border-accent/40 hover:bg-elevated/40 transition-all group"
+              >
+                <svg
+                  className="w-4 h-4 text-muted group-hover:text-accent transition-colors"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                <span className="text-xs font-bold text-muted group-hover:text-body uppercase tracking-wider transition-colors">
+                  Settings
+                </span>
+              </Link>
+              <Link
+                to="/profile"
+                className="flex items-center gap-2 flex-1 bg-surface/30 border border-subtle rounded-lg px-3 py-2 hover:border-accent/40 hover:bg-elevated/40 transition-all group"
+              >
+                <svg
+                  className="w-4 h-4 text-muted group-hover:text-accent transition-colors"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+                <span className="text-xs font-bold text-muted group-hover:text-body uppercase tracking-wider transition-colors">
+                  Profile
+                </span>
+              </Link>
+            </div>
 
-                        <div className="flex items-center gap-2">
-                            <Link to="/settings" className="flex items-center gap-2 flex-1 bg-surface/30 border border-subtle rounded-lg px-3 py-2 hover:border-accent/40 hover:bg-elevated/40 transition-all group">
-                                <svg className="w-4 h-4 text-muted group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span className="text-xs font-bold text-muted group-hover:text-body uppercase tracking-wider transition-colors">Settings</span>
-                            </Link>
-                            <Link to="/profile" className="flex items-center gap-2 flex-1 bg-surface/30 border border-subtle rounded-lg px-3 py-2 hover:border-accent/40 hover:bg-elevated/40 transition-all group">
-                                <svg className="w-4 h-4 text-muted group-hover:text-accent transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                <span className="text-xs font-bold text-muted group-hover:text-body uppercase tracking-wider transition-colors">Profile</span>
-                            </Link>
-                        </div>
+            <div className="space-y-1.5">
+              {primaryNav.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="flex items-center gap-3 bg-surface/30 rounded-lg px-4 py-3 border-l-2 border-l-transparent hover:bg-elevated/40 hover:border-l-accent transition-all group"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d={link.icon}
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">
+                      {link.label}
+                    </p>
+                    <p className="text-xs text-dim leading-relaxed">
+                      {link.desc}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
 
-                        <div className="space-y-1.5">
-                            {primaryNav.map((link) => (
-                                <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 rounded-lg px-4 py-3 border-l-2 border-l-transparent hover:bg-elevated/40 hover:border-l-accent transition-all group">
-                                    <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={link.icon} />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">{link.label}</p>
-                                        <p className="text-xs text-dim leading-relaxed">{link.desc}</p>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
+            <hr className="border-subtle/40" />
 
-                        <hr className="border-subtle/40" />
+            <div className="space-y-1.5 opacity-70">
+              {secondaryNav.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="flex items-center gap-3 bg-surface/30 rounded-lg px-4 py-3 border-l-2 border-l-transparent hover:bg-elevated/40 hover:border-l-accent transition-all group hover:opacity-100"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-accent/5 border border-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d={link.icon}
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">
+                      {link.label}
+                    </p>
+                    <p className="text-xs text-dim leading-relaxed">
+                      {link.desc}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
 
-                        <div className="space-y-1.5 opacity-70">
-                            {secondaryNav.map((link) => (
-                                <Link key={link.to} to={link.to} className="flex items-center gap-3 bg-surface/30 rounded-lg px-4 py-3 border-l-2 border-l-transparent hover:bg-elevated/40 hover:border-l-accent transition-all group hover:opacity-100">
-                                    <div className="w-8 h-8 rounded-lg bg-accent/5 border border-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
-                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={link.icon} />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-bold text-heading group-hover:text-accent transition-colors uppercase tracking-wide">{link.label}</p>
-                                        <p className="text-xs text-dim leading-relaxed">{link.desc}</p>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* TOGGLE TAB BUTTON */}
-                {/* Placed immediately outside the sliding frame within the parent wrapper. 
+        {/* TOGGLE TAB BUTTON */}
+        {/* Placed immediately outside the sliding frame within the parent wrapper. 
                     It is given 'pointer-events-auto' so it always stays clickable, and 
                     the logic automatically shifts it back into full view on the left screen edge 
                     when closed.
                 */}
-                <button
-                    onClick={() => setShowActions(!showActions)}
-                    className={`bg-accent border border-l-0 border-accent rounded-r-xl shadow-lg px-2 py-4 mt-16 text-xs font-bold tracking-[0.15em] uppercase text-black hover:bg-accent/90 pointer-events-auto flex flex-col items-center gap-2 transition-transform duration-300 ease-in-out ${showActions ? '' : 'translate-x-full'
-                        }`}
-                >
-                    <svg className={`w-4 h-4 transition-transform duration-300 ${showActions ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                    <span className="[writing-mode:vertical-rl] rotate-180">
-                        {showActions ? 'Close' : 'Modules'}
-                    </span>
-                </button>
-            </div>
-        </div>
-    );
+        <button
+          onClick={() => setShowActions(!showActions)}
+          className={`bg-accent border border-l-0 border-accent rounded-r-xl shadow-lg px-2 py-4 mt-16 text-xs font-bold tracking-[0.15em] uppercase text-black hover:bg-accent/90 pointer-events-auto flex flex-col items-center gap-2 transition-transform duration-300 ease-in-out ${
+            showActions ? "" : "translate-x-full"
+          }`}
+        >
+          <svg
+            className={`w-4 h-4 transition-transform duration-300 ${showActions ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M9 5l7 7-7 7"
+            />
+          </svg>
+          <span className="[writing-mode:vertical-rl] rotate-180">
+            {showActions ? "Close" : "Modules"}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
 }
