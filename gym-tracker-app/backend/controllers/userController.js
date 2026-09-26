@@ -1,366 +1,242 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const { requireVar } = require('../config/env');
+const { sendData, sendError } = require('../utils/httpResponses');
 
 exports.getProfile = async (req, res) => {
-    console.log('Profile Info Request');
     try {
         const user = await User.findUserById(req.userId);
 
         if (!user) {
-            console.log('User not found');
-            return res.status(404).json({
-                success: false,
-                error: 'User not found'
-            });
+            return sendError(res, 404, 'User not found');
         }
 
-        res.json({
-            success: true,
-            user: user
-        });
+        return sendData(res, 200, { user });
     } catch (error) {
-        console.error('Error fetching profile:', error);
-        res.status(500).json({ success: false, error: 'Failed to fetch profile' });
+        console.error('[User] Error fetching profile:', error);
+        return sendError(res, 500, 'Failed to fetch profile');
     }
 };
 
 exports.updateProfile = async (req, res) => {
-    console.log('Profile Update Request');
     try {
-
         const { name, surname, email, gender, height, weight, birth_date } = req.body;
 
-        const updatedUser = await User.updateUser(req.userId, {
-            name,
-            surname,
-            email,
-            gender,
-            weight,
-            height,
-            birth_date
+        const user = await User.updateUser(req.userId, {
+            name, surname, email, gender, weight, height, birth_date
         });
 
-        res.json({
-            success: true,
-            user: updatedUser
-        });
+        return sendData(res, 200, { user });
     } catch (error) {
-        console.error('Error updating profile:', error);
-        res.status(500).json({ success: false, error: 'Failed to update profile' });
+        console.error('[User] Error updating profile:', error);
+        return sendError(res, 500, 'Failed to update profile');
     }
 };
 
 exports.deleteUser = async (req, res) => {
-    console.log('Delete profile request received');
-
     try {
         const { password } = req.body;
 
         if (!password) {
-            return res.status(400).json({
-                success: false,
-                error: 'Password is required to delete account'
-            });
+            return sendError(res, 400, 'Password is required to delete account');
         }
 
         const user = await User.findUserPasswordById(req.userId);
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                error: 'User not found'
-            });
+            return sendError(res, 404, 'User not found');
         }
 
         const isValid = await User.validatePassword(password, user.password);
         if (!isValid) {
-            return res.status(403).json({
-                success: false,
-                error: 'Incorrect password'
-            });
+            return sendError(res, 403, 'Incorrect password');
         }
 
         await User.deleteUser(req.userId);
 
-        return res.json({
-            success: true
-        })
-
+        return sendData(res, 200, {});
     } catch (error) {
-        console.error('Error deleting user:', error);
-        return res.status(500).json({
-            success: false,
-            error: 'Error deleting user'
-        })
+        console.error('[User] Error deleting user:', error);
+        return sendError(res, 500, 'Error deleting user');
     }
-}
+};
 
-
-/**
- * Handle user login
- */
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        console.log('\n=== Login Request ===');
-        console.log(`[Login] Email: ${email}`);
-
-        // Validate input
         if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                error: 'Email and password are required'
-            });
+            return sendError(res, 400, 'Email and password are required');
         }
 
-        // Find user in database
         const user = await User.findUserByEmail(email);
+
+        // The same message is returned whether the email is unknown or the
+        // password is wrong, so the endpoint does not reveal which accounts exist.
         if (!user) {
-            return res.status(401).json({
-                success: false,
-                error: 'Invalid email or password'
-            });
+            return sendError(res, 401, 'Invalid email or password');
         }
 
-        // Validate password
         const isValid = await User.validatePassword(password, user.password);
         if (!isValid) {
-            return res.status(401).json({
-                success: false,
-                error: 'Invalid email or password'
-            });
+            return sendError(res, 401, 'Invalid email or password');
         }
 
-        // Generate JWT token with user ID and email
         const token = jwt.sign(
             { userId: user.id, email: user.email },
-            process.env.JWT_SECRET,
+            requireVar('JWT_SECRET'),
             { expiresIn: '7d' }
         );
 
-        console.log('[Login] Successful');
-
-        res.json({
-            success: true,
+        return sendData(res, 200, {
             message: 'Login successful',
             token,
             user: { id: user.id, email: user.email }
         });
     } catch (error) {
-        console.error('[Login Error]:', error.message);
-        res.status(500).json({
-            success: false,
-            error: 'Login failed'
-        });
+        console.error('[User] Login error:', error.message);
+        return sendError(res, 500, 'Login failed');
     }
 };
 
-/**
- * Handle user registration
- */
 exports.register = async (req, res) => {
     try {
         const { name, surname, email, password, gender_id, weight, height, birth_date } = req.body;
 
-        console.log('\n=== Register Request ===');
-        console.log(`[Register] Email: ${email}`);
-        console.log(`[Register] User values: name=${name}, surname=${surname}, email=${email}, gender_id=${gender_id}, weight=${weight}, height=${height}, birth_date=${birth_date}`);
-
-        // Validate input
         if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                error: 'Email and password are required'
-            });
+            return sendError(res, 400, 'Email and password are required');
         }
 
-        // Check if user already exists
         const existingUser = await User.findUserByEmail(email);
         if (existingUser) {
-            return res.status(409).json({
-                success: false,
-                error: 'Email already registered'
-            });
+            return sendError(res, 409, 'Email already registered');
         }
 
-        // Create user with hashed password
         const user = await User.createUser(name, surname, email, password, gender_id, weight, height, birth_date);
 
-        console.log('[Register] User registered successfully');
-
-        res.status(201).json({
-            success: true,
+        return sendData(res, 201, {
             message: 'Registration successful',
             user: { id: user.id, email: user.email }
         });
     } catch (error) {
-        console.error('[Register Error]:', error.message);
-        res.status(500).json({
-            success: false,
-            error: 'Registration failed'
-        });
+        console.error('[User] Registration error:', error.message);
+        return sendError(res, 500, 'Registration failed');
     }
 };
 
 exports.getWeightHistory = async (req, res) => {
     try {
-        console.log('\n=== Get Weight History Request ===');
-
-        const userId = req.userId;
-        if (!userId) {
-            return res.status(400).json({
-                success: false,
-                error: 'User ID is required'
-            });
-        }
-
         const { startDate, endDate, page, limit, sortBy, sortOrder } = req.query;
 
         if (startDate && isNaN(Date.parse(startDate))) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid startDate format (use YYYY-MM-DD)'
-            });
+            return sendError(res, 400, 'Invalid startDate format (use YYYY-MM-DD)');
         }
 
         if (endDate && isNaN(Date.parse(endDate))) {
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid endDate format (use YYYY-MM-DD)'
-            });
+            return sendError(res, 400, 'Invalid endDate format (use YYYY-MM-DD)');
         }
 
         if (startDate && endDate && startDate > endDate) {
-            return res.status(400).json({
-                success: false,
-                error: 'startDate cannot be after endDate'
-            });
+            return sendError(res, 400, 'startDate cannot be after endDate');
         }
 
-        const validSortBy = ['date', 'weight'].includes(sortBy) ? sortBy : undefined;
-        const validSortOrder = ['asc', 'desc'].includes(sortOrder) ? sortOrder : undefined;
-        const pageNum = page ? parseInt(page, 10) : undefined;
-        const limitNum = limit ? parseInt(limit, 10) : undefined;
-
-        const result = await User.getWeightHistory(userId, {
+        const result = await User.getWeightHistory(req.userId, {
             startDate,
             endDate,
-            page: pageNum,
-            limit: limitNum,
-            sortBy: validSortBy,
-            sortOrder: validSortOrder
+            page: toPositiveInt(page),
+            limit: toPositiveInt(limit),
+            // Whitelisted here because both values are interpolated into SQL.
+            sortBy: ['date', 'weight'].includes(sortBy) ? sortBy : undefined,
+            sortOrder: sortOrder === 'asc' ? 'asc' : undefined
         });
 
-        return res.status(200).json({
-            success: true,
-            data: result.rows,
-            total: result.total
-        });
+        return sendData(res, 200, { data: result.rows, total: result.total });
     } catch (error) {
-        console.error('[Get Weight History Error]:', error.message);
-        return res.status(500).json({
-            success: false,
-            error: 'Get weight history failed'
-        });
+        console.error('[User] Error getting weight history:', error.message);
+        return sendError(res, 500, 'Get weight history failed');
     }
 };
 
 exports.addWeight = async (req, res) => {
     try {
-        const userId = req.userId;
         const { weight, date } = req.body;
 
-        if (!userId || weight == null || !date) {
-            return res.status(400).json({
-                success: false,
-                error: 'userId, weight and date are required'
-            });
+        if (weight == null || !date) {
+            return sendError(res, 400, 'weight and date are required');
         }
 
-        const newWeightEntry = await User.addWeight(userId, weight, date);
-        const currentWeight = await User.syncProfileWeightFromHistory(userId);
+        const entry = await User.addWeight(req.userId, weight, date);
+        const currentWeight = await User.syncProfileWeightFromHistory(req.userId);
 
-        return res.status(201).json({
-            success: true,
-            data: newWeightEntry,
-            currentWeight
-        });
+        return sendData(res, 201, { data: entry, currentWeight });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            error: 'Add weight failed'
-        });
+        console.error('[User] Error adding weight:', error);
+        return sendError(res, 500, 'Add weight failed');
     }
 };
 
 exports.updateWeight = async (req, res) => {
     try {
-        const userId = req.userId;
         const { id, weight, date } = req.body;
 
         if (!id || weight == null || !date) {
-            return res.status(400).json({
-                success: false,
-                error: 'id, weight and date are required'
-            });
+            return sendError(res, 400, 'id, weight and date are required');
         }
 
-        const updatedWeight = await User.updateWeight(id, weight, date, userId); // ensure ownership
-        await User.syncProfileWeightFromHistory(userId);
+        const entry = await User.updateWeight(id, weight, date, req.userId);
+        await User.syncProfileWeightFromHistory(req.userId);
 
-        return res.status(200).json({
-            success: true,
-            data: updatedWeight
-        });
+        return sendData(res, 200, { data: entry });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            error: 'Update weight failed'
-        });
+        console.error('[User] Error updating weight:', error);
+        return sendError(res, 500, 'Update weight failed');
+    }
+};
+
+exports.deleteWeight = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return sendError(res, 400, 'id is required');
+        }
+
+        await User.deleteWeight(id, req.userId);
+        await User.syncProfileWeightFromHistory(req.userId);
+
+        return sendData(res, 200, {});
+    } catch (error) {
+        console.error('[User] Error deleting weight:', error);
+        return sendError(res, 500, 'Delete weight failed');
     }
 };
 
 exports.getSettings = async (req, res) => {
     try {
         const settings = await User.getSettings(req.userId);
-        return res.status(200).json({ success: true, data: settings });
+        return sendData(res, 200, { data: settings });
     } catch (error) {
-        console.error('[Settings] Error fetching:', error.message);
-        return res.status(500).json({ success: false, error: 'Failed to fetch settings' });
+        console.error('[User] Error fetching settings:', error.message);
+        return sendError(res, 500, 'Failed to fetch settings');
     }
 };
 
 exports.updateSettings = async (req, res) => {
     try {
         const { show_rpe, show_1rm, show_goals, show_rest_time, default_rest_time } = req.body;
-        const settings = await User.updateSettings(req.userId, { show_rpe, show_1rm, show_goals, show_rest_time, default_rest_time });
-        return res.status(200).json({ success: true, data: settings });
-    } catch (error) {
-        console.error('[Settings] Error updating:', error.message);
-        return res.status(500).json({ success: false, error: 'Failed to update settings' });
-    }
-};
 
-exports.deleteWeight = async (req, res) => {
-    try {
-        const userId = req.userId;
-        const { id } = req.params;
-
-        if (!id) {
-            return res.status(400).json({
-                success: false,
-                error: 'id is required'
-            });
-        }
-
-        await User.deleteWeight(id, userId); // ensure ownership
-        await User.syncProfileWeightFromHistory(userId);
-
-        return res.status(200).json({ success: true });
-    } catch (error) {
-        return res.status(500).json({
-            success: false,
-            error: 'Delete weight failed'
+        const settings = await User.updateSettings(req.userId, {
+            show_rpe, show_1rm, show_goals, show_rest_time, default_rest_time
         });
+
+        return sendData(res, 200, { data: settings });
+    } catch (error) {
+        console.error('[User] Error updating settings:', error.message);
+        return sendError(res, 500, 'Failed to update settings');
     }
 };
+
+function toPositiveInt(value) {
+    if (value === undefined) return undefined;
+    const parsed = parseInt(value, 10);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}

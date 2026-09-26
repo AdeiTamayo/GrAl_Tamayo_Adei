@@ -1,51 +1,52 @@
 const Goal = require('../models/goal');
+const { sendData, sendError } = require('../utils/httpResponses');
 
 exports.getGoals = async (req, res) => {
-    console.log("Get all goals request received");
     try {
         const goals = await Goal.getUserGoals(req.userId);
-        res.json({ success: true, goals });
+        return sendData(res, 200, { goals });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        console.error('[Goals] Error fetching goals:', error);
+        return sendError(res, 500, 'Failed to get goals');
     }
 };
 
 exports.createGoal = async (req, res) => {
-    console.log("Create goal request received");
     try {
         const { exercise_id, target_weight, target_reps, expected_date } = req.body;
-        const newGoal = await Goal.createGoal(req.userId, exercise_id, target_weight, target_reps, expected_date);
-        res.json({ success: true, goal: newGoal });
+        const goal = await Goal.createGoal(req.userId, exercise_id, target_weight, target_reps, expected_date);
+        return sendData(res, 200, { goal });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        console.error('[Goals] Error creating goal:', error);
+        return sendError(res, 500, 'Failed to create goal');
     }
 };
 
 exports.updateGoal = async (req, res) => {
-    console.log("Update goal request received");
     try {
         const { target_weight, target_reps, expected_date } = req.body;
-        const updatedGoal = await Goal.updateGoal(req.params.id, req.userId, target_weight, target_reps, expected_date);
-        if (updatedGoal) {
-            res.json({ success: true, goal: updatedGoal });
-        } else {
-            res.status(404).json({ success: false, error: "Goal not found or unauthorized" });
+        const goal = await Goal.updateGoal(req.params.id, req.userId, target_weight, target_reps, expected_date);
+
+        if (!goal) {
+            return sendError(res, 404, 'Goal not found or unauthorized');
         }
+        return sendData(res, 200, { goal });
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        console.error('[Goals] Error updating goal:', error);
+        return sendError(res, 500, 'Failed to update goal');
     }
 };
 
 exports.deleteGoal = async (req, res) => {
-    console.log("Delete goal request received");
     try {
         const deleted = await Goal.deleteGoal(req.params.id, req.userId);
-        if (deleted) {
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ success: false, error: "Goal not found" });
+
+        if (!deleted) {
+            return sendError(res, 404, 'Goal not found or unauthorized');
         }
+        return sendData(res, 200, {});
     } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
+        console.error('[Goals] Error deleting goal:', error);
+        return sendError(res, 500, 'Failed to delete goal');
     }
 };

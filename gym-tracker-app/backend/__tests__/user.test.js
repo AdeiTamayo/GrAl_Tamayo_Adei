@@ -27,10 +27,16 @@ let app;
 
 beforeEach(() => {
   jest.resetModules();
+  // The API refuses to sign a token without a secret; give the suite one.
+  process.env.JWT_SECRET = 'test-secret';
   const db = require('../config/database');
   db.query.mockReset();
   db.query.mockReturnValue(Promise.resolve({ rows: [] }));
   app = require('../server');
+});
+
+afterEach(() => {
+  delete process.env.JWT_SECRET;
 });
 
 describe('POST /api/user/login', () => {
