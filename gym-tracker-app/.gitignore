@@ -1,11 +1,9 @@
 # Dependencies
 node_modules/
 frontend/node_modules/
-backend/node_modules/
 
 # Production builds
 frontend/build/
-backend/dist/
 
 # Python
 __pycache__/
@@ -13,12 +11,10 @@ __pycache__/
 *$py.class
 *.so
 .Python
-backend/python/__pycache__/
 venv/
 env/
 ENV/
 *.egg-info/
-
 
 # Environment variables
 .env
@@ -54,11 +50,3 @@ coverage/
 .cache/
 temp/
 tmp/
-
-# Ignore testing resources files
-backend/media/output
-backend/media/uploads
-
-
-
-tools/

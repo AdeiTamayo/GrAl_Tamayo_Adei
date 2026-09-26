@@ -2,9 +2,9 @@ name: Run Tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, migrate-to-supabase]
   pull_request:
-    branches: [main]
+    branches: [main, migrate-to-supabase]
 
 jobs:
   frontend:
@@ -25,14 +25,18 @@ jobs:
         run: npm ci
         working-directory: gym-tracker-app/frontend
 
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: gym-tracker-app/frontend
+
       - name: Run frontend tests
         run: npm test -- --watchAll=false
         working-directory: gym-tracker-app/frontend
         env:
           CI: true
 
-  backend:
-    name: Backend Tests
+  frontend-build:
+    name: Frontend Production Build
     runs-on: ubuntu-latest
 
     steps:
@@ -43,14 +47,38 @@ jobs:
         with:
           node-version: 24
           cache: 'npm'
-          cache-dependency-path: gym-tracker-app/backend/package-lock.json
+          cache-dependency-path: gym-tracker-app/frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: gym-tracker-app/backend
+        working-directory: gym-tracker-app/frontend
+
+      - name: Production build
+        run: npm run build
+        working-directory: gym-tracker-app/frontend
+        env:
+          CI: true
+
+  legacy-backend:
+    name: Legacy Backend Tests (archived)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'npm'
+          cache-dependency-path: legacy/backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: legacy/backend
 
       - name: Run backend tests
         run: npm test
-        working-directory: gym-tracker-app/backend
+        working-directory: legacy/backend
         env:
           CI: true

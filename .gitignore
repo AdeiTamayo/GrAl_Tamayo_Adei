@@ -8,8 +8,8 @@ node_modules/
 build/
 dist/
 
-# Media uploads / processed videos
-gym-tracker-app/backend/media/
+# Media uploads / processed videos (archived backend)
+legacy/backend/media/
 
 # Logs
 *.log
