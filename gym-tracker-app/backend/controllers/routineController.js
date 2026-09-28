@@ -1,6 +1,7 @@
 const Routines = require('../models/routines');
 const { sendData, sendError } = require('../utils/httpResponses');
 
+/** Return all routines belonging to the authenticated user. */
 exports.getUserRoutines = async (req, res) => {
     try {
         const routines = await Routines.getUserRoutines(req.userId);
@@ -11,6 +12,7 @@ exports.getUserRoutines = async (req, res) => {
     }
 };
 
+/** Return one routine owned by the authenticated user. */
 exports.getRoutineById = async (req, res) => {
     try {
         const routine = await Routines.getRoutineById(req.params.id, req.userId);
@@ -25,6 +27,7 @@ exports.getRoutineById = async (req, res) => {
     }
 };
 
+/** Create a routine for the authenticated user. */
 exports.createRoutine = async (req, res) => {
     try {
         const routine = await Routines.createRoutine(req.userId, req.body.name);
@@ -39,6 +42,7 @@ exports.createRoutine = async (req, res) => {
     }
 };
 
+/** Update a routine owned by the authenticated user. */
 exports.updateRoutine = async (req, res) => {
     try {
         const { name, note } = req.body;
@@ -54,6 +58,7 @@ exports.updateRoutine = async (req, res) => {
     }
 };
 
+/** Delete a routine owned by the authenticated user. */
 exports.deleteRoutine = async (req, res) => {
     try {
         const deleted = await Routines.deleteRoutine(req.params.id, req.userId);
@@ -68,6 +73,7 @@ exports.deleteRoutine = async (req, res) => {
     }
 };
 
+/** Add an exercise with its planned values to a routine. */
 exports.addExerciseToRoutine = async (req, res) => {
     try {
         const { exercise_id, exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note } = req.body;
@@ -87,6 +93,7 @@ exports.addExerciseToRoutine = async (req, res) => {
     }
 };
 
+/** Update the planned values for an exercise in a routine. */
 exports.updateRoutineExercise = async (req, res) => {
     try {
         const { exercise_order, planned_sets, planned_reps, planned_weight, planned_time, note } = req.body;
@@ -106,6 +113,7 @@ exports.updateRoutineExercise = async (req, res) => {
     }
 };
 
+/** Remove an exercise from a routine. */
 exports.removeExerciseFromRoutine = async (req, res) => {
     try {
         const removed = await Routines.removeExerciseFromRoutine(req.params.item_id, req.userId);
@@ -120,6 +128,7 @@ exports.removeExerciseFromRoutine = async (req, res) => {
     }
 };
 
+/** Add a planned set to a routine exercise. */
 exports.addSetToRoutineExercise = async (req, res) => {
     try {
         const { set_number, planned_weight, planned_reps, planned_time } = req.body;
@@ -138,6 +147,7 @@ exports.addSetToRoutineExercise = async (req, res) => {
     }
 };
 
+/** Update a planned set after validating its numeric range. */
 exports.updateRoutineSet = async (req, res) => {
     try {
         const { planned_weight, planned_reps, planned_time } = req.body;
@@ -164,6 +174,7 @@ exports.updateRoutineSet = async (req, res) => {
     }
 };
 
+/** Delete a planned set from a routine exercise. */
 exports.deleteRoutineSet = async (req, res) => {
     try {
         const deleted = await Routines.deleteRoutineSet(req.params.set_id, req.userId);
@@ -178,6 +189,7 @@ exports.deleteRoutineSet = async (req, res) => {
     }
 };
 
+/** Check whether a planned numeric value exceeds the database limit. */
 function isOutOfRange(value) {
     return value != null && Math.abs(value) >= 1000;
 }

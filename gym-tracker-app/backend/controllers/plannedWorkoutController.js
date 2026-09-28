@@ -1,6 +1,7 @@
 const PlannedWorkout = require('../models/plannedWorkout');
 const { sendData, sendError } = require('../utils/httpResponses');
 
+/** Return all planned workouts for the authenticated user. */
 exports.getAll = async (req, res) => {
     try {
         const planned = await PlannedWorkout.getAll(req.userId);
@@ -11,6 +12,7 @@ exports.getAll = async (req, res) => {
     }
 };
 
+/** Create a planned workout, optionally linked to a routine. */
 exports.create = async (req, res) => {
     try {
         const { date, name, routine_id, note } = req.body;
@@ -27,6 +29,7 @@ exports.create = async (req, res) => {
     }
 };
 
+/** Update a planned workout owned by the authenticated user. */
 exports.update = async (req, res) => {
     try {
         const { date, name, note } = req.body;
@@ -42,6 +45,7 @@ exports.update = async (req, res) => {
     }
 };
 
+/** Delete a planned workout owned by the authenticated user. */
 exports.delete = async (req, res) => {
     try {
         const deleted = await PlannedWorkout.delete(req.params.id, req.userId);

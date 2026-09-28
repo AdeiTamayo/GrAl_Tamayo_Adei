@@ -1,6 +1,7 @@
 const Goal = require('../models/goal');
 const { sendData, sendError } = require('../utils/httpResponses');
 
+/** Return all goals belonging to the authenticated user. */
 exports.getGoals = async (req, res) => {
     try {
         const goals = await Goal.getUserGoals(req.userId);
@@ -11,6 +12,7 @@ exports.getGoals = async (req, res) => {
     }
 };
 
+/** Create a training goal for the authenticated user. */
 exports.createGoal = async (req, res) => {
     try {
         const { exercise_id, target_weight, target_reps, expected_date } = req.body;
@@ -22,6 +24,7 @@ exports.createGoal = async (req, res) => {
     }
 };
 
+/** Update an existing goal owned by the authenticated user. */
 exports.updateGoal = async (req, res) => {
     try {
         const { target_weight, target_reps, expected_date } = req.body;
@@ -37,6 +40,7 @@ exports.updateGoal = async (req, res) => {
     }
 };
 
+/** Delete an existing goal owned by the authenticated user. */
 exports.deleteGoal = async (req, res) => {
     try {
         const deleted = await Goal.deleteGoal(req.params.id, req.userId);

@@ -2,6 +2,7 @@ const Workout = require('../models/workout');
 const PR = require('../models/pr');
 const { sendData, sendError } = require('../utils/httpResponses');
 
+/** Return all workouts belonging to the authenticated user. */
 exports.getWorkouts = async (req, res) => {
     try {
         const workouts = await Workout.getWorkouts(req.userId);
@@ -12,6 +13,7 @@ exports.getWorkouts = async (req, res) => {
     }
 };
 
+/** Return one workout owned by the authenticated user. */
 exports.getWorkoutById = async (req, res) => {
     try {
         const workout = await Workout.getWorkoutById(req.params.id, req.userId);
@@ -26,6 +28,7 @@ exports.getWorkoutById = async (req, res) => {
     }
 };
 
+/** Create a workout for the authenticated user. */
 exports.createWorkout = async (req, res) => {
     try {
         const { name, date, note } = req.body;
@@ -42,6 +45,7 @@ exports.createWorkout = async (req, res) => {
     }
 };
 
+/** Update a workout owned by the authenticated user. */
 exports.updateWorkout = async (req, res) => {
     try {
         const { name, date, note } = req.body;
@@ -57,6 +61,7 @@ exports.updateWorkout = async (req, res) => {
     }
 };
 
+/** Delete a workout owned by the authenticated user. */
 exports.deleteWorkout = async (req, res) => {
     try {
         const deleted = await Workout.deleteWorkout(req.params.id, req.userId);
@@ -71,6 +76,7 @@ exports.deleteWorkout = async (req, res) => {
     }
 };
 
+/** Add an exercise to a workout. */
 exports.addWorkoutExercise = async (req, res) => {
     try {
         const { exercise_id, note } = req.body;
@@ -86,6 +92,7 @@ exports.addWorkoutExercise = async (req, res) => {
     }
 };
 
+/** Remove an exercise from a workout. */
 exports.deleteWorkoutExercise = async (req, res) => {
     try {
         const deleted = await Workout.deleteWorkoutExercise(req.params.workoutExerciseId, req.userId);
@@ -100,6 +107,7 @@ exports.deleteWorkoutExercise = async (req, res) => {
     }
 };
 
+/** Add a set to a workout exercise and check whether it creates a PR. */
 exports.addSet = async (req, res) => {
     try {
         const { weight, reps, time, note, rpe } = req.body;
@@ -130,6 +138,7 @@ exports.addSet = async (req, res) => {
     }
 };
 
+/** Update a set owned by the authenticated user. */
 exports.updateSet = async (req, res) => {
     try {
         const { weight, reps, time, note, rpe } = req.body;
@@ -145,6 +154,7 @@ exports.updateSet = async (req, res) => {
     }
 };
 
+/** Delete a set owned by the authenticated user. */
 exports.deleteSet = async (req, res) => {
     try {
         const deleted = await Workout.deleteSet(req.params.setId, req.userId);

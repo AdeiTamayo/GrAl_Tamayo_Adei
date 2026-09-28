@@ -10,6 +10,7 @@ function parsePositiveInt(value) {
     return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+/** Return the exercise catalog, using the cache for the full unpaginated list. */
 exports.getExercises = async (req, res) => {
     try {
         const page = parsePositiveInt(req.query.page);
@@ -49,6 +50,7 @@ exports.getExercises = async (req, res) => {
     }
 };
 
+/** Return one exercise by its identifier. */
 exports.getExerciseById = async (req, res) => {
     try {
         const exercise = await Exercise.getExerciseById(req.params.id);
@@ -73,6 +75,7 @@ exports.getExerciseById = async (req, res) => {
     }
 };
 
+/** Create a new exercise from the submitted exercise details. */
 exports.createExercise = async (req, res) => {
     try {
         // `exercice_name` is the historical request field name; the database
@@ -111,6 +114,7 @@ exports.createExercise = async (req, res) => {
     }
 };
 
+/** Update an existing exercise and return the modified record. */
 exports.modifyExercise = async (req, res) => {
     try {
         const { exercice_name, body_part, target_muscle, secondary_muscles, equipment, difficulty, category, description, instructions } = req.body;
@@ -140,6 +144,7 @@ exports.modifyExercise = async (req, res) => {
     }
 };
 
+/** Delete an exercise by its identifier. */
 exports.deleteExercise = async (req, res) => {
     try {
         const deleted = await Exercise.deleteExercise(req.params.id);
@@ -161,6 +166,7 @@ exports.deleteExercise = async (req, res) => {
     }
 };
 
+/** Return the available exercise filter values. */
 exports.getFilterOptions = async (req, res) => {
     try {
         const filters = await Exercise.getFilterOptions();
@@ -185,6 +191,7 @@ exports.getFilterOptions = async (req, res) => {
     }
 };
 
+/** Return the authenticated user's workout history for an exercise. */
 exports.getExerciseHistory = async (req, res) => {
     try {
         const exerciseId = parseInt(req.params.id, 10);

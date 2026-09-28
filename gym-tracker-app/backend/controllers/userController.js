@@ -3,6 +3,7 @@ const User = require('../models/user');
 const { requireVar } = require('../config/env');
 const { sendData, sendError } = require('../utils/httpResponses');
 
+/** Return the authenticated user's profile. */
 exports.getProfile = async (req, res) => {
     try {
         const user = await User.findUserById(req.userId);
@@ -18,6 +19,7 @@ exports.getProfile = async (req, res) => {
     }
 };
 
+/** Update the authenticated user's profile fields. */
 exports.updateProfile = async (req, res) => {
     try {
         const { name, surname, email, gender, height, weight, birth_date } = req.body;
@@ -33,6 +35,7 @@ exports.updateProfile = async (req, res) => {
     }
 };
 
+/** Verify the password and permanently delete the authenticated account. */
 exports.deleteUser = async (req, res) => {
     try {
         const { password } = req.body;
@@ -60,6 +63,7 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
+/** Authenticate a user and issue a signed JWT. */
 exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -98,6 +102,7 @@ exports.login = async (req, res) => {
     }
 };
 
+/** Validate registration data and create a new user account. */
 exports.register = async (req, res) => {
     try {
         const { name, surname, email, password, gender_id, weight, height, birth_date } = req.body;
@@ -123,6 +128,7 @@ exports.register = async (req, res) => {
     }
 };
 
+/** Return filtered and paginated weight history for the current user. */
 exports.getWeightHistory = async (req, res) => {
     try {
         const { startDate, endDate, page, limit, sortBy, sortOrder } = req.query;
@@ -156,6 +162,7 @@ exports.getWeightHistory = async (req, res) => {
     }
 };
 
+/** Add a weight entry and synchronize the profile's current weight. */
 exports.addWeight = async (req, res) => {
     try {
         const { weight, date } = req.body;
@@ -174,6 +181,7 @@ exports.addWeight = async (req, res) => {
     }
 };
 
+/** Update a user's weight entry and synchronize the profile weight. */
 exports.updateWeight = async (req, res) => {
     try {
         const { id, weight, date } = req.body;
@@ -192,6 +200,7 @@ exports.updateWeight = async (req, res) => {
     }
 };
 
+/** Delete a weight entry and synchronize the profile weight. */
 exports.deleteWeight = async (req, res) => {
     try {
         const { id } = req.params;
@@ -210,6 +219,7 @@ exports.deleteWeight = async (req, res) => {
     }
 };
 
+/** Return the authenticated user's application settings. */
 exports.getSettings = async (req, res) => {
     try {
         const settings = await User.getSettings(req.userId);
@@ -220,6 +230,7 @@ exports.getSettings = async (req, res) => {
     }
 };
 
+/** Update the authenticated user's application settings. */
 exports.updateSettings = async (req, res) => {
     try {
         const { show_rpe, show_1rm, show_goals, show_rest_time, default_rest_time } = req.body;
@@ -235,6 +246,7 @@ exports.updateSettings = async (req, res) => {
     }
 };
 
+/** Convert a query value to a positive integer, or leave it undefined. */
 function toPositiveInt(value) {
     if (value === undefined) return undefined;
     const parsed = parseInt(value, 10);

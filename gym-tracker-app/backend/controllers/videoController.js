@@ -11,6 +11,7 @@ const {
 // minutes. Keep the socket open longer than the 2 minute Express default.
 const REQUEST_TIMEOUT = 10 * 60 * 1000;
 
+/** Write one JSON progress or result object to the NDJSON response stream. */
 function sendJsonLine(res, data) {
     res.write(JSON.stringify(data) + '\n');
 }

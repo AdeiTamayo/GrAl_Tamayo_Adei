@@ -1,6 +1,7 @@
 const PR = require('../models/pr');
 const { sendData, sendError } = require('../utils/httpResponses');
 
+/** Return the best recorded performance for each exercise. */
 exports.getPrSummary = async (req, res) => {
     try {
         const prs = await PR.getPrSummary(req.userId);
@@ -11,6 +12,7 @@ exports.getPrSummary = async (req, res) => {
     }
 };
 
+/** Return the personal-record history for one exercise. */
 exports.getPrHistory = async (req, res) => {
     try {
         const history = await PR.getPrHistory(req.userId, req.params.id);
@@ -21,6 +23,7 @@ exports.getPrHistory = async (req, res) => {
     }
 };
 
+/** Manually create a personal-record entry. */
 exports.createPR = async (req, res) => {
     try {
         const { exercise_id, weight, repetitions, date, note } = req.body;
@@ -32,6 +35,7 @@ exports.createPR = async (req, res) => {
     }
 };
 
+/** Update a personal-record entry owned by the authenticated user. */
 exports.updatePR = async (req, res) => {
     try {
         const { weight, repetitions, date, note } = req.body;
@@ -47,6 +51,7 @@ exports.updatePR = async (req, res) => {
     }
 };
 
+/** Delete a personal-record entry owned by the authenticated user. */
 exports.deletePR = async (req, res) => {
     try {
         const deleted = await PR.deletePR(req.userId, req.params.id);
